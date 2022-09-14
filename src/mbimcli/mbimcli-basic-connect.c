@@ -61,6 +61,7 @@ static gchar    *query_ip_packet_filters_str;
 static gchar    *set_ip_packet_filters_str;
 static gboolean  query_provisioned_contexts_flag;
 static gchar    *set_provisioned_contexts_str;
+static gchar    *set_signal_state_str;
 
 static gboolean query_connection_state_arg_parse (const char *option_name,
                                                   const char *value,
@@ -205,6 +206,10 @@ static GOptionEntry entries[] = {
       "Set provisioned contexts (allowed keys: context-id, context-type, auth, compression, username, password, access-string, provider-id)",
       "[\"key=value,...\"]"
     },
+    { "set-signal-state", 0, 0, G_OPTION_ARG_STRING, &set_signal_state_str,
+      "Set signal state (allowed keys: signal-strength-interval, rssi-threshold, error-rate-threshold)",
+      "[\"key=value,...\"]"
+    },
     { NULL }
 };
 
@@ -301,7 +306,8 @@ mbimcli_basic_connect_options_enabled (void)
                  !!query_ip_packet_filters_str +
                  !!set_ip_packet_filters_str +
                  query_provisioned_contexts_flag +
-                 !!set_provisioned_contexts_str);
+                 !!set_provisioned_contexts_str +
+                 !!set_signal_state_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Basic Connect actions requested\n");
@@ -2177,6 +2183,45 @@ set_provisioned_contexts_foreach_cb (const gchar                   *key,
     return TRUE;
 }
 
+typedef struct {
+    guint32  signal_strength;
+    guint32  rssi;
+    guint32  error_rate;
+} SignalStateProperties;
+
+static gboolean
+set_signal_state_foreach_cb (const gchar            *key,
+                             const gchar            *value,
+                             GError                **error,
+                             SignalStateProperties  *props)
+{
+    if (g_ascii_strcasecmp (key, "signal-strength-interval") == 0) {
+        if (!mbimcli_read_uint_from_string (value, &props->signal_strength)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "Couldn't parse signal-strength as integer : '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "rssi-threshold") == 0) {
+        if (!mbimcli_read_uint_from_string (value, &props->rssi)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "Couldn't parse rssi as integer : '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "error-rate-threshold") == 0) {
+        if (!mbimcli_read_uint_from_string (value, &props->error_rate)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "Couldn't parse error-rate as integer : '%s'", value);
+            return FALSE;
+        }
+    } else {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "unrecognized option '%s'", key);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 void
 mbimcli_basic_connect_run (MbimDevice   *device,
                            GCancellable *cancellable)
@@ -2785,6 +2830,42 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              60,
                              ctx->cancellable,
                              (GAsyncReadyCallback)provisioned_contexts_ready,
+                             NULL);
+        return;
+    }
+
+    /* Set signal state */
+    if (set_signal_state_str) {
+        SignalStateProperties props = {
+            .signal_strength = 0,
+            .rssi            = 0,
+            .error_rate      = 0
+        };
+
+        if (!mbimcli_parse_key_value_string (set_signal_state_str,
+                                             &error,
+                                             (MbimParseKeyValueForeachFn)set_signal_state_foreach_cb,
+                                             &props)) {
+            g_printerr ("error: couldn't parse input string: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        request = mbim_message_signal_state_set_new (props.signal_strength,
+                                                     props.rssi,
+                                                     props.error_rate,
+                                                     &error);
+        if (!request) {
+            g_printerr ("error: couldn't create request: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             60,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)signal_state_ready,
                              NULL);
         return;
     }
