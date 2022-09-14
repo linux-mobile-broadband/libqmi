@@ -60,6 +60,7 @@ static gboolean  query_packet_statistics_flag;
 static gchar    *query_ip_packet_filters_str;
 static gchar    *set_ip_packet_filters_str;
 static gboolean  query_provisioned_contexts_flag;
+static gchar    *set_provisioned_contexts_str;
 
 static gboolean query_connection_state_arg_parse (const char *option_name,
                                                   const char *value,
@@ -200,6 +201,10 @@ static GOptionEntry entries[] = {
       "Query provisioned contexts",
       NULL
     },
+    { "set-provisioned-contexts", 0, 0, G_OPTION_ARG_STRING, &set_provisioned_contexts_str,
+      "Set provisioned contexts (allowed keys: context-id, context-type, auth, compression, username, password, access-string, provider-id)",
+      "[\"key=value,...\"]"
+    },
     { NULL }
 };
 
@@ -295,7 +300,8 @@ mbimcli_basic_connect_options_enabled (void)
                  query_packet_statistics_flag +
                  !!query_ip_packet_filters_str +
                  !!set_ip_packet_filters_str +
-                 query_provisioned_contexts_flag);
+                 query_provisioned_contexts_flag +
+                 !!set_provisioned_contexts_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Basic Connect actions requested\n");
@@ -2098,6 +2104,79 @@ provisioned_contexts_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+typedef struct {
+    guint             context_id;
+    MbimCompression   compression;
+    MbimAuthProtocol  auth_protocol;
+    MbimContextType   context_type;
+    gchar            *access_string;
+    gchar            *username;
+    gchar            *password;
+    gchar            *provider_id;
+} ProvisionedContextProperties;
+
+static void
+provisioned_context_properties_clear (ProvisionedContextProperties *props)
+{
+    g_free (props->access_string);
+    g_free (props->username);
+    g_free (props->password);
+    g_free (props->provider_id);
+}
+
+G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(ProvisionedContextProperties, provisioned_context_properties_clear)
+
+static gboolean
+set_provisioned_contexts_foreach_cb (const gchar                   *key,
+                                     const gchar                   *value,
+                                     GError                       **error,
+                                     ProvisionedContextProperties  *props)
+{
+    if (g_ascii_strcasecmp (key, "context-id") == 0) {
+        if (!mbimcli_read_uint_from_string (value, &props->context_id)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "Couldn't parse context-id as integer : '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "context-type") == 0) {
+        if (!mbimcli_read_context_type_from_string (value, &props->context_type)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown context-type: '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "auth") == 0) {
+        if (!mbimcli_read_auth_protocol_from_string (value, &props->auth_protocol)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown auth: '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "compression") == 0) {
+        if (!mbimcli_read_compression_from_string (value, &props->compression)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown compression: '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "username") == 0) {
+        g_free (props->username);
+        props->username = g_strdup (value);
+    } else if (g_ascii_strcasecmp (key, "password") == 0) {
+        g_free (props->password);
+        props->password = g_strdup (value);
+    } else if (g_ascii_strcasecmp (key, "access-string") == 0) {
+        g_free (props->access_string);
+        props->access_string = g_strdup (value);
+    } else if (g_ascii_strcasecmp (key, "provider-id") == 0) {
+        g_free (props->provider_id);
+        props->provider_id = g_strdup (value);
+    } else {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "unrecognized option '%s'", key);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 void
 mbimcli_basic_connect_run (MbimDevice   *device,
                            GCancellable *cancellable)
@@ -2658,6 +2737,52 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         mbim_device_command (ctx->device,
                              request,
                              10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)provisioned_contexts_ready,
+                             NULL);
+        return;
+    }
+
+    /* Set provisioned context */
+    if (set_provisioned_contexts_str) {
+        g_auto(ProvisionedContextProperties) props = {
+            .access_string   = NULL,
+            .context_id      = 0,
+            .auth_protocol   = MBIM_AUTH_PROTOCOL_NONE,
+            .username        = NULL,
+            .password        = NULL,
+            .compression     = MBIM_COMPRESSION_NONE,
+            .context_type    = MBIM_CONTEXT_TYPE_INVALID,
+            .provider_id     = NULL
+        };
+
+        if (!mbimcli_parse_key_value_string (set_provisioned_contexts_str,
+                                             &error,
+                                             (MbimParseKeyValueForeachFn)set_provisioned_contexts_foreach_cb,
+                                             &props)) {
+            g_printerr ("error: couldn't parse input string: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        request = mbim_message_provisioned_contexts_set_new ((guint32)props.context_id,
+                                                             mbim_uuid_from_context_type (props.context_type),
+                                                             props.access_string,
+                                                             props.username,
+                                                             props.password,
+                                                             props.compression,
+                                                             props.auth_protocol,
+                                                             props.provider_id,
+                                                             &error);
+        if (!request) {
+            g_printerr ("error: couldn't create request: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             60,
                              ctx->cancellable,
                              (GAsyncReadyCallback)provisioned_contexts_ready,
                              NULL);
