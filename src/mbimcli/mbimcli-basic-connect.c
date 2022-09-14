@@ -64,6 +64,8 @@ static gchar    *set_provisioned_contexts_str;
 static gchar    *set_signal_state_str;
 static gchar    *set_network_idle_hint_str;
 static gboolean  query_network_idle_hint_flag;
+static gchar    *set_emergency_mode_str;
+static gboolean  query_emergency_mode_flag;
 
 static gboolean query_connection_state_arg_parse (const char *option_name,
                                                   const char *value,
@@ -220,6 +222,14 @@ static GOptionEntry entries[] = {
       "Query network idle hint",
       NULL
     },
+    { "set-emergency-mode", 0, 0, G_OPTION_ARG_STRING, &set_emergency_mode_str,
+      "Set emergency mode",
+      "[(on|off)]"
+    },
+    { "query-emergency-mode", 0, 0, G_OPTION_ARG_NONE, &query_emergency_mode_flag,
+      "Query emergency mode",
+      NULL
+    },
     { NULL }
 };
 
@@ -319,7 +329,9 @@ mbimcli_basic_connect_options_enabled (void)
                  !!set_provisioned_contexts_str +
                  !!set_signal_state_str +
                  !!set_network_idle_hint_str +
-                 query_network_idle_hint_flag);
+                 query_network_idle_hint_flag +
+                 !!set_emergency_mode_str +
+                 query_emergency_mode_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Basic Connect actions requested\n");
@@ -2267,6 +2279,39 @@ network_idle_hint_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+emergency_mode_ready (MbimDevice   *device,
+                      GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    MbimEmergencyModeState  emergency_state;
+    const gchar            *emergency_state_str = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_emergency_mode_response_parse (
+            response,
+            &emergency_state,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    emergency_state_str = mbim_emergency_mode_state_get_string (emergency_state);
+    g_print ("[%s] Emergency mode: '%s'\n",
+             mbim_device_get_path_display (device),
+             VALIDATE_UNKNOWN (emergency_state_str));
+
+    shutdown (TRUE);
+}
+
 void
 mbimcli_basic_connect_run (MbimDevice   *device,
                            GCancellable *cancellable)
@@ -2948,6 +2993,43 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)network_idle_hint_ready,
+                             NULL);
+        return;
+    }
+
+    /* Set emergency mode state */
+    if (set_emergency_mode_str) {
+        MbimEmergencyModeState  emergency_state;
+
+        if (!mbimcli_read_emergency_mode_state_from_string (set_emergency_mode_str, &emergency_state)) {
+            shutdown (FALSE);
+            return;
+        }
+
+        request = mbim_message_emergency_mode_set_new (emergency_state, &error);
+        if (!request) {
+            g_printerr ("error: couldn't create request: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)emergency_mode_ready,
+                             NULL);
+        return;
+    }
+
+    /* Query emergency mode state */
+    if (query_emergency_mode_flag) {
+        request = mbim_message_emergency_mode_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)emergency_mode_ready,
                              NULL);
         return;
     }

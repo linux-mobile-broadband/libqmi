@@ -66,6 +66,7 @@ gboolean mbimcli_parse_sar_config_state_array (const gchar  *str,
     MBIMCLI_ENUM_LIST_ITEM (MbimDefaultPduActivationHint, default_pdu_activation_hint, "default pdu activation hint") \
     MBIMCLI_ENUM_LIST_ITEM (MbimAccessMediaType,          access_media_type,           "access media type")           \
     MBIMCLI_ENUM_LIST_ITEM (MbimNetworkIdleHintState,     network_idle_hint_state,     "network idle hint state")     \
+    MBIMCLI_ENUM_LIST_ITEM (MbimEmergencyModeState,       emergency_mode_state,        "emergency mode state")        \
     MBIMCLI_ENUM_LIST_ITEM (MbimIntelBootMode,            intel_boot_mode,             "intel boot mode")
 
 #define MBIMCLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
