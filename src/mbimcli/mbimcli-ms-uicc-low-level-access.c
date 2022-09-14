@@ -39,6 +39,8 @@ static gchar    *set_uicc_open_channel_str;
 static gchar    *set_uicc_close_channel_str;
 static gboolean  query_uicc_atr_flag;
 static gchar    *set_uicc_apdu_str;
+static gchar    *set_uicc_reset_str;
+static gboolean  query_uicc_reset_flag;
 
 static GOptionEntry entries[] = {
     { "ms-query-uicc-application-list", 0, 0, G_OPTION_ARG_NONE, &query_uicc_application_list_flag,
@@ -72,6 +74,14 @@ static GOptionEntry entries[] = {
     { "ms-set-uicc-apdu", 0, 0, G_OPTION_ARG_STRING, &set_uicc_apdu_str,
       "Set UICC apdu (allowed keys: channel, secure-message, classbyte-type, command)",
       "[\"key=value,...\"]"
+    },
+    { "ms-set-uicc-reset", 0, 0, G_OPTION_ARG_STRING, &set_uicc_reset_str,
+      "Set UICC reset",
+      "[(Pass Through Action)]"
+    },
+    { "ms-query-uicc-reset", 0, 0, G_OPTION_ARG_NONE, &query_uicc_reset_flag,
+      "Query UICC reset",
+      NULL
     },
     { NULL }
 };
@@ -107,7 +117,9 @@ mbimcli_ms_uicc_low_level_access_options_enabled (void)
                 !!set_uicc_open_channel_str +
                 !!set_uicc_close_channel_str +
                 query_uicc_atr_flag +
-                !!set_uicc_apdu_str;
+                !!set_uicc_apdu_str +
+                !!set_uicc_reset_str +
+                query_uicc_reset_flag;
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft UICC Low Level Access Service actions requested\n");
@@ -954,6 +966,37 @@ apdu_input_parse (const gchar     *str,
     return TRUE;
 }
 
+static void
+uicc_reset_ready (MbimDevice   *device,
+                  GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)     response = NULL;
+    g_autoptr(GError)          error = NULL;
+    MbimUiccPassThroughStatus  pass_through_status;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_uicc_low_level_access_reset_response_parse (
+            response,
+            &pass_through_status,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Succesfully retrieved reset info:\n"
+             "\tpass through action: %s\n",
+             mbim_uicc_pass_through_status_get_string (pass_through_status));
+
+    shutdown (TRUE);
+}
+
 void
 mbimcli_ms_uicc_low_level_access_run (MbimDevice   *device,
                                       GCancellable *cancellable)
@@ -1211,6 +1254,44 @@ mbimcli_ms_uicc_low_level_access_run (MbimDevice   *device,
                              30,
                              ctx->cancellable,
                              (GAsyncReadyCallback)set_apdu_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to set UICC reset */
+    if (set_uicc_reset_str) {
+        MbimUiccPassThroughAction  pass_through_action;
+
+        if(!mbimcli_read_uicc_pass_through_action_from_string (set_uicc_reset_str, &pass_through_action)) {
+            shutdown (FALSE);
+            return;
+        }
+
+        request = mbim_message_ms_uicc_low_level_access_reset_set_new (pass_through_action, &error);
+        if (!request) {
+            g_printerr ("error: couldn't create Reset request %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             30,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)uicc_reset_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to query UICC reset */
+    if (query_uicc_reset_flag) {
+        g_debug ("Asynchronously querying UICC reset...");
+        request = mbim_message_ms_uicc_low_level_access_reset_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             30,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)uicc_reset_ready,
                              NULL);
         return;
     }
