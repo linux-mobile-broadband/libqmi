@@ -66,6 +66,7 @@ static gchar    *set_network_idle_hint_str;
 static gboolean  query_network_idle_hint_flag;
 static gchar    *set_emergency_mode_str;
 static gboolean  query_emergency_mode_flag;
+static gchar    *set_service_activation_str;
 
 static gboolean query_connection_state_arg_parse (const char *option_name,
                                                   const char *value,
@@ -230,6 +231,10 @@ static GOptionEntry entries[] = {
       "Query emergency mode",
       NULL
     },
+    { "set-service-activation", 0, 0, G_OPTION_ARG_STRING, &set_service_activation_str,
+      "Set service activation",
+      "[Data]"
+    },
     { NULL }
 };
 
@@ -331,7 +336,8 @@ mbimcli_basic_connect_options_enabled (void)
                  !!set_network_idle_hint_str +
                  query_network_idle_hint_flag +
                  !!set_emergency_mode_str +
-                 query_emergency_mode_flag);
+                 query_emergency_mode_flag +
+                 !!set_service_activation_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Basic Connect actions requested\n");
@@ -2312,6 +2318,45 @@ emergency_mode_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+set_service_activation_ready (MbimDevice   *device,
+                              GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    MbimNwError             nw_error;
+    guint32                 result_data_size;
+    const guint8           *result_data = NULL;
+    g_autofree gchar       *result_data_str = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_service_activation_response_parse (response,
+                                                         &nw_error,
+                                                         &result_data_size,
+                                                         &result_data,
+                                                         &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    result_data_str = mbim_common_str_hex (result_data, result_data_size, ':');
+    g_print ("[%s] Service activation response received successfully:\n"
+             "\t         Network error: '%s'\n"
+             "\t                  Data: '%s'\n",
+             mbim_device_get_path_display (device),
+             VALIDATE_UNKNOWN (mbim_nw_error_get_string (nw_error)),
+             result_data_str);
+
+    shutdown (TRUE);
+}
+
 void
 mbimcli_basic_connect_run (MbimDevice   *device,
                            GCancellable *cancellable)
@@ -3030,6 +3075,36 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)emergency_mode_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to set service activation */
+    if (set_service_activation_str) {
+        guint8 *data = NULL;
+        gsize   data_size = 0;
+
+        data = mbimcli_read_buffer_from_string (set_service_activation_str, -1, &data_size, &error);
+        if (!data) {
+            g_printerr ("error: couldn't parse the input: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        request = mbim_message_service_activation_set_new (data_size,
+                                                           data,
+                                                           &error);
+        if (!request) {
+            g_printerr ("error: couldn't create request: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)set_service_activation_ready,
                              NULL);
         return;
     }
