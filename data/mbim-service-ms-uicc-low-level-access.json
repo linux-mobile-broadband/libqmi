@@ -9,7 +9,7 @@
     "since"    : "1.26",
     "query"    : [],
     "response" : [ { "name"   : "atr",
-                     "format" : "string" } ] },
+                     "format" : "uicc-ref-byte-array" } ] },
 
   // ************************************************************************
   { "name"     : "Open Channel",
