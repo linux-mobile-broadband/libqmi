@@ -1727,8 +1727,8 @@ device_services_message_ready (MbimDevice   *device,
                                GTask        *task)
 {
     g_autoptr(MbimMessage)                    response = NULL;
-    g_autoptr(GError)                         error = NULL;
     g_autoptr(MbimDeviceServiceElementArray)  device_services = NULL;
+    GError                                   *error = NULL;
     guint32                                   device_services_count;
     guint32                                   max_dss_sessions;
     DeviceOpenContext                        *ctx;
