@@ -1646,7 +1646,7 @@ ms_ext_version_message_ready (MbimDevice   *self,
                               GTask        *task)
 {
     g_autoptr(MbimMessage)  response = NULL;
-    g_autoptr(GError)       error = NULL;
+    GError                 *error = NULL;
     guint16                 mbim_version;
     guint16                 ms_mbimex_version;
     DeviceOpenContext      *ctx;
