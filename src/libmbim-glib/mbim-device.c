@@ -1115,53 +1115,32 @@ process_message (MbimDevice        *self,
     }
 }
 
-static gboolean
-validate_message_type (const MbimMessage *message)
-{
-    switch (mbim_message_get_message_type (message)) {
-        case MBIM_MESSAGE_TYPE_OPEN:
-        case MBIM_MESSAGE_TYPE_CLOSE:
-        case MBIM_MESSAGE_TYPE_COMMAND:
-        case MBIM_MESSAGE_TYPE_HOST_ERROR:
-        case MBIM_MESSAGE_TYPE_OPEN_DONE:
-        case MBIM_MESSAGE_TYPE_CLOSE_DONE:
-        case MBIM_MESSAGE_TYPE_COMMAND_DONE:
-        case MBIM_MESSAGE_TYPE_FUNCTION_ERROR:
-        case MBIM_MESSAGE_TYPE_INDICATE_STATUS:
-            return TRUE;
-        default:
-        case MBIM_MESSAGE_TYPE_INVALID:
-            return FALSE;
-    }
-}
-
 static void
 parse_response (MbimDevice *self)
 {
     do {
         const MbimMessage *message;
-        guint32            in_length;
-
-        /* If not even the MBIM header available, just return */
-        if (self->priv->response->len < 12)
-            return;
+        guint32            len;
+        g_autoptr(GError)  error = NULL;
 
         message = (const MbimMessage *)self->priv->response;
 
-        /* Fully ignore data that is clearly not a MBIM message */
-        if (!validate_message_type (message)) {
-            g_warning ("[%s] discarding %u bytes in stream as message type validation fails",
-                       self->priv->path_display, self->priv->response->len);
+        /* Invalid message? */
+        if (!mbim_message_validate (message, &error)) {
+            /* No full message yet */
+            if (g_error_matches (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INCOMPLETE_MESSAGE))
+                return;
+
+            /* Invalid MBIM message */
+            g_warning ("[%s] discarding %u bytes in stream as message validation fails: %s",
+                       self->priv->path_display, self->priv->response->len,
+                       error->message);
             g_byte_array_remove_range (self->priv->response, 0, self->priv->response->len);
             return;
         }
 
-        /* No full message yet */
-        in_length = mbim_message_get_message_length (message);
-        if (self->priv->response->len < in_length)
-            return;
-
         /* Play with the received message */
+        len = mbim_message_get_message_length (message);
         process_message (self, message);
 
         /* If we were force-closed during the processing of a message, we'd be
@@ -1170,7 +1149,7 @@ parse_response (MbimDevice *self)
             break;
 
         /* Remove message from buffer */
-        g_byte_array_remove_range (self->priv->response, 0, in_length);
+        g_byte_array_remove_range (self->priv->response, 0, len);
     } while (self->priv->response->len > 0);
 }
 
