@@ -1191,22 +1191,22 @@ parse_request (MbimProxy *self,
 {
     do {
         g_autoptr(MbimMessage) message = NULL;
-        guint32                len = 0;
+        g_autoptr(GError)      error = NULL;
 
-        if (client->buffer->len >= sizeof (struct header) &&
-            (len = GUINT32_FROM_LE (((struct header *)client->buffer->data)->length)) > client->buffer->len) {
-            /* have not received complete message */
+        /* Invalid message? */
+        if (!mbim_message_validate ((const MbimMessage *)client->buffer, &error)) {
+            /* No full message yet */
+            if (g_error_matches (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INCOMPLETE_MESSAGE))
+                return;
+            /* Invalid message */
+            g_byte_array_remove_range (client->buffer, 0, client->buffer->len);
             return;
         }
 
-        if (!len)
-            return;
+        message = mbim_message_dup ((const MbimMessage *)client->buffer);
+        g_assert (message);
 
-        message = mbim_message_new (client->buffer->data, len);
-        if (!message)
-            return;
-
-        g_byte_array_remove_range (client->buffer, 0, len);
+        g_byte_array_remove_range (client->buffer, 0, mbim_message_get_message_length (message));
         process_message (self, client, message);
     } while (client->buffer->len > 0);
 }
