@@ -78,6 +78,7 @@ test_message_printable (MbimMessage *message,
 static void
 test_basic_connect_pin_set_raw (void)
 {
+    GError *error = NULL;
     MbimMessage *message;
     MbimMessageCommandBuilder *builder;
     const guint8 expected_message [] = {
@@ -119,6 +120,8 @@ test_basic_connect_pin_set_raw (void)
     message = _mbim_message_command_builder_complete (builder);
 
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
                         ((GByteArray *)message)->len,
@@ -181,6 +184,9 @@ test_basic_connect_pin_set (void)
                                         &error);
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
@@ -207,6 +213,7 @@ test_basic_connect_pin_set (void)
 static void
 test_basic_connect_connect_set_raw (void)
 {
+    GError *error = NULL;
     MbimMessage *message;
     MbimMessageCommandBuilder *builder;
     const guint8 expected_message [] = {
@@ -265,6 +272,8 @@ test_basic_connect_connect_set_raw (void)
     message = _mbim_message_command_builder_complete (builder);
 
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
                         ((GByteArray *)message)->len,
@@ -345,6 +354,9 @@ test_basic_connect_connect_set (void)
                    &error));
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
@@ -404,6 +416,9 @@ test_basic_connect_service_activation_set (void)
                    &error));
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
@@ -496,6 +511,9 @@ test_basic_connect_device_service_subscribe_list_set (void)
 
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
@@ -568,6 +586,9 @@ test_ussd_set (void)
 
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
@@ -650,6 +671,9 @@ test_auth_akap_query (void)
 
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
@@ -723,6 +747,9 @@ test_stk_pac_set (void)
 
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
@@ -796,6 +823,9 @@ test_stk_terminal_response_set (void)
 
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
@@ -874,6 +904,9 @@ test_stk_envelope_set (void)
 
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
@@ -928,6 +961,9 @@ test_basic_connect_ip_packet_filters_set_none (void)
 
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
@@ -1015,6 +1051,9 @@ test_basic_connect_ip_packet_filters_set_one (void)
 
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
@@ -1131,6 +1170,9 @@ test_basic_connect_ip_packet_filters_set_two (void)
 
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
@@ -1203,6 +1245,9 @@ test_dss_connect_set (void)
 
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
@@ -1312,6 +1357,9 @@ test_basic_connect_multicarrier_providers_set (void)
 
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
@@ -1364,6 +1412,9 @@ test_ms_host_shutdown_notify_set (void)
     message = mbim_message_ms_host_shutdown_notify_set_new (&error);
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,
@@ -1427,6 +1478,8 @@ test_ms_basic_connect_extensions_registration_parameters_set_0_unnamed_tlvs (voi
                    &error));
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
 
     mbim_message_set_transaction_id (message, 1);
 
@@ -1501,6 +1554,8 @@ test_ms_basic_connect_extensions_registration_parameters_set_1_unnamed_tlv (void
                    &error));
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
 
     mbim_message_set_transaction_id (message, 1);
 
@@ -1602,6 +1657,8 @@ test_ms_basic_connect_extensions_registration_parameters_set_3_unnamed_tlvs (voi
                    &error));
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
 
     mbim_message_set_transaction_id (message, 1);
 
@@ -1688,6 +1745,9 @@ test_ms_basic_connect_v3_connect_set (void)
 
     g_assert_no_error (error);
     g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     mbim_message_set_transaction_id (message, 1);
 
     test_message_trace ((const guint8 *)((GByteArray *)message)->data,

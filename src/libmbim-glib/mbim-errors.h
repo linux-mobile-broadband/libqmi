@@ -37,20 +37,22 @@
  * @MBIM_CORE_ERROR_UNSUPPORTED: Not supported.
  * @MBIM_CORE_ERROR_ABORTED: Operation aborted.
  * @MBIM_CORE_ERROR_UNKNOWN_STATE: State is unknown. Since 1.16.
+ * @MBIM_CORE_ERROR_INCOMPLETE_MESSAGE: MBIM message is incomplete. Since 1.28.
  *
  * Common errors that may be reported by libmbim-glib.
  *
  * Since: 1.0
  */
 typedef enum { /*< since=1.0 >*/
-    MBIM_CORE_ERROR_FAILED           = 0, /*< nick=Failed >*/
-    MBIM_CORE_ERROR_WRONG_STATE      = 1, /*< nick=WrongState >*/
-    MBIM_CORE_ERROR_TIMEOUT          = 2, /*< nick=Timeout >*/
-    MBIM_CORE_ERROR_INVALID_ARGS     = 3, /*< nick=InvalidArgs >*/
-    MBIM_CORE_ERROR_INVALID_MESSAGE  = 4, /*< nick=InvalidMessage >*/
-    MBIM_CORE_ERROR_UNSUPPORTED      = 5, /*< nick=Unsupported >*/
-    MBIM_CORE_ERROR_ABORTED          = 6, /*< nick=Aborted >*/
-    MBIM_CORE_ERROR_UNKNOWN_STATE    = 7  /*< nick=UnknownState >*/
+    MBIM_CORE_ERROR_FAILED             = 0, /*< nick=Failed >*/
+    MBIM_CORE_ERROR_WRONG_STATE        = 1, /*< nick=WrongState >*/
+    MBIM_CORE_ERROR_TIMEOUT            = 2, /*< nick=Timeout >*/
+    MBIM_CORE_ERROR_INVALID_ARGS       = 3, /*< nick=InvalidArgs >*/
+    MBIM_CORE_ERROR_INVALID_MESSAGE    = 4, /*< nick=InvalidMessage >*/
+    MBIM_CORE_ERROR_UNSUPPORTED        = 5, /*< nick=Unsupported >*/
+    MBIM_CORE_ERROR_ABORTED            = 6, /*< nick=Aborted >*/
+    MBIM_CORE_ERROR_UNKNOWN_STATE      = 7, /*< nick=UnknownState >*/
+    MBIM_CORE_ERROR_INCOMPLETE_MESSAGE = 8, /*< nick=IncompleteMessage >*/
 } MbimCoreError;
 
 /**

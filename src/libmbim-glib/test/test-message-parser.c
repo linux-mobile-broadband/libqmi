@@ -135,6 +135,9 @@ test_basic_connect_visible_providers (void)
         0x67, 0x00, 0x65, 0x00 };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_visible_providers_response_parse (
@@ -253,6 +256,9 @@ test_basic_connect_subscriber_ready_status (void)
         0x31, 0x00, 0x32, 0x00 };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_subscriber_ready_status_response_parse (
@@ -349,6 +355,9 @@ test_basic_connect_device_caps (void)
                                 0x4D, 0x00, 0x00, 0x00 };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_device_caps_response_parse (
@@ -449,6 +458,9 @@ test_basic_connect_ip_configuration (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_ip_configuration_response_parse (
@@ -600,6 +612,9 @@ test_basic_connect_ip_configuration_2 (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_ip_configuration_response_parse (
@@ -735,6 +750,9 @@ test_basic_connect_service_activation (void)
         0x05, 0x06, 0x07, 0x08  };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_service_activation_response_parse (
@@ -801,6 +819,9 @@ test_basic_connect_register_state (void)
         0x36, 0x00, 0x00, 0x00 };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_register_state_response_parse (
@@ -858,6 +879,9 @@ test_provisioned_contexts (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (!mbim_message_provisioned_contexts_response_parse (
@@ -901,6 +925,9 @@ test_sms_read_zero_pdu (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_sms_read_response_parse (
@@ -969,6 +996,9 @@ test_sms_read_single_pdu (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_sms_read_response_parse (
@@ -1066,6 +1096,9 @@ test_sms_read_multiple_pdu (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_sms_read_response_parse (
@@ -1163,6 +1196,9 @@ test_ussd (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_ussd_response_parse (
@@ -1260,6 +1296,9 @@ test_auth_akap (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_auth_akap_response_parse (
@@ -1349,6 +1388,9 @@ test_stk_pac_notification (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_stk_pac_notification_parse (
@@ -1527,6 +1569,9 @@ test_stk_pac_response (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    mbim_message_validate (response, &error);
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_stk_pac_response_parse (
@@ -1584,6 +1629,9 @@ test_stk_terminal_response (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_stk_terminal_response_response_parse (
@@ -1650,6 +1698,9 @@ test_stk_envelope_response (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_stk_envelope_response_parse (
@@ -1696,6 +1747,9 @@ test_basic_connect_ip_packet_filters_none (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_ip_packet_filters_response_parse (
@@ -1761,6 +1815,9 @@ test_basic_connect_ip_packet_filters_one (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_ip_packet_filters_response_parse (
@@ -1860,6 +1917,9 @@ test_basic_connect_ip_packet_filters_two (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_ip_packet_filters_response_parse (
@@ -1933,6 +1993,9 @@ test_ms_firmware_id_get (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_ms_firmware_id_get_response_parse (
@@ -1977,6 +2040,10 @@ test_basic_connect_connect_short (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+
+    /* generic validation passes because the MBIM message format is fine */
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
 
     /* should fail! */
     g_assert (!mbim_message_connect_response_parse (
@@ -2055,6 +2122,8 @@ test_basic_connect_visible_providers_overflow (void)
         0x67, 0x00, 0x65, 0x00 };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
 
     result = mbim_message_visible_providers_response_parse (response,
                                                             &n_providers,
@@ -2153,6 +2222,9 @@ test_ms_basic_connect_extensions_base_stations (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     result = (mbim_message_ms_basic_connect_extensions_base_stations_info_response_parse (
@@ -2232,6 +2304,9 @@ test_ms_basic_connect_extensions_registration_parameters_0_unnamed_tlvs (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 3, 0);
 
     result = (mbim_message_ms_basic_connect_extensions_v3_registration_parameters_response_parse (
@@ -2301,6 +2376,9 @@ test_ms_basic_connect_extensions_registration_parameters_1_unnamed_tlv (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 3, 0);
 
     result = (mbim_message_ms_basic_connect_extensions_v3_registration_parameters_response_parse (
@@ -2400,6 +2478,9 @@ test_ms_basic_connect_extensions_registration_parameters_3_unnamed_tlvs (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 3, 0);
 
     result = (mbim_message_ms_basic_connect_extensions_v3_registration_parameters_response_parse (
@@ -2499,6 +2580,9 @@ test_ms_basic_connect_v3_connect_0_unnamed_tlvs (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 3, 0);
 
     result = (mbim_message_ms_basic_connect_v3_connect_response_parse (
@@ -2587,6 +2671,9 @@ test_ms_basic_connect_v3_connect_1_unnamed_tlv (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 3, 0);
 
     result = (mbim_message_ms_basic_connect_v3_connect_response_parse (
@@ -2705,6 +2792,9 @@ test_ms_basic_connect_v3_connect_3_unnamed_tlvs (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 3, 0);
 
     result = (mbim_message_ms_basic_connect_v3_connect_response_parse (
@@ -2816,6 +2906,9 @@ test_ms_basic_connect_extensions_device_caps_v3 (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 3, 0);
 
     result = (mbim_message_ms_basic_connect_extensions_v3_device_caps_response_parse (
@@ -2925,6 +3018,9 @@ test_ms_basic_connect_extensions_wake_reason_command (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 3, 0);
 
     result = (mbim_message_ms_basic_connect_extensions_v3_wake_reason_response_parse (
@@ -3004,6 +3100,9 @@ test_ms_basic_connect_extensions_wake_reason_command_payload (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 3, 0);
 
     result = (mbim_message_ms_basic_connect_extensions_v3_wake_reason_response_parse (
@@ -3088,6 +3187,9 @@ test_ms_basic_connect_extensions_wake_reason_packet (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 3, 0);
 
     result = (mbim_message_ms_basic_connect_extensions_v3_wake_reason_response_parse (
@@ -3182,6 +3284,9 @@ test_ms_uicc_low_level_access_application_list (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
     test_message_printable (response, 1, 0);
 
     result = (mbim_message_ms_uicc_low_level_access_application_list_response_parse (

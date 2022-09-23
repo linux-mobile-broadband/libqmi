@@ -3,7 +3,8 @@
 /*
  * libmbim-glib -- GLib/GIO based library to control MBIM devices
  *
- * Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2013 - 2022 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2022 Google, Inc.
  */
 
 #ifndef _LIBMBIM_GLIB_MBIM_MESSAGE_H_
@@ -272,6 +273,27 @@ guint32 mbim_message_get_transaction_id (const MbimMessage *self);
  */
 void mbim_message_set_transaction_id (MbimMessage *self,
                                       guint32      transaction_id);
+
+/**
+ * mbim_message_validate:
+ * @self: a #MbimMessage.
+ * @error: return location for error or %NULL.
+ *
+ * Validates the contents of the headers in the MBIM message.
+ *
+ * This operation may be used to ensure that the message is full and of a valid
+ * type.
+ *
+ * This operation does not validate that the specific contents of a given
+ * message type are available, that is done by the methods retrieving those
+ * specific contents.
+ *
+ * Returns: %TRUE if the message is valid, %FALSE if @error is set.
+ *
+ * Since: 1.28
+ */
+gboolean mbim_message_validate (const MbimMessage  *self,
+                                GError            **error);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (MbimMessage, mbim_message_unref)
 

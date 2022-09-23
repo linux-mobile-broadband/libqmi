@@ -3,7 +3,8 @@
 /*
  * libmbim-glib -- GLib/GIO based library to control MBIM devices
  *
- * Copyright (C) 2013 - 2018 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2013 - 2022 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2022 Google, Inc.
  */
 
 #include <glib.h>
@@ -118,6 +119,135 @@ _mbim_message_allocate (MbimMessageType message_type,
 
     return self;
 }
+
+/*****************************************************************************/
+
+static gboolean
+_mbim_message_validate_generic_header (const MbimMessage  *self,
+                                       GError            **error)
+{
+    /* Validate that the generic header can be read before reading the message
+     * type and length */
+    if (self->len < sizeof (struct header)) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INCOMPLETE_MESSAGE,
+                     "Message is shorter than the minimum header (%u < %u)",
+                     self->len, (guint) sizeof (struct header));
+        return FALSE;
+    }
+
+    /* Validate that the size reported in the message header is available */
+    if (self->len < MBIM_MESSAGE_GET_MESSAGE_LENGTH (self)) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INCOMPLETE_MESSAGE,
+                     "Message is incomplete (%u < %u)",
+                     self->len, MBIM_MESSAGE_GET_MESSAGE_LENGTH (self));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+_mbim_message_validate_type_header (const MbimMessage  *self,
+                                    GError            **error)
+{
+    gsize message_header_size = 0;
+
+    if (!_mbim_message_validate_generic_header (self, error))
+        return FALSE;
+
+    /* Validate message type and get additional minimum required size based on
+     * message type */
+    switch (MBIM_MESSAGE_GET_MESSAGE_TYPE (self)) {
+        case MBIM_MESSAGE_TYPE_OPEN:
+            message_header_size = sizeof (struct header) + sizeof (struct open_message);
+            break;
+        case MBIM_MESSAGE_TYPE_CLOSE:
+            /* ignore check */
+            break;
+        case MBIM_MESSAGE_TYPE_COMMAND:
+            message_header_size = sizeof (struct header) + sizeof (struct command_message);
+            break;
+        case MBIM_MESSAGE_TYPE_OPEN_DONE:
+            message_header_size = sizeof (struct header) + sizeof (struct open_done_message);
+            break;
+        case MBIM_MESSAGE_TYPE_CLOSE_DONE:
+            message_header_size = sizeof (struct header) + sizeof (struct close_done_message);
+            break;
+        case MBIM_MESSAGE_TYPE_COMMAND_DONE:
+            message_header_size = sizeof (struct header) + sizeof (struct command_done_message);
+            break;
+        case MBIM_MESSAGE_TYPE_FUNCTION_ERROR:
+        case MBIM_MESSAGE_TYPE_HOST_ERROR:
+            message_header_size = sizeof (struct header) + sizeof (struct error_message);
+            break;
+        case MBIM_MESSAGE_TYPE_INDICATE_STATUS:
+            message_header_size = sizeof (struct header) + sizeof (struct indicate_status_message);
+            break;
+        default:
+        case MBIM_MESSAGE_TYPE_INVALID:
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                         "Message type unknown: 0x%08x", MBIM_MESSAGE_GET_MESSAGE_TYPE (self));
+            return FALSE;
+    }
+
+    /* Validate that the message type specific header can be read. */
+    if (message_header_size && (MBIM_MESSAGE_GET_MESSAGE_LENGTH (self) < message_header_size)) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "Invalid message size: message type header incomplete");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+gboolean
+mbim_message_validate (const MbimMessage  *self,
+                       GError            **error)
+{
+    gsize message_size = 0;
+
+    if (!_mbim_message_validate_type_header (self, error))
+        return FALSE;
+
+    /* Get information buffer size */
+    switch (MBIM_MESSAGE_GET_MESSAGE_TYPE (self)) {
+        case MBIM_MESSAGE_TYPE_COMMAND:
+            message_size = sizeof (struct header) + sizeof (struct command_message) +
+                           GUINT32_FROM_LE (((struct full_message *)(self->data))->message.command.buffer_length);
+            break;
+        case MBIM_MESSAGE_TYPE_COMMAND_DONE:
+            message_size = sizeof (struct header) + sizeof (struct command_done_message) +
+                           GUINT32_FROM_LE (((struct full_message *)(self->data))->message.command_done.buffer_length);
+            break;
+        case MBIM_MESSAGE_TYPE_INDICATE_STATUS:
+            message_size = sizeof (struct header) + sizeof (struct indicate_status_message) +
+                           GUINT32_FROM_LE (((struct full_message *)(self->data))->message.indicate_status.buffer_length);
+            break;
+        case MBIM_MESSAGE_TYPE_OPEN:
+        case MBIM_MESSAGE_TYPE_CLOSE:
+        case MBIM_MESSAGE_TYPE_HOST_ERROR:
+        case MBIM_MESSAGE_TYPE_OPEN_DONE:
+        case MBIM_MESSAGE_TYPE_CLOSE_DONE:
+        case MBIM_MESSAGE_TYPE_FUNCTION_ERROR:
+            /* ignore check */
+            break;
+        case MBIM_MESSAGE_TYPE_INVALID:
+        default:
+            g_assert_not_reached ();
+            break;
+    }
+
+    /* The information buffer must fit within the message contents */
+    if (message_size && (MBIM_MESSAGE_GET_MESSAGE_LENGTH (self) < message_size)) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "Invalid message size: information buffer incomplete");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*****************************************************************************/
 
 static guint32
 _mbim_message_get_information_buffer_offset (const MbimMessage *self)
