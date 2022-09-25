@@ -35,8 +35,8 @@
 
 #if defined HAVE_QMI_SERVICE_WDA
 
-#define QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAMS_UNDEFINED 0xFFFFFFFF
-#define QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAM_SIZE_UNDEFINED 0xFFFFFFFF
+#define QMI_WDA_AGGREGATION_PROTOCOL_MAX_DATAGRAMS_UNDEFINED 0xFFFFFFFF
+#define QMI_WDA_AGGREGATION_PROTOCOL_MAX_DATAGRAM_SIZE_UNDEFINED 0xFFFFFFFF
 #define QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED -1
 
 /* Context */
@@ -73,7 +73,7 @@ parse_get_data_format (const gchar  *option_name,
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_WDA_SET_DATA_FORMAT
     { "wda-set-data-format", 0, 0, G_OPTION_ARG_STRING, &set_data_format_str,
-      "Set data format (allowed keys: link-layer-protocol (802-3|raw-ip), ul-protocol (disabled|tlp|qc-ncm|mbim|rndis|qmap|qmapv5), dl-protocol (disabled|tlp|qc-ncm|mbim|rndis|qmap|qmapv5), dl-datagram-max-size, dl-max-datagrams, ep-type (undefined|hsusb|pcie|embedded), ep-iface-number)",
+      "Set data format (allowed keys: link-layer-protocol (802-3|raw-ip), ul-protocol (disabled|tlp|qc-ncm|mbim|rndis|qmap|qmapv5), dl-protocol (disabled|tlp|qc-ncm|mbim|rndis|qmap|qmapv5), dl-datagram-max-size, dl-max-datagrams, ep-type (undefined|hsusb|pcie|embedded), ep-iface-number, ul-datagram-max-size, ul-max-datagrams)",
       "[\"key=value,...\"]"
     },
 #endif
@@ -346,8 +346,10 @@ set_data_format_ready (QmiClientWda *client,
     QmiWdaLinkLayerProtocol link_layer_protocol;
     QmiWdaDataAggregationProtocol data_aggregation_protocol;
     guint32 ndp_signature;
-    guint32 data_aggregation_max_datagrams;
-    guint32 data_aggregation_max_size;
+    guint32 dl_data_aggregation_max_datagrams;
+    guint32 dl_data_aggregation_max_size;
+    guint32 ul_data_aggregation_max_datagrams;
+    guint32 ul_data_aggregation_max_size;
 
     output = qmi_client_wda_set_data_format_finish (client, res, &error);
     if (!output) {
@@ -403,15 +405,27 @@ set_data_format_ready (QmiClientWda *client,
 
     if (qmi_message_wda_set_data_format_output_get_downlink_data_aggregation_max_datagrams (
             output,
-            &data_aggregation_max_datagrams,
+            &dl_data_aggregation_max_datagrams,
             NULL))
-        g_print ("Downlink data aggregation max datagrams: '%u'\n", data_aggregation_max_datagrams);
+        g_print ("Downlink data aggregation max datagrams: '%u'\n", dl_data_aggregation_max_datagrams);
 
     if (qmi_message_wda_set_data_format_output_get_downlink_data_aggregation_max_size (
             output,
-            &data_aggregation_max_size,
+            &dl_data_aggregation_max_size,
             NULL))
-        g_print ("     Downlink data aggregation max size: '%u'\n", data_aggregation_max_size);
+        g_print ("     Downlink data aggregation max size: '%u'\n", dl_data_aggregation_max_size);
+
+    if (qmi_message_wda_set_data_format_output_get_uplink_data_aggregation_max_datagrams (
+            output,
+            &ul_data_aggregation_max_datagrams,
+            NULL))
+        g_print ("  Uplink data aggregation max datagrams: '%u'\n", ul_data_aggregation_max_datagrams);
+
+    if (qmi_message_wda_set_data_format_output_get_uplink_data_aggregation_max_size (
+            output,
+            &ul_data_aggregation_max_size,
+            NULL))
+        g_print ("       Uplink data aggregation max size: '%u'\n", ul_data_aggregation_max_size);
 
     qmi_message_wda_set_data_format_output_unref (output);
     operation_shutdown (TRUE);
@@ -425,6 +439,8 @@ typedef struct {
     guint32 dl_max_datagrams;
     QmiDataEndpointType endpoint_type;
     gint endpoint_iface_number;
+    guint32 ul_datagram_max_size;
+    guint32 ul_max_datagrams;
 } SetDataFormatProperties;
 
 
@@ -508,6 +524,16 @@ set_data_format_properties_handle (const gchar  *key,
         return TRUE;
     }
 
+    if (g_ascii_strcasecmp (key, "ul-datagram-max-size") == 0) {
+        props->ul_datagram_max_size = atoi(value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "ul-max-datagrams") == 0) {
+        props->ul_max_datagrams = atoi(value);
+        return TRUE;
+    }
+
     g_set_error (error,
                  QMI_CORE_ERROR,
                  QMI_CORE_ERROR_FAILED,
@@ -525,10 +551,12 @@ set_data_format_input_create (const gchar *str)
         .link_layer_protocol   = QMI_WDA_LINK_LAYER_PROTOCOL_UNKNOWN,
         .ul_protocol           = QMI_WDA_DATA_AGGREGATION_PROTOCOL_DISABLED,
         .dl_protocol           = QMI_WDA_DATA_AGGREGATION_PROTOCOL_DISABLED,
-        .dl_datagram_max_size  = QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAM_SIZE_UNDEFINED,
-        .dl_max_datagrams      = QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAMS_UNDEFINED,
+        .dl_datagram_max_size  = QMI_WDA_AGGREGATION_PROTOCOL_MAX_DATAGRAM_SIZE_UNDEFINED,
+        .dl_max_datagrams      = QMI_WDA_AGGREGATION_PROTOCOL_MAX_DATAGRAMS_UNDEFINED,
         .endpoint_type         = QMI_DATA_ENDPOINT_TYPE_UNDEFINED,
         .endpoint_iface_number = QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED,
+        .ul_datagram_max_size  = QMI_WDA_AGGREGATION_PROTOCOL_MAX_DATAGRAM_SIZE_UNDEFINED,
+        .ul_max_datagrams      = QMI_WDA_AGGREGATION_PROTOCOL_MAX_DATAGRAMS_UNDEFINED,
     };
 
     input = qmi_message_wda_set_data_format_input_new ();
@@ -564,7 +592,7 @@ set_data_format_input_create (const gchar *str)
             goto error_out;
         }
 
-        if (props.dl_datagram_max_size != QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAM_SIZE_UNDEFINED &&
+        if (props.dl_datagram_max_size != QMI_WDA_AGGREGATION_PROTOCOL_MAX_DATAGRAM_SIZE_UNDEFINED &&
             !qmi_message_wda_set_data_format_input_set_downlink_data_aggregation_max_size (
                 input,
                 props.dl_datagram_max_size,
@@ -575,7 +603,7 @@ set_data_format_input_create (const gchar *str)
             goto error_out;
         }
 
-        if (props.dl_max_datagrams != QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAMS_UNDEFINED &&
+        if (props.dl_max_datagrams != QMI_WDA_AGGREGATION_PROTOCOL_MAX_DATAGRAMS_UNDEFINED &&
             !qmi_message_wda_set_data_format_input_set_downlink_data_aggregation_max_datagrams (
                 input,
                 props.dl_max_datagrams,
@@ -584,7 +612,6 @@ set_data_format_input_create (const gchar *str)
                         props.dl_max_datagrams, error->message);
             g_error_free (error);
             goto error_out;
-
         }
 
         if ((props.endpoint_type == QMI_DATA_ENDPOINT_TYPE_UNDEFINED) ^
@@ -601,6 +628,28 @@ set_data_format_input_create (const gchar *str)
                 props.endpoint_iface_number,
                 &error)) {
             g_printerr ("error: could not set peripheral endpoint id: %s\n", error->message);
+            g_error_free (error);
+            goto error_out;
+        }
+
+        if (props.ul_datagram_max_size != QMI_WDA_AGGREGATION_PROTOCOL_MAX_DATAGRAM_SIZE_UNDEFINED &&
+            !qmi_message_wda_set_data_format_input_set_uplink_data_aggregation_max_size (
+                input,
+                props.ul_datagram_max_size,
+                &error)) {
+            g_printerr ("error: could not set Upload data aggregation max size %d: %s\n",
+                        props.ul_datagram_max_size, error->message);
+            g_error_free (error);
+            goto error_out;
+        }
+
+        if (props.ul_max_datagrams != QMI_WDA_AGGREGATION_PROTOCOL_MAX_DATAGRAMS_UNDEFINED &&
+            !qmi_message_wda_set_data_format_input_set_uplink_data_aggregation_max_datagrams (
+                input,
+                props.ul_max_datagrams,
+                &error)) {
+            g_printerr ("error: could not set Upload data aggregation max datagrams %d: %s\n",
+                        props.ul_max_datagrams, error->message);
             g_error_free (error);
             goto error_out;
         }
