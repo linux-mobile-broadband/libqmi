@@ -2396,10 +2396,10 @@ qmi_message_uim_get_slot_status_output_get_slot_eid_information (
         guint                                       i;
 
         ctx = message_uim_get_slot_status_output_get_compat_context (self);
-        ctx->slot_eid_information = g_array_sized_new (FALSE, FALSE, sizeof (GArray *), slot_eid->len);
 
         if (ctx->slot_eid_information)
             message_uim_get_slot_status_output_clear_slot_eid_information (ctx->slot_eid_information);
+        ctx->slot_eid_information = g_array_sized_new (FALSE, FALSE, sizeof (GArray *), slot_eid->len);
 
         for (i = 0; i < slot_eid->len; i++) {
             QmiSlotEidElement *element;
