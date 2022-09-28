@@ -93,6 +93,9 @@ class VariableArray(Variable):
         # Arrays need compat GIR support if the array element needs compat GIR support
         self.needs_compat_gir = self.array_element.needs_compat_gir
 
+        # Arrays contain personal info if the array element contains personal info or they themselves are personal info
+        self.contains_personal_info = self.contains_personal_info or self.array_element.contains_personal_info
+
 
     def emit_types(self, hfile, cfile, since, static):
         self.array_element.emit_types(hfile, cfile, since, static)

@@ -57,6 +57,13 @@ class VariableSequence(Variable):
                 self.needs_compat_gir = True
                 break
 
+        # We'll contain personal info if at least one of the members contains personal info or we ourselves are personal info
+        if not self.contains_personal_info:
+            for member in self.members:
+                if member['object'].contains_personal_info:
+                    self.contains_personal_info = True
+                    break
+
 
     def emit_types(self, hfile, cfile, since, static):
         for member in self.members:

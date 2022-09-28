@@ -87,6 +87,13 @@ class VariableStruct(Variable):
         self.new_method_gir = '__' + utils.build_underscore_name(self.struct_type_name_gir) + '_new'
         self.free_method_gir = '__' + utils.build_underscore_name(self.struct_type_name_gir) + '_free'
 
+        # We'll contain personal info if at least one of the members contains personal info or we ourselves are personal info
+        if not self.contains_personal_info:
+            for member in self.members:
+                if member['object'].contains_personal_info:
+                    self.contains_personal_info = True
+                    break
+
 
     def build_variable_declaration(self, line_prefix, variable_name):
         raise RuntimeError('Variable of type "struct" can only be defined as array members')

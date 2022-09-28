@@ -1547,11 +1547,7 @@ qmi_message_get_tlv_printable (QmiMessage *self,
     g_return_val_if_fail (line_prefix != NULL, NULL);
     g_return_val_if_fail (raw != NULL, NULL);
 
-    if (qmi_utils_get_show_personal_info ())
-        value_hex = qmi_helpers_str_hex (raw, raw_length, ':');
-    else
-        value_hex = g_strdup ("###...");
-
+    value_hex = qmi_helpers_str_hex (raw, raw_length, ':');
     printable = g_strdup_printf ("%sTLV:\n"
                                  "%s  type   = 0x%02x\n"
                                  "%s  length = %" G_GSIZE_FORMAT "\n"

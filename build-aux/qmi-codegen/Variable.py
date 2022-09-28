@@ -117,6 +117,11 @@ class Variable:
         else:
             self.personal_info = False;
 
+        """
+        Whether the variable contains personal info or not
+        """
+        self.contains_personal_info = self.personal_info
+
     """
     Emits the code to declare specific new types required by the variable.
     """

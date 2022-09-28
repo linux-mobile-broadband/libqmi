@@ -286,6 +286,7 @@ class Message:
                 '{\n'
                 '    const gchar *tlv_type_str = NULL;\n'
                 '    g_autofree gchar *translated_value = NULL;\n'
+                '    gboolean value_has_personal_info = FALSE;\n'
                 '\n')
 
             if self.type == 'Message':
@@ -303,7 +304,11 @@ class Message:
                             '            tlv_type_str = "${field_name}";\n'
                             '            translated_value = ${underscore_field}_get_printable (\n'
                             '                                   ctx->self,\n'
-                            '                                   ctx->line_prefix);\n'
+                            '                                   ctx->line_prefix);\n')
+                        if field.variable is not None and field.variable.contains_personal_info:
+                            field_template += (
+                                '            value_has_personal_info = TRUE;\n')
+                        field_template += (
                             '            break;\n')
                         template += string.Template(field_template).substitute(translations)
 
@@ -326,7 +331,11 @@ class Message:
                         '            tlv_type_str = "${field_name}";\n'
                         '            translated_value = ${underscore_field}_get_printable (\n'
                         '                                   ctx->self,\n'
-                        '                                   ctx->line_prefix);\n'
+                        '                                   ctx->line_prefix);\n')
+                    if field.variable is not None and field.variable.contains_personal_info:
+                        field_template += (
+                            '            value_has_personal_info = TRUE;\n')
+                    field_template += (
                         '            break;\n')
                     template += string.Template(field_template).substitute(translations)
 
@@ -348,7 +357,7 @@ class Message:
                 '    } else {\n'
                 '        g_autofree gchar *value_hex = NULL;\n'
                 '\n'
-                '        if (qmi_utils_get_show_personal_info ())\n'
+                '        if (qmi_utils_get_show_personal_info () || !value_has_personal_info)\n'
                 '            value_hex = qmi_helpers_str_hex (value, length, \':\');\n'
                 '        else\n'
                 '            value_hex = g_strdup ("###...");\n'
