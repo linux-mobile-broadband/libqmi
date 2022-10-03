@@ -1,4 +1,177 @@
 
+Overview of changes in libmbim 1.28
+----------------------------------------
+
+ * There is no longer an upstream-provided source tarball, please use the signed
+   git tag '1.28.0' instead to refer to the sources of this release.
+
+ * License boilerplate in the sources has been changed by SPDX identifiers.
+
+ * This version includes support for most operations in MBIM Extensions v2 (for
+   5G NSA) and v3 (for 5G SA). The enabling of the updated extensions requires
+   the user of the library to explicitly request what version wants to be used,
+   via the new 'MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2' or
+   'MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V3' flags in the device open request.
+   Please note that if one process enables the v2 or v3 support, it will apply
+   to operations done by other processes as well. When using the proxy, the
+   current version support is propagated to all clients of the proxy
+   automatically.
+
+ * The verbose message logging will now by default hide all fields that are
+   considered personal information. Extended message logging including all
+   field contents should be explicitly requested.
+
+ * Build:
+   ** The GNU autotools (autoconf/automake/libtool) support has been fully
+      removed, this release requires the use of the meson build system.
+   ** The 'instrospection' meson option is now a boolean.
+   ** New boolean 'man' meson option to allow disabling the man page generation.
+
+ * Extended the Basic Connect service, including the following operations:
+   * MBIM_CID_BASIC_CONNECT_REGISTER_STATE (MBIMEx v2.0)
+   * MBIM_CID_BASIC_CONNECT_PACKET_SERVICE (MBIMEx v2.0)
+   * MBIM_CID_BASIC_CONNECT_SIGNAL_STATE (MBIMEx v2.0)
+   * MBIM_CID_BASIC_CONNECT_SUBCRIBER_READY_STATUS (MBIMEx v3.0)
+   * MBIM_CID_BASIC_CONNECT_PACKET_SERVICE (MBIMEx v3.0)
+   * MBIM_CID_BASIC_CONNECT_CONNECT (MBIMEx v3.0)
+   * MBIM_CID_BASIC_CONNECT_IP_PACKET_FILTERS (MBIMEx v3.0)
+
+ * Extended the Microsoft-defined Basic Connect Extensions service, including
+   the following operations:
+   * MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_LOCATION_INFO_STATUS (MBIMEx v1.0)
+   * MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_PROVISIONED_CONTEXTS (MBIMEx v1.0)
+   * MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_BASE_STATIONS_INFO (MBIMEx v1.0)
+   * MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_VERSION (MBIMEx v2.0)
+   * MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_DEVICE_CAPS (MBIMEx v3.0)
+   * MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_MODEM_CONFIGURATION (MBIMEx v3.0)
+   * MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_REGISTRATION_PARAMETERS (MBIMEx v3.0)
+   * MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_LTE_ATTACH_INFO (MBIMEx v3.0)
+   * MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_BASE_STATIONS_INFO (MBIMEx v3.0)
+   * MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_WAKE_REASON (MBIMEx v3.0)
+
+ * Extended the Microsoft-defined UICC Low Level Access service, including the
+   following operations:
+   * MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_APPLICATION_LIST
+   * MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_FILE_STATUS
+   * MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_READ_BINARY
+   * MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_READ_RECORD
+
+ * New Microsoft-defined Voice Extensions service, including the following
+   operations:
+   * MBIM_CID_MS_VOICE_EXTENSIONS_NITZ
+
+ * Extended the Intel-defined Firmware Update service, including the following
+   operations:
+   * MBIM_CID_INTEL_FIRMWARE_UPDATE_MODEM_REBOOT (MBIMEx v2.0)
+
+ * New Intel-defined Thermal RF service, including the following operations:
+   * MBIM_CID_INTEL_THERMAL_RF_RFIM
+
+ * Extended the QDU service, including the following operations:
+   * MBIM_CID_QDU_QUECTEL_REBOOT
+   * MBIM_CID_QDU_QUECTEL_READ_VERSION
+
+ * libmbim-glib:
+   ** Updated the net link operations to support devices exposed by the wwan
+      subsystem.
+   ** New mbim_message_get_printable_full() method to print the contents of a
+      given message specifying the specific MBIMEx version in use.
+   ** New mbim_message_validate() method to validate the contents of the headers
+      in a MBIM message, to be used before accessing its contents.
+   ** Updated all MbimMessage getters so that an implicit validation is done
+      in the g_return_* macros. This validation will not be done if those macros
+      are disabled during build.
+   ** New MBIM_DEVICE_CONSECUTIVE_TIMEOUTS signal in the MbimDevice to report
+      the number of consecutive MBIM request timeouts detected.
+   ** New mbim_device_[get|set|check]_ms_mbimex_version() methods to manage the
+      MBIMEx version support in the MbimDevice.
+   ** New MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_[V2|V3] flags in
+      mbim_device_open_full() to allow enabling MBIMEx v2.0 or v3.0 support.
+   ** New MbimTlv type to support the variable-sized fields in MBIMEx v3.0
+      operations.
+   ** Ensure CLOSED state always in mbim_device_close(), even on error.
+   ** Disallow device close if an open operation is ongoing.
+   ** Extended MbimDataClass with 5G NSA/SA values, used in MBIMEx v2.0, and
+      added new MbimDataClassV3 and MbimDataSubclass types, used in MBIMEX v3.0.
+   ** Extended MbimCtrlCaps and MbimSubscriberReadyState with values reported
+      in MBIMEX v3.0 extensions.
+   ** New MbimWakeType, MbimAccessMediaType, MbimModemConfigurationStatus,
+      MbimFrequencyRange, MbimContextRoamingControl, MbimContextMediaType,
+      MbimContextState, MbimContextOperation, MbimMicoMode, MbimLadnInfo,
+      MbimDefaultPduActivationHint, MbimDrxCycle, MbimSubscriberReadyStatusFlag
+      enums used in MBIMEx v3.0 specific operations.
+   ** New MbimUiccApplicationType, MbimUiccFileAccessibility, MbimUiccFileType
+      and MbimUiccFileStructure enums, used in the MS UICC Low Level Access
+      service.
+   ** New MbimIntelServingCellInfo enum, used in the Intel Thermal RF service.
+   ** New MbimIntelBootMode enum, used in the Intel Firmware Update service.
+   ** New MbimQduQuectelRebootType and MbimQduQuectelVersionType enums used in
+      the Quectel-defined QDU service updates.
+   ** Extended the list of MbimNwError values with values from the 3GPP specs.
+   ** Deprecated MBIM_NW_ERROR_UNKNOWN, use NONE instead.
+   ** Deprecated MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_NETWORK_BLACKLIST, use
+      NETWORK_DENYLIST instead.
+   ** Fixed the public format for CDMA language in the SMS service.
+
+ * mbimcli:
+   ** New '--device-open-ms-mbimex-v2' option to request to enable MBIMEX v2.0
+      support.
+   ** New '--device-open-ms-mbimex-v3' option to request to enable MBIMEX v3.0
+      support.
+   ** New '--verbose-full' option to request enabling logs that include personal
+      information.
+   ** New '--set-ip-packet-filters' action.
+   ** New '--set-provisioned-contexts' action.
+   ** New '--set-signal-state' action.
+   ** New '--set-network-idle-hint' action.
+   ** New '--query-network-idle-hint' action.
+   ** New '--set-emergency-mode' action.
+   ** New '--query-emergency-mode' action.
+   ** New '--set-service-activation' action.
+   ** New '--ms-query-location-info-status' action.
+   ** New '--ms-query-provisioned-contexts' action.
+   ** New '--ms-set-provisioned-contexts' action.
+   ** New '--ms-query-base-stations' action
+   ** New '--ms-query-version' action.
+   ** New '--ms-query-registration-parameters' action.
+   ** New '--ms-set-registration-parameters' action.
+   ** New '--ms-query-modem-configuration' action.
+   ** New '--ms-query-wake-reason' action.
+   ** New '--ms-query-uicc-application-list' action.
+   ** New '--ms-query-uicc-file-status' action.
+   ** New '--ms-query-uicc-read-binary' action.
+   ** New '--ms-query-uicc-read-record' action.
+   ** New '--ms-set-uicc-open-channel' action.
+   ** New '--ms-set-uicc-close-channel' action.
+   ** New '--ms-query-uicc-atr' action.
+   ** New '--ms-set-uicc-apdu' action.
+   ** New '--ms-set-uicc-reset' action.
+   ** New '--ms-query-uicc-reset' action.
+   ** New '--ms-set-uicc-terminal-capability' action.
+   ** New '--ms-query-uicc-terminal-capability' action.
+   ** New '--ms-query-nitz' action.
+   ** New '--intel-query-rfim' action.
+   ** New '--intel-set-rfim' action.
+   ** Updated '--connect' action to deprecate 'apn' and prefer 'access-string'.
+   ** Updated '--connect' action to support 'compression' and 'context-type'.
+   ** Updated '--intel-modem-reboot' action to optionally receive the boot mode
+      type argument.
+   ** Fixed the Quectel specific operations so that they have the --quectel
+      prefix and do not overwrite the ones in the Basic Connect service.
+
+ * Several other improvements and fixes.
+
+The following features which were backported to 1.26.x releases are also present
+in libmbim 1.28.0:
+
+ * mbim-codegen: explicitly require python3.
+ * compat: deprecate the MbimLteAttachStatus type.
+ * libmbim-glib: added support for a new Quectel service.
+ * mbimcli: new '--quectel-query-radio-state' and '--quectel-set-radio-state'
+   operations, which provide a way to FCC unlock EM120 modules in new Lenovo
+   laptops.
+
+
 Overview of changes in libmbim 1.26
 ----------------------------------------
 
