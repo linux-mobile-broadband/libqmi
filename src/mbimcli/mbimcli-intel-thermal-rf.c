@@ -47,11 +47,11 @@ static gboolean query_rfim_flag;
 static gchar    *set_rfim_str;
 
 static GOptionEntry entries[] = {
-    { "query-rfim", 0, 0, G_OPTION_ARG_NONE, &query_rfim_flag,
+    { "intel-query-rfim", 0, 0, G_OPTION_ARG_NONE, &query_rfim_flag,
       "Query RFIM frequency information",
       NULL
     },
-    { "set-rfim", 0, 0, G_OPTION_ARG_STRING, &set_rfim_str,
+    { "intel-set-rfim", 0, 0, G_OPTION_ARG_STRING, &set_rfim_str,
       "Enable or disable RFIM (disabled by default)",
       "[(on|off)]"
     },
