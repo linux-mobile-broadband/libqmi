@@ -34,7 +34,7 @@ static Context *ctx;
 static gboolean query_nitz_flag;
 
 static GOptionEntry entries[] = {
-    { "query-nitz", 0, 0, G_OPTION_ARG_NONE, &query_nitz_flag,
+    { "ms-query-nitz", 0, 0, G_OPTION_ARG_NONE, &query_nitz_flag,
       "Query network identity and time zone",
       NULL
     },
