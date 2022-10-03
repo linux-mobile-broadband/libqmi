@@ -33,11 +33,11 @@ static gboolean  query_radio_state_flag;
 static gchar    *set_radio_state_str;
 
 static GOptionEntry entries[] = {
-    { "query-radio-state", 0, 0, G_OPTION_ARG_NONE, &query_radio_state_flag,
+    { "quectel-query-radio-state", 0, 0, G_OPTION_ARG_NONE, &query_radio_state_flag,
       "Query radio state",
       NULL
     },
-    { "set-radio-state", 0, 0, G_OPTION_ARG_STRING, &set_radio_state_str,
+    { "quectel-set-radio-state", 0, 0, G_OPTION_ARG_STRING, &set_radio_state_str,
       "Set radio state",
       "[(on)]"
     },
