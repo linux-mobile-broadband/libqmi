@@ -1,17 +1,19 @@
 Current maintainers:
-  Aleksander Morgado <aleksander@aleksander.es>
+  Aleksander Morgado <aleksandermj@chromium.org>
   Dan Williams       <dcbw@redhat.com>
 
 Other contributors:
   Ben Chan
+  Iñigo Martínez
+  Som_SP
   Yegor Yefremov
   Greg Suarez
-  Iñigo Martínez
   Bjørn Mork
-  Som_SP
   Roshan Pius
+  Daniele Palmas
   ZhangMingjie
   Eric Caruso
+  Ivan Mikhanchuk
   lywpljw
   Emil Ljungdahl
   Lubomir Rintel
@@ -22,15 +24,19 @@ Other contributors:
   Carlo Lobrano
   Collin McMillan
   David Ward
+  Jack Song
   Jaroslav Stepanek
   King.Sun
   Marius B. Kotsbak
   Michal Mazur
+  Nicolas Cavallari
   Philip Withnall
   Raju
   Scott Lee
   Shih-Yuan Lee (FourDollars)
   Yunlian Jiang
+  goapunk
+  ljw
   lvmaorui
   maorui lv
   wicadmin
