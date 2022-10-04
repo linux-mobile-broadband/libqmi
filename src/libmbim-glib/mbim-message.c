@@ -217,7 +217,7 @@ _mbim_message_validate_partial_fragment (const MbimMessage  *self,
 {
     if (MBIM_MESSAGE_FRAGMENT_GET_CURRENT (self) >= MBIM_MESSAGE_FRAGMENT_GET_TOTAL (self)) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                     "Invalid message fragement (%u/%u)",
+                     "Invalid message fragment (%u/%u)",
                      MBIM_MESSAGE_FRAGMENT_GET_CURRENT (self),
                      MBIM_MESSAGE_FRAGMENT_GET_TOTAL (self));
         return FALSE;
