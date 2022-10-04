@@ -13,24 +13,34 @@
 static void
 test_fragment_receive_single (void)
 {
-    MbimMessage *message;
-    const guint8 *fragment_information_buffer;
-    guint32 fragment_information_buffer_length;
+    GError                 *error = NULL;
+    g_autoptr(MbimMessage)  message = NULL;
+    const guint8           *fragment_information_buffer;
+    guint32                 fragment_information_buffer_length;
 
     /* This buffer contains a single message composed of a single fragment.
      * We don't really care about the actual data included within the fragment. */
     const guint8 buffer [] =  {
         0x07, 0x00, 0x00, 0x80, /* indications have fragments */
-        0x1C, 0x00, 0x00, 0x00, /* length of this fragment */
+        0x2C, 0x00, 0x00, 0x00, /* length of this fragment */
         0x01, 0x00, 0x00, 0x00, /* transaction id */
         0x01, 0x00, 0x00, 0x00, /* total fragments */
         0x00, 0x00, 0x00, 0x00, /* current fragment */
-        0x01, 0x02, 0x03, 0x04, /* frament data */
-        0x05, 0x06, 0x07, 0x08 };
+        0x01, 0x02, 0x03, 0x04, /* fragment data (at least 24 bytes for an indication) */
+        0x05, 0x06, 0x07, 0x08,
+        0x09, 0x0A, 0x0B, 0x0C,
+        0x0D, 0x0E, 0x0F, 0x00,
+        0x11, 0x12, 0x13, 0x14,
+        0x00, 0x00, 0x00, 0x00, /* buffer length 0! */
+    };
 
     const guint8 data [] = {
         0x01, 0x02, 0x03, 0x04, /* same data as in the fragment */
-        0x05, 0x06, 0x07, 0x08
+        0x05, 0x06, 0x07, 0x08,
+        0x09, 0x0A, 0x0B, 0x0C,
+        0x0D, 0x0E, 0x0F, 0x00,
+        0x11, 0x12, 0x13, 0x14,
+        0x00, 0x00, 0x00, 0x00,
     };
 
     message = mbim_message_new (buffer, sizeof (buffer));
@@ -38,24 +48,25 @@ test_fragment_receive_single (void)
     g_assert_cmpuint (_mbim_message_fragment_get_total   (message), ==, 1);
     g_assert_cmpuint (_mbim_message_fragment_get_current (message), ==, 0);
 
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     fragment_information_buffer = (_mbim_message_fragment_get_payload (
                                        message,
                                        &fragment_information_buffer_length));
 
     g_assert_cmpuint (fragment_information_buffer_length, ==, sizeof (data));
     g_assert (memcmp (fragment_information_buffer, data, fragment_information_buffer_length) == 0);
-
-    mbim_message_unref (message);
 }
 
 static void
 test_fragment_receive_multiple (void)
 {
-    GByteArray *bytearray;
-    MbimMessage *message;
-    GError *error = NULL;
-    const guint8 *fragment_information_buffer;
-    guint32 fragment_information_buffer_length;
+    g_autoptr(GByteArray)   bytearray = NULL;
+    g_autoptr(MbimMessage)  message = NULL;
+    GError                 *error = NULL;
+    const guint8           *fragment_information_buffer;
+    guint32                 fragment_information_buffer_length;
 
     /* This buffer contains several fragments of a single message.
      * We don't really care about the actual data included within the fragments. */
@@ -83,7 +94,7 @@ test_fragment_receive_multiple (void)
         0x04, 0x00, 0x00, 0x00, /* total fragments */
         0x02, 0x00, 0x00, 0x00, /* current fragment */
         0x10, 0x11, 0x12, 0x13, /* frament data */
-        0x14, 0x15, 0x16, 0x17,
+        0x04, 0x00, 0x00, 0x00,
         /* Fourth fragment */
         0x07, 0x00, 0x00, 0x80, /* indications have fragments */
         0x18, 0x00, 0x00, 0x00, /* length of this fragment */
@@ -99,12 +110,14 @@ test_fragment_receive_multiple (void)
         0x08, 0x09, 0x0A, 0x0B,
         0x0C, 0x0D, 0x0E, 0x0F,
         0x10, 0x11, 0x12, 0x13,
-        0x14, 0x15, 0x16, 0x17,
+        0x04, 0x00, 0x00, 0x00,
         0x18, 0x19, 0x1A, 0x1B
     };
 
     bytearray = g_byte_array_new ();
     g_byte_array_append (bytearray, buffer, sizeof (buffer));
+    g_assert (mbim_message_validate ((const MbimMessage *)bytearray, &error));
+    g_assert_no_error (error);
 
     /* First fragment creates the message */
     message = _mbim_message_fragment_collector_init ((const MbimMessage *)bytearray, &error);
@@ -112,8 +125,10 @@ test_fragment_receive_multiple (void)
     g_assert_cmpuint (_mbim_message_fragment_get_total   (message), ==, 4);
     g_assert_cmpuint (_mbim_message_fragment_get_current (message), ==, 0);
     g_assert         (_mbim_message_fragment_collector_complete (message) == FALSE);
-    g_byte_array_remove_range (bytearray, 0, mbim_message_get_message_length ((const MbimMessage *)bytearray));
 
+    g_byte_array_remove_range (bytearray, 0, mbim_message_get_message_length ((const MbimMessage *)bytearray));
+    g_assert (mbim_message_validate ((const MbimMessage *)bytearray, &error));
+    g_assert_no_error (error);
 
     /* Add second fragment */
     g_assert (_mbim_message_fragment_collector_add (message, (const MbimMessage *)bytearray, &error));
@@ -121,7 +136,10 @@ test_fragment_receive_multiple (void)
     g_assert_cmpuint (_mbim_message_fragment_get_total   (message), ==, 4);
     g_assert_cmpuint (_mbim_message_fragment_get_current (message), ==, 1);
     g_assert         (_mbim_message_fragment_collector_complete (message) == FALSE);
+
     g_byte_array_remove_range (bytearray, 0, mbim_message_get_message_length ((const MbimMessage *)bytearray));
+    g_assert (mbim_message_validate ((const MbimMessage *)bytearray, &error));
+    g_assert_no_error (error);
 
     /* Add third fragment */
     g_assert (_mbim_message_fragment_collector_add (message, (const MbimMessage *)bytearray, &error));
@@ -129,7 +147,10 @@ test_fragment_receive_multiple (void)
     g_assert_cmpuint (_mbim_message_fragment_get_total   (message), ==, 4);
     g_assert_cmpuint (_mbim_message_fragment_get_current (message), ==, 2);
     g_assert         (_mbim_message_fragment_collector_complete (message) == FALSE);
+
     g_byte_array_remove_range (bytearray, 0, mbim_message_get_message_length ((const MbimMessage *)bytearray));
+    g_assert (mbim_message_validate ((const MbimMessage *)bytearray, &error));
+    g_assert_no_error (error);
 
     /* Add fourth fragment */
     g_assert (_mbim_message_fragment_collector_add (message, (const MbimMessage *)bytearray, &error));
@@ -141,14 +162,16 @@ test_fragment_receive_multiple (void)
     g_assert_cmpuint (_mbim_message_fragment_get_current (message), ==, 0);
     g_byte_array_remove_range (bytearray, 0, mbim_message_get_message_length ((const MbimMessage *)bytearray));
 
-    /* Compare all compiled data */
+    /* Validate all compiled data */
+
+    g_assert (mbim_message_validate (message, &error));
+    g_assert_no_error (error);
+
     fragment_information_buffer = (_mbim_message_fragment_get_payload (
                                        message,
                                        &fragment_information_buffer_length));
     g_assert_cmpuint (fragment_information_buffer_length, ==, sizeof (data));
     g_assert (memcmp (fragment_information_buffer, data, fragment_information_buffer_length) == 0);
-
-    mbim_message_unref (message);
 }
 
 static void
