@@ -4,6 +4,7 @@
  * libmbim-glib -- GLib/GIO based library to control MBIM devices
  *
  * Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2022 Intel Corporation
  */
 
 #include "mbim-cid.h"
@@ -228,6 +229,12 @@ static const CidConfig cid_ms_voice_extensions_config [MBIM_CID_MS_VOICE_EXTENSI
     { NO_SET,    QUERY,    NOTIFY }, /* MBIM_CID_MS_VOICE_EXTENSIONS_NITZ */
 };
 
+/* Note: index of the array is CID-1 */
+#define MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_LAST MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_FCC_LOCK
+static const CidConfig cid_intel_mutual_authentication_config [MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_LAST] = {
+    { SET, QUERY, NO_NOTIFY }, /* MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_FCC_LOCK */
+};
+
 gboolean
 mbim_cid_can_set (MbimService service,
                   guint       cid)
@@ -279,6 +286,8 @@ mbim_cid_can_set (MbimService service,
         return cid_intel_thermal_rf_config[cid - 1].set;
     case MBIM_SERVICE_MS_VOICE_EXTENSIONS:
         return cid_ms_voice_extensions_config[cid - 1].set;
+    case MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION:
+        return cid_intel_mutual_authentication_config[cid - 1].set;
     case MBIM_SERVICE_INVALID:
     case MBIM_SERVICE_LAST:
     default:
@@ -338,6 +347,8 @@ mbim_cid_can_query (MbimService service,
         return cid_intel_thermal_rf_config[cid - 1].query;
     case MBIM_SERVICE_MS_VOICE_EXTENSIONS:
         return cid_ms_voice_extensions_config[cid - 1].query;
+    case MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION:
+        return cid_intel_mutual_authentication_config[cid - 1].query;
     case MBIM_SERVICE_INVALID:
     case MBIM_SERVICE_LAST:
     default:
@@ -397,6 +408,8 @@ mbim_cid_can_notify (MbimService service,
         return cid_intel_thermal_rf_config[cid - 1].notify;
     case MBIM_SERVICE_MS_VOICE_EXTENSIONS:
         return cid_ms_voice_extensions_config[cid - 1].notify;
+    case MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION:
+        return cid_intel_mutual_authentication_config[cid - 1].notify;
     case MBIM_SERVICE_INVALID:
     case MBIM_SERVICE_LAST:
     default:
@@ -457,6 +470,8 @@ mbim_cid_get_printable (MbimService service,
         return mbim_cid_intel_thermal_rf_get_string (cid);
     case MBIM_SERVICE_MS_VOICE_EXTENSIONS:
         return mbim_cid_ms_voice_extensions_get_string (cid);
+    case MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION:
+        return mbim_cid_intel_mutual_authentication_get_string (cid);
     case MBIM_SERVICE_LAST:
     default:
         g_assert_not_reached ();

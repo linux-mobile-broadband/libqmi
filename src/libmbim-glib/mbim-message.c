@@ -5,6 +5,7 @@
  *
  * Copyright (C) 2013 - 2022 Aleksander Morgado <aleksander@aleksander.es>
  * Copyright (C) 2022 Google, Inc.
+ * Copyright (C) 2022 Intel Corporation
  */
 
 #include <glib.h>
@@ -39,6 +40,7 @@
 #include "mbim-quectel.h"
 #include "mbim-intel-thermal-rf.h"
 #include "mbim-ms-voice-extensions.h"
+#include "mbim-intel-mutual-authentication.h"
 
 /*****************************************************************************/
 
@@ -2200,6 +2202,9 @@ mbim_message_get_printable_full (const MbimMessage  *self,
             break;
         case MBIM_SERVICE_MS_VOICE_EXTENSIONS:
             fields_printable = __mbim_message_ms_voice_extensions_get_printable_fields (self, line_prefix, &inner_error);
+            break;
+        case MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION:
+            fields_printable = __mbim_message_intel_mutual_authentication_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_INVALID:
         case MBIM_SERVICE_LAST:

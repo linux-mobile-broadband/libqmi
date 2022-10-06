@@ -1,0 +1,23 @@
+[
+  // *********************************************************************************
+  { "type" : "Service",
+    "name" : "Intel Mutual Authentication" },
+
+  // *********************************************************************************
+  { "name"     : "FCC Lock",
+    "service"  : "Intel Mutual Authentication",
+    "type"     : "Command",
+    "since"    : "1.30",
+    "query"    : [],
+    "set"      : [ { "name"          : "ResponsePresent",
+                     "format"        : "guint32",
+                     "public-format" : "gboolean" },
+                   { "name"          : "Response",
+                     "format"        : "guint32" } ],
+
+    "response" : [ { "name"          : "ChallengePresent",
+                     "format"        : "guint32",
+                     "public-format" : "gboolean" },
+                   { "name"          : "Challenge",
+                     "format"        : "guint32" } ] }
+]

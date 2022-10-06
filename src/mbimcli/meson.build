@@ -16,6 +16,7 @@ mbimcli_sources = files(
   'mbimcli-ms-voice-extensions.c',
   'mbimcli-phonebook.c',
   'mbimcli-quectel.c',
+  'mbimcli-intel-mutual-authentication.c',
 )
 
 sources = mbimcli_sources + files(

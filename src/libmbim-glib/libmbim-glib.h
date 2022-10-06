@@ -4,6 +4,7 @@
  * libmbim-glib -- GLib/GIO based library to control MBIM devices
  *
  * Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2022 Intel Corporation
  */
 
 #ifndef _LIBMBIM_GLIB_H_
@@ -45,6 +46,7 @@
 #include "mbim-quectel.h"
 #include "mbim-intel-thermal-rf.h"
 #include "mbim-ms-voice-extensions.h"
+#include "mbim-intel-mutual-authentication.h"
 
 /* backwards compatibility */
 #include "mbim-compat.h"

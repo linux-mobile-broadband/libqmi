@@ -23,6 +23,7 @@
       <year>2019</year>
       <year>2020</year>
       <year>2021</year>
+      <year>2022</year>
       <holder>The libmbim-glib authors</holder>
     </copyright>
 
@@ -103,6 +104,7 @@
     <xi:include href="xml/mbim-intel-firmware-update.xml"/>
     <xi:include href="xml/mbim-intel-firmware-update-v2.xml"/>
     <xi:include href="xml/mbim-intel-thermal-rf.xml"/>
+    <xi:include href="xml/mbim-intel-mutual-authentication.xml"/>
   </chapter>
 
   <chapter>
@@ -187,6 +189,10 @@
   <chapter id="api-index-1-28" role="1.28">
     <title>Index of new symbols in 1.28</title>
     <xi:include href="xml/api-index-1.28.xml"></xi:include>
+  </chapter>
+  <chapter id="api-index-1-30" role="1.30">
+    <title>Index of new symbols in 1.30</title>
+    <xi:include href="xml/api-index-1.30.xml"></xi:include>
   </chapter>
 
   <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>

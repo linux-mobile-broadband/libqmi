@@ -108,6 +108,7 @@ services_data = [
   ['sms'],
   ['stk'],
   ['ussd'],
+  ['intel-mutual-authentication'],
 ]
 
 foreach service_data: services_data

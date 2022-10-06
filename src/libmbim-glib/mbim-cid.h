@@ -4,6 +4,7 @@
  * libmbim-glib -- GLib/GIO based library to control MBIM devices
  *
  * Copyright (C) 2013 - 2018 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2022 Intel Corporation
  */
 
 #ifndef _LIBMBIM_GLIB_MBIM_CID_H_
@@ -427,6 +428,20 @@ typedef enum { /*< since=1.28 >*/
     MBIM_CID_INTEL_THERMAL_RF_UNKNOWN     = 0,
     MBIM_CID_INTEL_THERMAL_RF_RFIM        = 9,
 } MbimCidIntelThermalRf;
+
+/**
+ * MbimCidIntelMutualAuthentication:
+ * @MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_UNKNOWN: Unknown command.
+ * @MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_FCC_LOCK: FCC lock set.
+ *
+ * MBIM commands in the %MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION service.
+ *
+ * Since: 1.30
+ */
+typedef enum { /*< since=1.30 >*/
+    MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_UNKNOWN  = 0,
+    MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_FCC_LOCK = 1,
+} MbimCidIntelMutualAuthentication;
 
 /**
  * MbimCidMsVoiceExtensions:

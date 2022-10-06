@@ -6,6 +6,7 @@
  * Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>
  * Copyright (C) 2014 NVDIA Corporation
  * Copyright (C) 2014 Smith Micro Software, Inc.
+ * Copyright (C) 2022 Intel Corporation
  */
 
 #include <config.h>
@@ -256,6 +257,14 @@ static const MbimUuid uuid_ms_voice_extensions = {
     .e = { 0x61, 0xcb, 0x03, 0x4a, 0x70, 0x2e }
 };
 
+static const MbimUuid uuid_intel_mutual_authentication = {
+    .a = { 0xf8, 0x5d, 0x46, 0xef },
+    .b = { 0xab, 0x26 },
+    .c = { 0x40, 0x81 },
+    .d = { 0x98, 0x68 },
+    .e = { 0x4d, 0x18, 0x3c, 0x0a, 0x3a, 0xec }
+};
+
 static GList *mbim_custom_service_list = NULL;
 
 typedef struct {
@@ -391,6 +400,8 @@ mbim_uuid_from_service (MbimService service)
         return &uuid_intel_thermal_rf;
     case MBIM_SERVICE_MS_VOICE_EXTENSIONS:
         return &uuid_ms_voice_extensions;
+    case MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION:
+        return &uuid_intel_mutual_authentication;
     case MBIM_SERVICE_LAST:
         g_assert_not_reached ();
     default:
@@ -466,6 +477,9 @@ mbim_uuid_to_service (const MbimUuid *uuid)
 
     if (mbim_uuid_cmp (uuid, &uuid_ms_voice_extensions))
         return MBIM_SERVICE_MS_VOICE_EXTENSIONS;
+
+    if (mbim_uuid_cmp (uuid, &uuid_intel_mutual_authentication))
+        return MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION;
 
     for (l = mbim_custom_service_list; l != NULL; l = l->next) {
         if (mbim_uuid_cmp (&((MbimCustomService *)l->data)->uuid, uuid))

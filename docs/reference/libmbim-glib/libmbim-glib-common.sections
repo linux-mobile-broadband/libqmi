@@ -33,6 +33,7 @@ MBIM_UUID_MS_UICC_LOW_LEVEL_ACCESS
 MBIM_UUID_QUECTEL
 MBIM_UUID_INTEL_THERMAL_RF
 MBIM_UUID_MS_VOICE_EXTENSIONS
+MBIM_UUID_INTEL_MUTUAL_AUTHENTICATION
 <SUBSECTION Methods>
 mbim_service_get_string
 mbim_service_lookup_name
@@ -75,6 +76,7 @@ MbimCidMsUiccLowLevelAccess
 MbimCidQuectel
 MbimCidIntelThermalRf
 MbimCidMsVoiceExtensions
+MbimCidIntelMutualAuthentication
 <SUBSECTION Methods>
 mbim_cid_can_set
 mbim_cid_can_query
@@ -100,6 +102,7 @@ mbim_cid_ms_uicc_low_level_access_get_string
 mbim_cid_quectel_get_string
 mbim_cid_intel_thermal_rf_get_string
 mbim_cid_ms_voice_extensions_get_string
+mbim_cid_intel_mutual_authentication_get_string
 <SUBSECTION Private>
 mbim_cid_atds_build_string_from_mask
 mbim_cid_basic_connect_build_string_from_mask
@@ -121,6 +124,7 @@ mbim_cid_ms_uicc_low_level_access_build_string_from_mask
 mbim_cid_quectel_build_string_from_mask
 mbim_cid_intel_thermal_rf_build_string_from_mask
 mbim_cid_ms_voice_extensions_build_string_from_mask
+mbim_cid_intel_mutual_authentication_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_CID_ATDS
 MBIM_TYPE_CID_AUTH
@@ -142,6 +146,7 @@ MBIM_TYPE_CID_MS_UICC_LOW_LEVEL_ACCESS
 MBIM_TYPE_CID_QUECTEL
 MBIM_TYPE_CID_INTEL_THERMAL_RF
 MBIM_TYPE_CID_MS_VOICE_EXTENSIONS
+MBIM_TYPE_CID_INTEL_MUTUAL_AUTHENTICATION
 mbim_cid_atds_get_type
 mbim_cid_auth_get_type
 mbim_cid_basic_connect_get_type
@@ -162,6 +167,7 @@ mbim_cid_ms_sar_get_type
 mbim_cid_quectel_get_type
 mbim_cid_intel_thermal_rf_get_type
 mbim_cid_ms_voice_extensions_get_type
+mbim_cid_intel_mutual_authentication_get_type
 </SECTION>
 
 <SECTION>
