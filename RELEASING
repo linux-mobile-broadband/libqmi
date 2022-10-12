@@ -73,4 +73,4 @@ The libqmi releases are generated using meson.
 *) Verifying the release signature requires the public key of the person who
    signed it, e.g.:
 
-    $ curl https://www.freedesktop.org/software/libqmi/0x3CAD53398973FFFA.asc | gpg --import
+    $ curl https://www.freedesktop.org/software/libqmi/0xAECE0239C6606AD5.asc | gpg --import
