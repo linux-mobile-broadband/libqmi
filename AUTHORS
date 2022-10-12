@@ -5,12 +5,14 @@ Current maintainers:
 Other contributors:
   Eric Caruso
   Ben Chan
-  Andreas Kling
-  Bjørn Mork
-  Teijo Kinnunen
-  Elly Jones
-  Andrew Lassalle
   Iñigo Martínez
+  Bjørn Mork
+  Andreas Kling
+  Teijo Kinnunen
+  Andrew Lassalle
+  Elly Jones
+  Daniele Palmas
+  Prakash Pabba
   Stephan Gerhold
   Shawn J. Goff
   Thomas Weißschuh
@@ -19,25 +21,29 @@ Other contributors:
   Joel Selvaraj
   Aliaksandr Barouski
   Christophe Ronco
+  Dylan Van Assche
+  Madhav
   Reinhard Speyerer
-  Daniele Palmas
+  Akash Aggarwal
   Lubomir Rintel
   Luca Weiss
-  Madhav
   Michal Mazur
   Roshan Pius
+  vpodshiv
   A. Wilcox
   Albert Diserholt
   Andrew
   André Valentin
   Arman Uguray
+  Freedom Liu
   Madhavadas Pottekkat
   Thomas Haller
   Vincent Palatin
+  Yegor Yefremov
   carl.yin
-  vpodshiv
   Adrian Bunk
   Alexander Couzens
+  Ana Cabral
   Brian Lee
   Carl Yin
   Clayton Craft
@@ -51,7 +57,9 @@ Other contributors:
   Mike Frysinger
   Mikhail Efremov
   Nicholas Smith
+  Nikita Orlov
   Pavan Holla
+  Sean Tranchetti
   Stuart Cardall
   Ulrich Ölmann
   Valentin Blot
@@ -59,8 +67,8 @@ Other contributors:
   Walter Hagstrom
   Wang Jing
   Yanko Kaneti
-  Yegor Yefremov
   carlyin
+  goapunk
   nick black
   ttuttle
   wicadmin
