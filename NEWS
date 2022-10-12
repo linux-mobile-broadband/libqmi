@@ -1,4 +1,134 @@
 
+Overview of changes in libqmi 1.32.0
+----------------------------------------
+
+ * There is no longer an upstream-provided source tarball, please use the signed
+   git tag '1.32.0' instead to refer to the sources of this release.
+
+ * The verbose message logging will now by default hide all fields that are
+   considered personal information. Extended message logging including all
+   field contents should be explicitly requested.
+
+ * Build:
+   ** The GNU autotools (autoconf/automake/libtool) support has been fully
+      removed, this release requires the use of the meson build system.
+   ** The 'instrospection' meson option is now a boolean.
+   ** New boolean 'man' meson option to allow disabling the man page generation.
+
+ * New services:
+   ** New 'FOX' service for operations defined by Foxconn, including "Get
+      Firmware Version" for now.
+
+ * New request/response/indications:
+   ** pdc: implement "Refresh" indication.
+   ** gas: implement "DMS Get USB composition" request/response.
+   ** gas: implement "DMS Set USB composition" request/response.
+   ** wds: implement "Indication Register" request/response.
+   ** wds: implement "Extended Ip Config" indication.
+   ** dsd: implement "Get System Status" request/response.
+   ** dsd: implement "System Status Change" request/response.
+   ** dsd: implement "System Status" indication.
+   ** voice: implement "Burst DTMF" request/response.
+   ** voice: implement "Start Continuous DTMF" request/response.
+   ** voice: implement "Stop Continuous DTMF" request/response.
+   ** uim: implement "Remote Unlock" request/response.
+   ** nas: implement "Config Signal Info v2" request/response.
+
+ * New TLVs supported in existing messages:
+   ** pdc: added "Enable Refresh" TLV in "Register" request.
+   ** nas: added "5G Signal Strength" TLV in "Signal Info" indication.
+   ** dms: added "NR5G Band Capability" TLV in "Get Band Capabilities" response.
+   ** nas: added "NR5G SA/NSA band preference" TLVs in "Get/Set System Selection
+      Preference" request/response.
+   ** wds: added "Operator Reserved PCO" TLV in "Get Current Settings".
+   ** wda: added "Uplink Data Aggregation Max Datagrams" TLV in "Set Data
+      Format" request.
+   ** wda: added "Uplink Data Aggregation Max Size" TLV in "Set Data Format"
+      request.
+
+ * libqmi-glib:
+   ** New 'QmiFoxFirmwareVersionType' enum type.
+   ** New 'QmiPdcRefreshEventType' enum type.
+   ** New 'QmiGasUsbCompositionEndpointType' enum type.
+   ** New 'QmiDsdDataSystemNetworkType' enum type.
+   ** New 'QmiDsdRadioAccessTechnology' enum type.
+   ** New 'QmiDsdSoMask' enum type.
+   ** New 'QMI_DMS_RADIO_INTERFACE_TDS' value in the 'QmiDmsRadioInterface' enum
+      type.
+   ** New 'QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_OPERATOR_RESERVED_PCO'
+      value in 'QmiWdsGetCurrentSettingsRequestedSettings'.
+   ** New 'QMI_DEVICE_ADD_LINK_FLAGS_INGRESS_MAP_CKSUMV5' and
+      'QMI_DEVICE_ADD_LINK_FLAGS_INGRESS_MAP_CKSUMV5' values in the
+      'QmiDeviceAddLinkFlags' enum type, enabling support to request QMAPv5
+      checksum offload for both TX and RX paths.
+   ** Extended the 'QmiNasActiveBand' enum type with 5GNR bands.
+   ** Implemented support to monitor the consecutive QMI request timeouts in the
+      QmiDevice object, with a 'QMI_DEVICE_CONSECUTIVE_TIMEOUTS' signal and a
+      'qmi_device_get_consecutive_timeouts()' method.
+   ** Fixed the "GERAN Info" TLV in "NAS Get Cell Location Info" compat layer.
+   ** Fixed leak on unexpected message error processing in QmiDevice.
+   ** Renamed the 'QmiWdsGetCurrentSettingsRequestedSettings' flags type to
+      'QmiWdsRequestedSettings'.
+   ** Updated the code generator to avoid needing intermediate struct types in
+      several operations, and provided appropriate compat methods:
+      *** pdc: removed the 'QmiConfigTypeAndId' intermediate struct.
+      *** loc: removed the 'QmiIndicationLoc...GpsTime intermediate' structs.
+      *** loc: removed the 'QmiIndicationLoc...DilutionOfPrecision' intermediate
+          structs.
+      *** dms: removed the 'QmiMessageDmsGetStoredImageInfoInputImage'
+          intermediate struct.
+      *** dms: removed the 'QmiMessageDmsDeleteStoredImageInputImage'
+          intermediate struct.
+   ** Updated the code generator to avoid needing arrays of arrays in several
+      operations, and provided appropriate compat methods:
+      *** uim: avoid array of arrays in "Slot EID Information".
+      *** uim: avoid array of arrays in "Personalization Status Other".
+   ** Updated the code generator to generate GIR compat helpers for arrays of
+      structs, so that language bindings can properly use the methods using
+      that kind of types. This change makes the library include a lot of new
+      methods suffixed with _gir() which are only expected to be used via
+      introspection.
+   ** Implemented a lot of cleanups and improvements in the code generator.
+
+ * qmicli:
+   ** New '--verbose-full' option to request enabling logs that include personal
+      information.
+   ** New '--pdc-monitor-refresh' command.
+   ** New '--gas-dms-set-usb-composition' and '--gas-dms-get-usb-composition'
+      commands.
+   ** New '--wms-set-routes' command.
+   ** New '--dsd-get-system-status' command.
+   ** Updated the '--wda-set-data-format' command with new optional fields to
+      configure the uplink data aggregation max size and max datagrams.
+
+ * qmi-firmware-update:
+   ** Implemented support for normal upgrade operations even when udev is not
+      available in the system (e.g. openwrt).
+
+ * collections:
+   ** basic: added UIM remote unlock operation.
+   ** basic: added NAS signal info v2 operation.
+   ** basic: added SAR management operations.
+   ** basic: added LTE attach PDN list operation.
+   ** basic: added PCO support related operations.
+   ** basic: added Foxconn firmware version management operation.
+   ** basic: added DSD system status and attach/detach related operations.
+   ** basic: added voice DTMF support operations.
+
+
+ * Several other minor improvements and fixes.
+
+The following features which were backported to 1.30.x releases are also present
+in libqmi 1.32.0:
+
+   ** libqmi-glib: use unaligned netlink attribute length.
+   ** qmi-proxy: remove assert when attempting to close ghost device.
+   ** qmi-firmware-update: use defaults if FLASH variables not reported,
+      enabling support to flash the Sierra Wireless EM91xx modules in USB mode.
+   ** voice: implement "Get All Call Info" request/response.
+   ** dms: implement "Foxconn Set FCC Authentication v2" request/response.
+   ** qmicli: new '--dms-foxconn-set-fcc-authentication-v2' command.
+
 Overview of changes in libqmi 1.30.0
 ----------------------------------------
 
