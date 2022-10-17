@@ -168,6 +168,8 @@ client_unref (Client *client)
     }
 }
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (Client, client_unref)
+
 static Client *
 client_ref (Client *client)
 {
@@ -941,15 +943,17 @@ parse_request (QmiProxy *self,
 }
 
 static gboolean
-connection_readable_cb (GSocket *socket,
-                        GIOCondition condition,
-                        Client *client)
+connection_readable_cb (GSocket      *socket,
+                        GIOCondition  condition,
+                        Client       *_client)
 {
-    QmiProxy *self;
-    guint8 buffer[BUFFER_SIZE];
-    GError *error = NULL;
-    gssize r;
+    g_autoptr(Client)  client = NULL;
+    QmiProxy          *self;
+    guint8             buffer[BUFFER_SIZE];
+    GError            *error = NULL;
+    gssize             r;
 
+    client = client_ref (_client);
     self = client->proxy;
 
     if (condition & G_IO_IN || condition & G_IO_PRI) {
