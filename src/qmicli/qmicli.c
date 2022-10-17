@@ -1041,10 +1041,14 @@ int main (int argc, char **argv)
     g_log_set_handler ("Mbim", G_LOG_LEVEL_MASK, log_handler, NULL);
     if (verbose_flag) {
         mbim_utils_set_traces_enabled (TRUE);
+#if MBIM_CHECK_VERSION(1,27,6)
         mbim_utils_set_show_personal_info (FALSE);
+#endif
     } else if (verbose_full_flag) {
         mbim_utils_set_traces_enabled (TRUE);
+#if MBIM_CHECK_VERSION(1,27,6)
         mbim_utils_set_show_personal_info (TRUE);
+#endif
     }
 #endif
 
