@@ -1,0 +1,24 @@
+[
+  // *********************************************************************************
+  { "type" : "Service",
+    "name" : "Intel Tools" },
+
+  // *********************************************************************************
+
+  { "name"     : "Trace Config",
+    "type"     : "Command",
+    "since"    : "1.30",
+    "set"      : [ { "name"          : "TraceCmd",
+                     "format"        : "guint32",
+                     "public-format" : "MbimTraceCommand" },
+                   { "name"          : "TraceValue",
+                     "format"        : "guint32" } ],
+    "query"    : [ { "name"          : "TraceCmd",
+                     "format"        : "guint32",
+                     "public-format" : "MbimTraceCommand" } ],
+    "response" : [ { "name"          : "TraceCmd",
+                     "format"        : "guint32",
+                     "public-format" : "MbimTraceCommand" },
+                   { "name"          : "Result",
+                     "format"        : "guint32" } ] }
+]

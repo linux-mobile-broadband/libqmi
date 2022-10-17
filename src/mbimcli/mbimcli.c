@@ -322,6 +322,9 @@ device_open_ready (MbimDevice   *dev,
     case MBIM_SERVICE_PROXY_CONTROL:
     case MBIM_SERVICE_QMI:
     case MBIM_SERVICE_QDU:
+    case MBIM_SERVICE_INTEL_TOOLS:
+        mbimcli_intel_tools_run (dev, cancellable);
+        return;
         /* unsupported actions in the CLI */
     case MBIM_SERVICE_INVALID:
     default:
@@ -456,6 +459,11 @@ parse_actions (void)
         actions_enabled++;
     }
 
+    if (mbimcli_intel_tools_options_enabled ()) {
+        service = MBIM_SERVICE_INTEL_TOOLS;
+        actions_enabled++;
+    }
+
     /* Noop */
     if (noop_flag)
         actions_enabled++;
@@ -505,6 +513,7 @@ int main (int argc, char **argv)
     g_option_context_add_group (context, mbimcli_ms_voice_extensions_get_option_group ());
     g_option_context_add_group (context, mbimcli_ms_uicc_low_level_access_get_option_group ());
     g_option_context_add_group (context, mbimcli_intel_mutual_authentication_get_option_group ());
+    g_option_context_add_group (context, mbimcli_intel_tools_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_printerr ("error: %s\n", error->message);

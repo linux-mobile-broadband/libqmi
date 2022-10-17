@@ -115,6 +115,7 @@ gboolean mbim_uuid_from_printable (const gchar *str,
  * @MBIM_SERVICE_INTEL_THERMAL_RF: Intel thermal rf related commands. Since 1.28
  * @MBIM_SERVICE_MS_VOICE_EXTENSIONS: Microsoft Voice extensions service. Since 1.28.
  * @MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION: Intel mutual authentication commands. Since 1.30.
+ * @MBIM_SERVICE_INTEL_TOOLS: Intel tools service. Since 1.30.
  * @MBIM_SERVICE_LAST: Internal value.
  *
  * Enumeration of the generic MBIM services.
@@ -144,6 +145,7 @@ typedef enum { /*< since=1.0 >*/
     MBIM_SERVICE_INTEL_THERMAL_RF            = 19,
     MBIM_SERVICE_MS_VOICE_EXTENSIONS         = 20,
     MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION = 21,
+    MBIM_SERVICE_INTEL_TOOLS                 = 22,
 #if defined LIBMBIM_GLIB_COMPILATION
     MBIM_SERVICE_LAST /*< skip >*/
 #endif
@@ -391,6 +393,17 @@ typedef enum { /*< since=1.0 >*/
  * Since: 1.30
  */
 #define MBIM_UUID_INTEL_MUTUAL_AUTHENTICATION mbim_uuid_from_service (MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION)
+
+/**
+ * MBIM_UUID_INTEL_TOOLS:
+ *
+ * Get the UUID of the %MBIM_SERVICE_INTEL_TOOLS service.
+ *
+ * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.30
+ */
+#define MBIM_UUID_INTEL_TOOLS mbim_uuid_from_service (MBIM_SERVICE_INTEL_TOOLS)
 
 /**
  * mbim_service_lookup_name:

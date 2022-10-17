@@ -235,6 +235,19 @@ static const CidConfig cid_intel_mutual_authentication_config [MBIM_CID_INTEL_MU
     { SET, QUERY, NO_NOTIFY }, /* MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_FCC_LOCK */
 };
 
+/* Note: index of the array is CID-1 */
+#define MBIM_CID_INTEL_TOOLS_LAST MBIM_CID_INTEL_TOOLS_TRACE_CONFIG
+static const CidConfig cid_intel_tools_config [MBIM_CID_INTEL_TOOLS_LAST] = {
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { SET   , QUERY   , NO_NOTIFY }, /* MBIM_CID_INTEL_TOOLS_TRACE_CONFIG */
+};
+
 gboolean
 mbim_cid_can_set (MbimService service,
                   guint       cid)
@@ -288,6 +301,8 @@ mbim_cid_can_set (MbimService service,
         return cid_ms_voice_extensions_config[cid - 1].set;
     case MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION:
         return cid_intel_mutual_authentication_config[cid - 1].set;
+    case MBIM_SERVICE_INTEL_TOOLS:
+        return cid_intel_tools_config[cid - 1].set;
     case MBIM_SERVICE_INVALID:
     case MBIM_SERVICE_LAST:
     default:
@@ -349,6 +364,8 @@ mbim_cid_can_query (MbimService service,
         return cid_ms_voice_extensions_config[cid - 1].query;
     case MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION:
         return cid_intel_mutual_authentication_config[cid - 1].query;
+    case MBIM_SERVICE_INTEL_TOOLS:
+        return cid_intel_tools_config[cid - 1].query;
     case MBIM_SERVICE_INVALID:
     case MBIM_SERVICE_LAST:
     default:
@@ -410,6 +427,8 @@ mbim_cid_can_notify (MbimService service,
         return cid_ms_voice_extensions_config[cid - 1].notify;
     case MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION:
         return cid_intel_mutual_authentication_config[cid - 1].notify;
+    case MBIM_SERVICE_INTEL_TOOLS:
+        return cid_intel_tools_config[cid - 1].notify;
     case MBIM_SERVICE_INVALID:
     case MBIM_SERVICE_LAST:
     default:
@@ -472,6 +491,8 @@ mbim_cid_get_printable (MbimService service,
         return mbim_cid_ms_voice_extensions_get_string (cid);
     case MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION:
         return mbim_cid_intel_mutual_authentication_get_string (cid);
+    case MBIM_SERVICE_INTEL_TOOLS:
+        return mbim_cid_intel_tools_get_string (cid);
     case MBIM_SERVICE_LAST:
     default:
         g_assert_not_reached ();

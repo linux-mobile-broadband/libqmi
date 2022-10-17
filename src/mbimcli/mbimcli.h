@@ -32,6 +32,7 @@ GOptionGroup *mbimcli_intel_thermal_rf_get_option_group            (void);
 GOptionGroup *mbimcli_ms_voice_extensions_get_option_group         (void);
 GOptionGroup *mbimcli_ms_uicc_low_level_access_get_option_group    (void);
 GOptionGroup *mbimcli_intel_mutual_authentication_get_option_group (void);
+GOptionGroup *mbimcli_intel_tools_get_option_group                 (void);
 
 gboolean      mbimcli_basic_connect_options_enabled               (void);
 gboolean      mbimcli_phonebook_options_enabled                   (void);
@@ -47,6 +48,7 @@ gboolean      mbimcli_intel_thermal_rf_options_enabled            (void);
 gboolean      mbimcli_ms_voice_extensions_options_enabled         (void);
 gboolean      mbimcli_ms_uicc_low_level_access_options_enabled    (void);
 gboolean      mbimcli_intel_mutual_authentication_options_enabled (void);
+gboolean      mbimcli_intel_tools_options_enabled                 (void);
 
 void          mbimcli_basic_connect_run                 (MbimDevice   *device,
                                                          GCancellable *cancellable);
@@ -74,7 +76,9 @@ void          mbimcli_ms_voice_extensions_run           (MbimDevice   *device,
                                                          GCancellable *cancellable);
 void          mbimcli_ms_uicc_low_level_access_run      (MbimDevice   *device,
                                                          GCancellable *cancellable);
-void          mbimcli_intel_mutual_authentication_run   (MbimDevice *device,
+void          mbimcli_intel_mutual_authentication_run   (MbimDevice   *device,
+                                                         GCancellable *cancellable);
+void          mbimcli_intel_tools_run                   (MbimDevice   *device,
                                                          GCancellable *cancellable);
 
 

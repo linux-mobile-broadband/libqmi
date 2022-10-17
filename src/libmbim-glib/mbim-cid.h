@@ -458,6 +458,20 @@ typedef enum { /*< since=1.28 >*/
 } MbimCidMsVoiceExtensions;
 
 /**
+ * MbimCidIntelTools:
+ * @MBIM_CID_INTEL_TOOLS_UNKNOWN: Unknown command.
+ * @MBIM_CID_INTEL_TOOLS_TRACE_CONFIG: Configure Modem traces.
+ *
+ * MBIM commands in the %MBIM_SERVICE_INTEL_TOOLS service.
+ *
+ * Since: 1.30
+ */
+typedef enum { /*< since=1.30 >*/
+    MBIM_CID_INTEL_TOOLS_UNKNOWN      = 0,
+    MBIM_CID_INTEL_TOOLS_TRACE_CONFIG = 8,
+} MbimCidIntelTools;
+
+/**
  * mbim_cid_can_set:
  * @service: a #MbimService.
  * @cid: a command ID.

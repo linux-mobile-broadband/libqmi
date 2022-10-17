@@ -265,6 +265,14 @@ static const MbimUuid uuid_intel_mutual_authentication = {
     .e = { 0x4d, 0x18, 0x3c, 0x0a, 0x3a, 0xec }
 };
 
+static const MbimUuid uuid_intel_tools = {
+    .a = { 0x4a, 0xda, 0x49, 0x62 },
+    .b = { 0xb9, 0x88 },
+    .c = { 0x46, 0xc3 },
+    .d = { 0x87, 0xa7 },
+    .e = { 0x97, 0xf2, 0x0f, 0x99, 0x4a, 0xbb }
+};
+
 static GList *mbim_custom_service_list = NULL;
 
 typedef struct {
@@ -402,6 +410,8 @@ mbim_uuid_from_service (MbimService service)
         return &uuid_ms_voice_extensions;
     case MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION:
         return &uuid_intel_mutual_authentication;
+    case MBIM_SERVICE_INTEL_TOOLS:
+        return &uuid_intel_tools;
     case MBIM_SERVICE_LAST:
         g_assert_not_reached ();
     default:
@@ -480,6 +490,9 @@ mbim_uuid_to_service (const MbimUuid *uuid)
 
     if (mbim_uuid_cmp (uuid, &uuid_intel_mutual_authentication))
         return MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION;
+
+    if (mbim_uuid_cmp (uuid, &uuid_intel_tools))
+        return MBIM_SERVICE_INTEL_TOOLS;
 
     for (l = mbim_custom_service_list; l != NULL; l = l->next) {
         if (mbim_uuid_cmp (&((MbimCustomService *)l->data)->uuid, uuid))

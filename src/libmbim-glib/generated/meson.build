@@ -109,6 +109,7 @@ services_data = [
   ['stk'],
   ['ussd'],
   ['intel-mutual-authentication'],
+  ['intel-tools'],
 ]
 
 foreach service_data: services_data

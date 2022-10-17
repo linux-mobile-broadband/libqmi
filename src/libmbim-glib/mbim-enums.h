@@ -2007,6 +2007,24 @@ typedef enum { /*< since=1.28 >*/
     MBIM_UICC_FILE_STRUCTURE_BER_TLV     = 4,
 } MbimUiccFileStructure;
 
+/**
+ * MbimTraceCommand:
+ * @MBIM_TRACE_COMMAND_MODE: Trace command mode value.
+ * @MBIM_TRACE_COMMAND_LEVEL: Trace command level value.
+ * @MBIM_TRACE_COMMAND_LOCATION: Trace command location information.
+ * @MBIM_TRACE_COMMAND_FLASH_INTERVAL: Trace command flash interval information.
+ *
+ * The trace command value.
+ *
+ * Since: 1.30
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_TRACE_COMMAND_MODE           = 0,
+    MBIM_TRACE_COMMAND_LEVEL          = 1,
+    MBIM_TRACE_COMMAND_LOCATION       = 2,
+    MBIM_TRACE_COMMAND_FLASH_INTERVAL = 3,
+} MbimTraceCommand;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */
