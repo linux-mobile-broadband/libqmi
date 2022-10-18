@@ -1061,16 +1061,6 @@ process_message (MbimDevice        *self,
         g_autoptr(GError)  error_indication = NULL;
         GTask             *task;
 
-        /* Try to match this transaction just per transaction ID */
-        task = device_release_transaction (self,
-                                           TRANSACTION_TYPE_HOST,
-                                           MBIM_MESSAGE_TYPE_INVALID,
-                                           mbim_message_get_transaction_id (message));
-
-        if (!task)
-            g_debug ("[%s] No transaction matched in received function error message",
-                     self->priv->path_display);
-
         if (mbim_utils_get_traces_enabled ()) {
             g_autofree gchar *printable = NULL;
 
@@ -1085,11 +1075,21 @@ process_message (MbimDevice        *self,
                      printable);
         }
 
-        /* Signals are emitted regardless of whether the transaction matched or not */
+        /* Build indication error before task completion, to ensure the message
+         * is valid */
         error_indication = mbim_message_error_get_error (message);
-        g_signal_emit (self, signals[SIGNAL_ERROR], 0, error_indication);
 
-        if (task) {
+        /* Try to match this transaction just per transaction ID */
+        task = device_release_transaction (self,
+                                           TRANSACTION_TYPE_HOST,
+                                           MBIM_MESSAGE_TYPE_INVALID,
+                                           mbim_message_get_transaction_id (message));
+
+        if (!task) {
+            g_debug ("[%s] No transaction matched in received function error message",
+                     self->priv->path_display);
+
+        } else {
             TransactionContext *ctx;
 
             ctx = g_task_get_task_data (task);
@@ -1099,6 +1099,12 @@ process_message (MbimDevice        *self,
             ctx->fragments = mbim_message_dup (message);
             transaction_task_complete_and_free (task, NULL);
         }
+
+        /* Signals are emitted regardless of whether the transaction matched or not;
+         * and emitted after the task completion, because the listeners of this
+         * signal may decide to force-close the device, which in turn clears the
+         * internal buffer and the MbimMessage. */
+        g_signal_emit (self, signals[SIGNAL_ERROR], 0, error_indication);
         return;
     }
 
