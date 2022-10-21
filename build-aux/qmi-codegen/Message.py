@@ -205,15 +205,38 @@ class Message:
 
         translations = { 'name'                 : self.name,
                          'type'                 : 'response' if self.type == 'Message' else 'indication',
+                         'method_prefix'        : '__' if self.static else '',
+                         'method_scope'         : 'static ' if self.static else '',
+                         'since'                : self.since if utils.version_compare('1.34',self.since) > 0 else '1.34',
                          'container'            : utils.build_camelcase_name (self.output.fullname),
                          'container_underscore' : utils.build_underscore_name (self.output.fullname),
                          'underscore'           : utils.build_underscore_name (self.fullname),
                          'message_id'           : self.id_enum_name }
 
+        if not self.static:
+            template = (
+                '\n'
+                '/**\n'
+                ' * ${method_prefix}${underscore}_${type}_parse:\n'
+                ' * @message: a #QmiMessage.\n'
+                ' * @error: return location for error or %NULL.\n'
+                ' *\n'
+                ' * Parses a #QmiMessage and builds a #${container} out of it.\n'
+                ' * The operation fails if the message is of the wrong type.\n'
+                ' *\n'
+                ' * Returns: a #${container}, or %NULL if @error is set. The returned value should be freed with ${container_underscore}_unref().\n'
+                ' *\n'
+                ' * Since: ${since}\n'
+                ' */\n'
+                '${container} *${method_prefix}${underscore}_${type}_parse (\n'
+                '    QmiMessage *message,\n'
+                '    GError **error);\n')
+            hfile.write(string.Template(template).substitute(translations))
+
         template = (
             '\n'
-            'static ${container} *\n'
-            '__${underscore}_${type}_parse (\n'
+            '${method_scope}${container} *\n'
+            '${method_prefix}${underscore}_${type}_parse (\n'
             '    QmiMessage *message,\n'
             '    GError **error)\n'
             '{\n'
@@ -474,13 +497,23 @@ class Message:
         self.output.add_sections (sections)
 
         if self.type == 'Message':
-            template = (
+            template = ''
+            if not self.static and self.output is not None and self.output.fields is not None:
+                template += (
+                    '<SUBSECTION ${camelcase}Parsers>\n'
+                    'qmi_message_${service}_${name_underscore}_response_parse\n')
+            template += (
                 '<SUBSECTION ${camelcase}ClientMethods>\n'
                 'qmi_client_${service}_${name_underscore}\n'
                 'qmi_client_${service}_${name_underscore}_finish\n')
             sections['public-methods'] += string.Template(template).substitute(translations)
             translations['message_type'] = 'request'
         elif self.type == 'Indication':
+            if not self.static and self.output is not None and self.output.fields is not None:
+                template = (
+                    '<SUBSECTION ${camelcase}Parsers>\n'
+                    'qmi_indication_${service}_${name_underscore}_indication_parse\n')
+                sections['public-methods'] += string.Template(template).substitute(translations)
             translations['message_type'] = 'indication'
 
         translations['public_types']   = sections['public-types']
