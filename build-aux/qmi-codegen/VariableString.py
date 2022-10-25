@@ -138,11 +138,10 @@ class VariableString(Variable):
             template = (
                 '\n'
                 '${lp}{\n'
-                '${lp}    gchar tmp[${fixed_size_plus_one}];\n'
+                '${lp}    gchar tmp[${fixed_size_plus_one}] = { \'\\0\' };\n'
                 '\n'
                 '${lp}    if (!qmi_message_tlv_read_fixed_size_string (message, init_offset, &offset, ${fixed_size}, &tmp[0], &error))\n'
-                '${lp}        goto out;\n'
-                '${lp}    tmp[${fixed_size}] = \'\\0\';\n')
+                '${lp}        goto out;\n')
         else:
             translations['n_size_prefix_bytes'] = self.n_size_prefix_bytes
             translations['max_size'] = self.max_size if self.max_size != '' else '0'
