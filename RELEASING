@@ -3,8 +3,7 @@ The libqmi releases are generated using meson.
 
 0.1) For major releases:
      * Increment qmi_minor_version and reset qmi_micro_version.
-     * Assuming API/ABI compatibility, increment both qmi_glib_lt_current and
-       qmi_glib_lt_age.
+     * Assuming API/ABI compatibility, increment both current and age.
 
 0.2) For stable branch releases:
      * Increment qmi_micro_version.
