@@ -3,8 +3,7 @@ The libmbim releases are generated using meson.
 
 0.1) For major releases:
      * Increment mbim_minor_version and reset mbim_micro_version.
-     * Assuming API/ABI compatibility, increment both mbim_glib_lt_current and
-       mbim_glib_lt_age.
+     * Assuming API/ABI compatibility, increment both current and age.
 
 0.2) For stable branch releases:
      * Increment mbim_micro_version.
