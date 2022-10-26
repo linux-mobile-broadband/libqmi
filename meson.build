@@ -3,7 +3,7 @@
 
 project(
   'libqmi', 'c',
-  version: '1.31.901',
+  version: '1.32.0',
   license: 'GPL2',
   default_options: [
     'buildtype=debugoptimized',
@@ -35,9 +35,9 @@ qmi_glib_pkgincludedir = qmi_includedir / qmi_glib_include_subdir
 # - Otherwise, increment c and zero r.
 #   - If the interface has grown (that is, the new library is compatible with old code), increment a.
 #   - If the interface has changed in an incompatible way (that is, functions have changed or been removed), then zero a.
-current = 13
+current = 14
 revision = 0
-age = 8
+age = 9
 qmi_glib_version = '@0@.@1@.@2@'.format(current - age, age, revision)
 
 qmi_gir_version = '1.0'
