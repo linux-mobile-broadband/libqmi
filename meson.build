@@ -239,6 +239,8 @@ if enable_man
   subdir('docs/man')
 endif
 
+enable_fuzzer = get_option('fuzzer')
+
 configure_file(
   output: 'config.h',
   configuration: config_h,
@@ -251,6 +253,7 @@ summary({
   'bash completion': enable_bash_completion,
   'gobject introspection': enable_gir,
   'man pages': enable_man,
+  'fuzzer': enable_fuzzer,
 }, section: 'Build')
 
 summary({

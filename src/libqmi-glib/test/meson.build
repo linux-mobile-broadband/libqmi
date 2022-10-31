@@ -39,3 +39,15 @@ foreach test_name, test_args: test_units
     env: test_env,
   )
 endforeach
+
+if get_option('fuzzer')
+  fuzzer_name = 'test-message-fuzzer'
+  exe = executable(
+    fuzzer_name,
+    sources: fuzzer_name + '.c',
+    include_directories: top_inc,
+    dependencies: libqmi_glib_dep,
+    c_args: '-DLIBQMI_GLIB_COMPILATION',
+    link_args : '-fsanitize=fuzzer',
+  )
+endif
