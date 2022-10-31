@@ -167,7 +167,10 @@ _mbim_message_validate_type_header (const MbimMessage  *self,
         return FALSE;
 
     /* Validate message type and get additional minimum required size based on
-     * message type */
+     * message type. At this stage, we only check the fragment header validity for
+     * Command, Command Done and Indication messages, because only the 'complete'
+     * fragment will have the additional header contents specific to each message
+     * type. */
     switch (MBIM_MESSAGE_GET_MESSAGE_TYPE (self)) {
         case MBIM_MESSAGE_TYPE_OPEN:
             message_header_size = sizeof (struct header) + sizeof (struct open_message);
@@ -231,6 +234,38 @@ _mbim_message_validate_complete_fragment (const MbimMessage  *self,
                                           GError            **error)
 {
     gsize message_size = 0;
+    gsize message_header_size = 0;
+
+    /* Before reading the information buffer length we must validate that the
+     * message type header is readable. */
+    switch (MBIM_MESSAGE_GET_MESSAGE_TYPE (self)) {
+        case MBIM_MESSAGE_TYPE_COMMAND:
+            message_header_size = sizeof (struct header) + sizeof (struct command_message);
+            break;
+        case MBIM_MESSAGE_TYPE_COMMAND_DONE:
+            message_header_size = sizeof (struct header) + sizeof (struct command_done_message);
+            break;
+        case MBIM_MESSAGE_TYPE_INDICATE_STATUS:
+            message_header_size = sizeof (struct header) + sizeof (struct indicate_status_message);
+            break;
+        case MBIM_MESSAGE_TYPE_OPEN:
+        case MBIM_MESSAGE_TYPE_CLOSE:
+        case MBIM_MESSAGE_TYPE_HOST_ERROR:
+        case MBIM_MESSAGE_TYPE_OPEN_DONE:
+        case MBIM_MESSAGE_TYPE_CLOSE_DONE:
+        case MBIM_MESSAGE_TYPE_FUNCTION_ERROR:
+        case MBIM_MESSAGE_TYPE_INVALID:
+        default:
+            g_assert_not_reached ();
+            break;
+    }
+
+    /* Validate that the message type specific header can be read. */
+    if (message_header_size && (MBIM_MESSAGE_GET_MESSAGE_LENGTH (self) < message_header_size)) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "Invalid message size: fragment type header incomplete");
+        return FALSE;
+    }
 
     /* Get information buffer size */
     switch (MBIM_MESSAGE_GET_MESSAGE_TYPE (self)) {
