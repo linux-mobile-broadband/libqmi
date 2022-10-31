@@ -44,6 +44,7 @@ static guint timeout_id;
 
 /* Main options */
 static gboolean verbose_flag;
+static gboolean verbose_full_flag;
 static gboolean version_flag;
 static gboolean no_exit_flag;
 static gint     empty_timeout = -1;
@@ -59,6 +60,10 @@ static GOptionEntry main_entries[] = {
     },
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose_flag,
       "Run action with verbose logs, including the debug ones",
+      NULL
+    },
+    { "verbose-full", 'v', 0, G_OPTION_ARG_NONE, &verbose_full_flag,
+      "Run action with verbose logs, including the debug ones and personal info",
       NULL
     },
     { "version", 'V', 0, G_OPTION_ARG_NONE, &version_flag,
@@ -119,7 +124,7 @@ log_handler (const gchar    *log_domain,
         g_assert_not_reached ();
     }
 
-    if (!verbose_flag && !err)
+    if (!verbose_flag && !verbose_full_flag && !err)
         return;
 
     now = time ((time_t *) NULL);
@@ -200,8 +205,16 @@ int main (int argc, char **argv)
 
     g_log_set_handler (NULL,  G_LOG_LEVEL_MASK, log_handler, NULL);
     g_log_set_handler ("Qmi", G_LOG_LEVEL_MASK, log_handler, NULL);
-    if (verbose_flag)
+    if (verbose_flag && verbose_full_flag) {
+        g_printerr ("error: cannot specify --verbose and --verbose-full at the same time\n");
+        exit (EXIT_FAILURE);
+    } else if (verbose_flag) {
         qmi_utils_set_traces_enabled (TRUE);
+        qmi_utils_set_show_personal_info (FALSE);
+    } else if (verbose_full_flag) {
+        qmi_utils_set_traces_enabled (TRUE);
+        qmi_utils_set_show_personal_info (TRUE);
+    }
 
     /* Setup signals */
     g_unix_signal_add (SIGINT,  quit_cb, NULL);
