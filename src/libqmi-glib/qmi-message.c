@@ -311,12 +311,22 @@ qmi_tlv_next (QmiMessage *self,
  * Returns: %TRUE if the message is valid, %FALSE otherwise.
  */
 static gboolean
-message_check (QmiMessage *self,
-               GError **error)
+message_check (QmiMessage  *self,
+               GError     **error)
 {
-    gsize header_length;
-    guint8 *end;
+    gsize       header_length;
+    gsize       qmux_length;
+    guint8     *end;
     struct tlv *tlv;
+
+    if (self->len < (1 + sizeof (struct qmux))) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_INVALID_MESSAGE,
+                     "QMUX length too short for QMUX header (%u < %" G_GSIZE_FORMAT ")",
+                     get_qmux_length (self), sizeof (struct qmux));
+        return FALSE;
+    }
 
     if (((struct full_message *)(self->data))->marker != QMI_MESSAGE_QMUX_MARKER) {
         g_set_error (error,
@@ -328,20 +338,12 @@ message_check (QmiMessage *self,
         return FALSE;
     }
 
-    if (get_qmux_length (self) < sizeof (struct qmux)) {
-        g_set_error (error,
-                     QMI_CORE_ERROR,
-                     QMI_CORE_ERROR_INVALID_MESSAGE,
-                     "QMUX length too short for QMUX header (%u < %" G_GSIZE_FORMAT ")",
-                     get_qmux_length (self), sizeof (struct qmux));
-        return FALSE;
-    }
-
     /*
      * qmux length is one byte shorter than buffer length because qmux
      * length does not include the qmux frame marker.
      */
-    if (get_qmux_length (self) != self->len - 1) {
+    qmux_length = get_qmux_length (self);
+    if (qmux_length != self->len - 1) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
@@ -354,7 +356,7 @@ message_check (QmiMessage *self,
                                             sizeof (struct control_header) :
                                             sizeof (struct service_header));
 
-    if (get_qmux_length (self) < header_length) {
+    if (qmux_length < header_length) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
@@ -363,7 +365,7 @@ message_check (QmiMessage *self,
         return FALSE;
     }
 
-    if (get_qmux_length (self) - header_length != get_all_tlvs_length (self)) {
+    if (qmux_length - header_length != get_all_tlvs_length (self)) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
