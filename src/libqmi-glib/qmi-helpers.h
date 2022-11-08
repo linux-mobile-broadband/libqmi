@@ -60,6 +60,12 @@ typedef enum {
     QMI_HELPERS_TRANSPORT_TYPE_MBIM,
 } QmiHelpersTransportType;
 
+/*
+ * Symbol defining the file name for a unix domain socket used instead of a device file.
+ * The unix domain socket is addressed with the QMUX protocol.
+ */
+#define QMI_QMUX_SOCKET_FILE_NAME "qmux_socket"
+
 G_GNUC_INTERNAL
 QmiHelpersTransportType qmi_helpers_get_transport_type (const gchar  *path,
                                                         GError      **error);

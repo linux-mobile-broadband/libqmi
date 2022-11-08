@@ -520,6 +520,10 @@ qmi_helpers_get_transport_type (const gchar  *path,
     if (g_file_test (rpmsg_sysfs_path, G_FILE_TEST_EXISTS))
         return QMI_HELPERS_TRANSPORT_TYPE_QMUX;
 
+    /* Allow libqmi to connect directly to a unix domain socket with a specific file name */
+    if (g_strrstr (device_basename, QMI_QMUX_SOCKET_FILE_NAME))
+        return QMI_HELPERS_TRANSPORT_TYPE_QMUX;
+
     g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
                  "unexpected port subsystem");
     return QMI_HELPERS_TRANSPORT_TYPE_UNKNOWN;
