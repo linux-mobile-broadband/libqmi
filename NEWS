@@ -1,4 +1,12 @@
 
+Overview of changes in libqmi 1.32.2
+----------------------------------------
+
+ * libqmi-glib: fixed message header validation to avoid reading out of bounds.
+
+ * qmi-proxy: added --verbose-full flag to allow printing logs with personal
+   info included.
+
 Overview of changes in libqmi 1.32.0
 ----------------------------------------
 
