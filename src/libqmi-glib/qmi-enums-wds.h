@@ -1332,14 +1332,18 @@ typedef enum { /*< since=1.0 >*/
  * QmiWdsProfileType:
  * @QMI_WDS_PROFILE_TYPE_3GPP: 3GPP profile type.
  * @QMI_WDS_PROFILE_TYPE_3GPP2: 3GPP2 profile type.
+ * @QMI_WDS_PROFILE_TYPE_EPC: EPC profile type. Since 1.34.
+ * @QMI_WDS_PROFILE_TYPE_ALL: All technologies profile type. Since 1.34.
  *
  * Profile network type family.
  *
  * Since: 1.0
  */
 typedef enum { /*< since=1.0 >*/
-    QMI_WDS_PROFILE_TYPE_3GPP    = 0,
-    QMI_WDS_PROFILE_TYPE_3GPP2   = 1
+    QMI_WDS_PROFILE_TYPE_3GPP  = 0,
+    QMI_WDS_PROFILE_TYPE_3GPP2 = 1,
+    QMI_WDS_PROFILE_TYPE_EPC   = 2,
+    QMI_WDS_PROFILE_TYPE_ALL   = 255
 } QmiWdsProfileType;
 
  /**
@@ -1895,5 +1899,23 @@ typedef enum {  /*< since=1.28 >*/
     QMI_WDS_IP_SUPPORT_TYPE_IPV6   = 1,
     QMI_WDS_IP_SUPPORT_TYPE_IPV4V6 = 2,
 } QmiWdsIpSupportType;
+
+/**
+ * QmiWdsProfileChangeEvent:
+ * @QMI_WDS_PROFILE_CREATE_EVENT: create profile event.
+ * @QMI_WDS_PROFILE_DELETE_EVENT: delete profile event.
+ * @QMI_WDS_PROFILE_MODIFY_EVENT: modify profile event.
+ * @QMI_WDS_PROFILE_SUBSCRIPTION_CHANGE_EVENT: subscription changed event.
+ *
+ * Profile change event.
+ *
+ * Since: 1.34
+ */
+typedef enum { /*< since=1.34 >*/
+    QMI_WDS_PROFILE_CREATE_EVENT              = 1,
+    QMI_WDS_PROFILE_DELETE_EVENT              = 2,
+    QMI_WDS_PROFILE_MODIFY_EVENT              = 3,
+    QMI_WDS_PROFILE_SUBSCRIPTION_CHANGE_EVENT = 4
+} QmiWdsProfileChangeEvent;
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WDS_H_ */

@@ -197,6 +197,7 @@
       <xi:include href="xml/qmi-indication-wds-packet-service-status.xml"/>
       <xi:include href="xml/qmi-indication-wds-set-lte-attach-pdn-list.xml"/>
       <xi:include href="xml/qmi-indication-wds-extended-ip-config.xml"/>
+      <xi:include href="xml/qmi-indication-wds-profile-changed.xml"/>
     </section>
     <section>
       <title>WDS Requests</title>
@@ -234,6 +235,7 @@
       <xi:include href="xml/qmi-message-wds-get-channel-rates.xml"/>
       <xi:include href="xml/qmi-message-wds-swi-create-profile-indexed.xml"/>
       <xi:include href="xml/qmi-message-wds-indication-register.xml"/>
+      <xi:include href="xml/qmi-message-wds-configure-profile-event-list.xml"/>
     </section>
   </chapter>
 
