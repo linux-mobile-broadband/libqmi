@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc.
  */
 
 #include "config.h"
@@ -353,6 +354,7 @@ get_signal_info_ready (QmiClientNas *client,
     gint16 rsrp;
     gint16 snr;
     gint8 rscp;
+    gint16 wcdma_rscp;
     gint16 rsrq_5g;
     gint32 rssi_tdma;
     gint32 rscp_tdma;
@@ -432,6 +434,14 @@ get_signal_info_ready (QmiClientNas *client,
                  "\tECIO: '%.1lf dBm'\n",
                  rssi,
                  (-0.5)*((gdouble)ecio));
+    }
+
+    /* WCDMA Signal Code Power... */
+    if (qmi_message_nas_get_signal_info_output_get_wcdma_rscp (output,
+                                                               &wcdma_rscp,
+                                                               NULL)) {
+        g_print ("\tRSCP: '%d dBm'\n",
+                 (-1)*wcdma_rscp);
     }
 
     /* LTE... */
