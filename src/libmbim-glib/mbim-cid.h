@@ -430,20 +430,6 @@ typedef enum { /*< since=1.28 >*/
 } MbimCidIntelThermalRf;
 
 /**
- * MbimCidIntelMutualAuthentication:
- * @MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_UNKNOWN: Unknown command.
- * @MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_FCC_LOCK: FCC lock set.
- *
- * MBIM commands in the %MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION service.
- *
- * Since: 1.30
- */
-typedef enum { /*< since=1.30 >*/
-    MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_UNKNOWN  = 0,
-    MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_FCC_LOCK = 1,
-} MbimCidIntelMutualAuthentication;
-
-/**
  * MbimCidMsVoiceExtensions:
  * @MBIM_CID_MS_VOICE_EXTENSIONS_UNKNOWN: Unknown command.
  * @MBIM_CID_MS_VOICE_EXTENSIONS_NITZ: Network Identity and Time Zone information command.
@@ -456,6 +442,20 @@ typedef enum { /*< since=1.28 >*/
     MBIM_CID_MS_VOICE_EXTENSIONS_UNKNOWN = 0,
     MBIM_CID_MS_VOICE_EXTENSIONS_NITZ    = 10,
 } MbimCidMsVoiceExtensions;
+
+/**
+ * MbimCidIntelMutualAuthentication:
+ * @MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_UNKNOWN: Unknown command.
+ * @MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_FCC_LOCK: FCC lock set.
+ *
+ * MBIM commands in the %MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION service.
+ *
+ * Since: 1.30
+ */
+typedef enum { /*< since=1.30 >*/
+    MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_UNKNOWN  = 0,
+    MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_FCC_LOCK = 1,
+} MbimCidIntelMutualAuthentication;
 
 /**
  * MbimCidIntelTools:
