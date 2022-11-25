@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc.
  */
 
 #include "config.h"
@@ -63,6 +64,7 @@ static gchar *sim_power_off_str;
 static gchar *change_provisioning_session_str;
 static gchar *switch_slot_str;
 static gchar *depersonalization_str;
+static gchar *remote_unlock_str;
 static gchar **monitor_refresh_file_array;
 static gboolean get_card_status_flag;
 static gboolean get_supported_messages_flag;
@@ -197,7 +199,12 @@ static GOptionEntry entries[] = {
       "[(feature),(operation),(control key)[,(slot number)]]"
     },
 #endif
-
+#if defined HAVE_QMI_MESSAGE_UIM_REMOTE_UNLOCK
+    { "uim-remote-unlock", 0, 0, G_OPTION_ARG_STRING, &remote_unlock_str,
+      "Updates the SimLock configuration data",
+      "[XX:XX:...]"
+    },
+#endif
     { "uim-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a UIM client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -242,6 +249,7 @@ qmicli_uim_options_enabled (void)
                  !!switch_slot_str +
                  !!monitor_refresh_file_array +
                  !!depersonalization_str +
+                 !!remote_unlock_str +
                  get_card_status_flag +
                  get_supported_messages_flag +
                  get_slot_status_flag +
@@ -2597,6 +2605,59 @@ depersonalization_ready (QmiClientUim *client,
 
 #endif /* HAVE_QMI_MESSAGE_UIM_DEPERSONALIZATION */
 
+#if defined HAVE_QMI_MESSAGE_UIM_REMOTE_UNLOCK
+
+static QmiMessageUimRemoteUnlockInput *
+remote_unlock_input_create (const gchar *simlock_data_str)
+{
+    QmiMessageUimRemoteUnlockInput *input;
+    GArray                         *simlock_data = NULL;
+
+    if (!qmicli_read_raw_data_from_string (simlock_data_str, &simlock_data))
+        return NULL;
+
+    input = qmi_message_uim_remote_unlock_input_new ();
+
+    if (simlock_data->len <= 1024) {
+        qmi_message_uim_remote_unlock_input_set_simlock_data (input,
+                                                              simlock_data,
+                                                              NULL);
+    } else {
+        qmi_message_uim_remote_unlock_input_set_simlock_extended_data (input,
+                                                                       simlock_data,
+                                                                       NULL);
+    }
+
+    g_array_unref (simlock_data);
+    return input;
+}
+
+static void
+remote_unlock_ready (QmiClientUim *client,
+                     GAsyncResult *res)
+{
+    g_autoptr(QmiMessageUimRemoteUnlockOutput) output = NULL;
+    g_autoptr(GError)                          error = NULL;
+
+    output = qmi_client_uim_remote_unlock_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_uim_remote_unlock_output_get_result (output, &error)) {
+        g_printerr ("error: remote unlock operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Remote unlock operation successfully completed\n");
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_UIM_REMOTE_UNLOCK */
+
 void
 qmicli_uim_run (QmiDevice *device,
                 QmiClientUim *client,
@@ -2969,6 +3030,29 @@ qmicli_uim_run (QmiDevice *device,
                                           ctx->cancellable,
                                           (GAsyncReadyCallback)depersonalization_ready,
                                           NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_UIM_REMOTE_UNLOCK
+    /* Request to perform remote unlock operations? */
+    if (remote_unlock_str) {
+        g_autoptr(QmiMessageUimRemoteUnlockInput) input = NULL;
+
+        g_debug ("Asynchronously updating SimLock data...");
+        input = remote_unlock_input_create (remote_unlock_str);
+        if (!input) {
+            g_printerr ("error: couldn't parse the input string as a bytearray\n");
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        qmi_client_uim_remote_unlock (ctx->client,
+                                      input,
+                                      10,
+                                      ctx->cancellable,
+                                      (GAsyncReadyCallback)remote_unlock_ready,
+                                      NULL);
         return;
     }
 #endif
