@@ -246,8 +246,7 @@ gchar *
 mbim_tlv_string_get (const MbimTlv  *self,
                      GError        **error)
 {
-    const gunichar2      *utf16 = NULL;
-    g_autofree gunichar2 *utf16d = NULL;
+    g_autofree gunichar2 *tmp = NULL;
     guint32               size;
 
     g_return_val_if_fail (self != NULL, NULL);
@@ -258,23 +257,20 @@ mbim_tlv_string_get (const MbimTlv  *self,
         return NULL;
     }
 
-    utf16 = (const gunichar2 *) MBIM_TLV_FIELD_DATA (self);
+    /* Duplicate array unconditionally to avoid alignment issues as we don't
+     * know if the 16bit array is aligned properly or not in the TLV */
     size = MBIM_TLV_GET_DATA_LENGTH (self);
+    tmp = (gunichar2 *) g_memdup ((gconstpointer) MBIM_TLV_FIELD_DATA (self), size);
 
     /* For BE systems, convert from LE to BE */
     if (G_BYTE_ORDER == G_BIG_ENDIAN) {
         guint i;
 
-        utf16d = (gunichar2 *) g_malloc (size);
         for (i = 0; i < (size / 2); i++)
-            utf16d[i] = GUINT16_FROM_LE (utf16[i]);
+            tmp[i] = GUINT16_FROM_LE (tmp[i]);
     }
 
-    return g_utf16_to_utf8 (utf16d ? utf16d : utf16,
-                            size / 2,
-                            NULL,
-                            NULL,
-                            error);
+    return g_utf16_to_utf8 (tmp, size / 2, NULL, NULL, error);
 }
 
 /*****************************************************************************/
