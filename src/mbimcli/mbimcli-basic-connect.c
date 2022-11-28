@@ -1306,7 +1306,6 @@ set_ip_packet_filters_parse (const gchar                  *str,
                              SetIpPacketFiltersProperties *props,
                              MbimDevice                   *device)
 {
-    g_auto(GStrv)     split = NULL;
     g_autoptr(GError) error = NULL;
 
     if (!mbimcli_parse_key_value_string (str,

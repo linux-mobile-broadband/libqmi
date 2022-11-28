@@ -169,7 +169,6 @@ mbimcli_intel_firmware_update_run (MbimDevice   *device,
                                    GCancellable *cancellable)
 {
     g_autoptr(MbimMessage) request = NULL;
-    g_autoptr(GError)      error = NULL;
 
     /* Initialize context */
     ctx = g_slice_new (Context);
