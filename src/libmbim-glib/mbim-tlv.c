@@ -305,7 +305,7 @@ mbim_tlv_guint16_array_get (const MbimTlv  *self,
     }
 
     if (size) {
-        tmp = (guint16 *) g_memdup ((const guint16 *)MBIM_TLV_FIELD_DATA (self), size);
+        tmp = (guint16 *) g_memdup ((gconstpointer) MBIM_TLV_FIELD_DATA (self), size);
 
         /* For BE systems, convert from LE to BE */
         if (G_BYTE_ORDER == G_BIG_ENDIAN) {
