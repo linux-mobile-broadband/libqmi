@@ -232,11 +232,9 @@ mbimcli_intel_tools_run (MbimDevice   *device,
     if (query_trace_config_str) {
         MbimTraceCommand trace_command;
 
-        if (query_trace_config_str) {
-            if (!mbimcli_read_trace_command_from_string (query_trace_config_str, &trace_command)) {
-                g_printerr ("error: couldn't parse input string, invalid trace command '%d'\n", trace_command);
-                return;
-            }
+        if (!mbimcli_read_trace_command_from_string (query_trace_config_str, &trace_command)) {
+            g_printerr ("error: couldn't parse input string, invalid trace command '%d'\n", trace_command);
+            return;
         }
 
         g_debug ("Asynchronously querying trace info...");
