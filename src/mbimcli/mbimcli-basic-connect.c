@@ -235,7 +235,7 @@ static GOptionEntry entries[] = {
       "Set service activation",
       "[Data]"
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

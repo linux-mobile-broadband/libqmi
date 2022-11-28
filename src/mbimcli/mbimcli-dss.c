@@ -44,7 +44,7 @@ static GOptionEntry entries[] = {
       "Disconnect DSS session",
       "[(UUID),(Session ID)]"
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

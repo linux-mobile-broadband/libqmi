@@ -42,7 +42,7 @@ static GOptionEntry entries[] = {
       "Reboot modem. Boot mode and timeout arguments only required if MBIMEx >= 2.0.",
       "[(Boot Mode),(Timeout)]"
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

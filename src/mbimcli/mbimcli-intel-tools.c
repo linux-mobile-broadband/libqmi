@@ -54,7 +54,7 @@ static GOptionEntry entries[] = {
       "Query trace configuration",
       "[(TraceCmd)]"
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

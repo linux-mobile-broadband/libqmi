@@ -93,7 +93,7 @@ static GOptionEntry entries[] = {
       "Query UICC terminal capability",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

@@ -41,7 +41,7 @@ static GOptionEntry entries[] = {
       "Set radio state",
       "[(on)]"
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

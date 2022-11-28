@@ -55,7 +55,7 @@ static GOptionEntry entries[] = {
       "Enable or disable RFIM (disabled by default)",
       "[(on|off)]"
     },
-    {NULL}
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

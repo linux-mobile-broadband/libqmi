@@ -51,7 +51,7 @@ static GOptionEntry entries[] = {
       "Query transmission status",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

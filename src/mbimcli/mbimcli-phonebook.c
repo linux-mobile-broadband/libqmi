@@ -62,7 +62,7 @@ static GOptionEntry entries[] = {
       "Delete all phonebook entries",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

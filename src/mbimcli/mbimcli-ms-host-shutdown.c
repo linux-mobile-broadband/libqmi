@@ -35,7 +35,7 @@ static GOptionEntry entries[] = {
       "Notify that host is shutting down",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

@@ -40,7 +40,7 @@ static GOptionEntry entries[] = {
       "Query cell location",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

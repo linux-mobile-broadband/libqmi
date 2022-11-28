@@ -130,7 +130,7 @@ static GOptionEntry entries[] = {
       "Query wake reason. Since MBIMEx v3.0.",
       NULL
     },
-    {NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 static gboolean

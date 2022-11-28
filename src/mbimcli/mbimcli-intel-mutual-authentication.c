@@ -43,7 +43,7 @@ static GOptionEntry entries[] = {
       "Set FCC lock information",
       "[(ResponsePresent),(Response)]"
     },
-    {NULL}
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

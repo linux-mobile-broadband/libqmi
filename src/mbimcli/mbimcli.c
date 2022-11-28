@@ -93,7 +93,7 @@ static GOptionEntry main_entries[] = {
       "Print version",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 static gboolean

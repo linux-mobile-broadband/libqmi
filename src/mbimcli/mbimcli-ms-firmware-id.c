@@ -35,7 +35,7 @@ static GOptionEntry entries[] = {
       "Query firmware ID",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

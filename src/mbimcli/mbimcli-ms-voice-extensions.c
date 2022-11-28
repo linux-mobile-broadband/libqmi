@@ -38,7 +38,7 @@ static GOptionEntry entries[] = {
       "Query network identity and time zone",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *
