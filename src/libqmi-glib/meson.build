@@ -128,6 +128,11 @@ libqmi_glib_dep = declare_dependency(
   link_with: libqmi_glib,
 )
 
+libqmi_glib_pkg_requires = ['glib-2.0', 'gobject-2.0', 'gio-2.0']
+if enable_qrtr
+  libqmi_glib_pkg_requires += [ 'qrtr-glib' ]
+endif
+
 pkg.generate(
   libraries: libqmi_glib,
   version: qmi_version,
@@ -135,7 +140,7 @@ pkg.generate(
   description: 'Library to communicate with QMI-powered modems',
   subdirs: qmi_glib_include_subdir,
   # FIXME: produced by the inhability of meson to use internal dependencies
-  requires: ['glib-2.0', 'gobject-2.0', 'gio-2.0'],
+  requires: libqmi_glib_pkg_requires,
   variables: [
     'exec_prefix=${prefix}',
     'qmi_mbim_qmux_supported=' + enable_mbim_qmux.to_int().to_string(),
