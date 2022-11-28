@@ -164,17 +164,12 @@ typedef MbimDeprecatedLteAttachStatus MbimLteAttachStatus;
 G_DEPRECATED
 void mbim_lte_attach_status_free (MbimDeprecatedLteAttachStatus *var);
 
-#if defined(__clang__)
-# pragma clang diagnostic push
-# pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(__GNUC__)
+#if defined(__clang__) || defined(__GNUC__)
 # pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (MbimLteAttachStatus, mbim_lte_attach_status_free)
-#if defined(__clang__)
-# pragma clang diagnostic pop
-#elif defined(__GNUC__)
+#if defined(__clang__) || defined (__GNUC__)
 # pragma GCC diagnostic pop
 #endif
 
