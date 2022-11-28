@@ -594,9 +594,8 @@ process_internal_proxy_open (MbimProxy   *self,
                              Client      *client,
                              MbimMessage *message)
 {
-    Request                *request;
-    MbimStatusError         status = MBIM_STATUS_ERROR_FAILURE;
-    g_autoptr(MbimMessage)  indication = NULL;
+    Request         *request;
+    MbimStatusError  status = MBIM_STATUS_ERROR_FAILURE;
 
     /* create request holder */
     request = request_new (self, client, message);
