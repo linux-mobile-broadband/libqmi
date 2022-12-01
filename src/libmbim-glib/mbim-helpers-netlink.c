@@ -31,7 +31,14 @@
 NetlinkHeader *
 mbim_helpers_netlink_get_message_header (NetlinkMessage *msg)
 {
+#if defined(__clang__) || defined(__GNUC__)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wcast-align"
+#endif
     return (NetlinkHeader *) (msg->data);
+#if defined(__clang__) || defined(__GNUC__)
+# pragma GCC diagnostic pop
+#endif
 }
 
 guint
@@ -276,8 +283,18 @@ netlink_message_cb (GSocket      *socket,
     }
 
     buffer_len = (unsigned int ) bytes_received;
-    for (hdr = (struct nlmsghdr *) buf; NLMSG_OK (hdr, buffer_len);
+
+#if defined(__clang__) || defined(__GNUC__)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+    for (hdr = (struct nlmsghdr *) buf;
+         NLMSG_OK (hdr, buffer_len);
          NLMSG_NEXT (hdr, buffer_len)) {
+#if defined(__clang__) || defined(__GNUC__)
+# pragma GCC diagnostic pop
+#endif
+
         NetlinkTransaction *tr;
         struct nlmsgerr    *err;
 
