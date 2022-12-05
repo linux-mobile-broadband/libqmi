@@ -977,8 +977,8 @@ typedef enum { /*< since=1.4 >*/
  */
 typedef enum { /*< since=1.4 >*/
     MBIM_SMS_STATUS_FLAG_NONE               = 0,
-    MBIM_SMS_STATUS_FLAG_MESSAGE_STORE_FULL = 1,
-    MBIM_SMS_STATUS_FLAG_NEW_MESSAGE        = 2
+    MBIM_SMS_STATUS_FLAG_MESSAGE_STORE_FULL = 1 << 0,
+    MBIM_SMS_STATUS_FLAG_NEW_MESSAGE        = 1 << 1,
 } MbimSmsStatusFlag;
 
 /*****************************************************************************/

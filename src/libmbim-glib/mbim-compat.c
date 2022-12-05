@@ -109,4 +109,19 @@ mbim_message_ms_basic_connect_extensions_lte_attach_status_notification_parse (
     return TRUE;
 }
 
+/*****************************************************************************/
+/* MbimSmsStatusFlag is flags, not an enum */
+
+const gchar *
+mbim_sms_status_flag_get_string (MbimSmsStatusFlag val)
+{
+    const gchar *sms_status_flag_values[] = {
+        [MBIM_SMS_STATUS_FLAG_NONE] = "none",
+        [MBIM_SMS_STATUS_FLAG_MESSAGE_STORE_FULL] = "message-store-full",
+        [MBIM_SMS_STATUS_FLAG_NEW_MESSAGE] = "new-message",
+    };
+
+    return ((guint)val < G_N_ELEMENTS (sms_status_flag_values)) ? sms_status_flag_values[val] : NULL;
+}
+
 #endif /* MBIM_DISABLE_DEPRECATED */

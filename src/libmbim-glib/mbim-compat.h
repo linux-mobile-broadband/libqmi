@@ -288,6 +288,22 @@ typedef int MbimDeprecatedCidMsBasicConnectExtensions;
  */
 #define MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_NETWORK_BLACKLIST (MbimDeprecatedCidMsBasicConnectExtensions) MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_NETWORK_DENYLIST
 
+/*****************************************************************************/
+/* MbimSmsStatusFlag is flags, not an enum */
+
+/**
+ * mbim_sms_status_flag_get_string:
+ * @val: a MbimSmsStatusFlag.
+ *
+ * Gets the nickname string for the #MbimSmsStatusFlag specified at @val.
+ *
+ * Returns: (transfer none): a string with the nickname, or %NULL if not found. Do not free the returned value.
+ *
+ * Since: 1.4
+ * Deprecated: 1.30: Use mbim_sms_status_flag_build_string_from_mask() instead.
+ */
+const gchar *mbim_sms_status_flag_get_string (MbimSmsStatusFlag val);
+
 #endif /* MBIM_DISABLE_DEPRECATED */
 
 G_END_DECLS
