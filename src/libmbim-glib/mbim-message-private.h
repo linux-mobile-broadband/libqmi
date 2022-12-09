@@ -310,6 +310,7 @@ gboolean _mbim_message_read_string        (const MbimMessage  *self,
                                            guint32             relative_offset,
                                            MbimStringEncoding  encoding,
                                            gchar             **str,
+                                           guint32            *bytes_read,
                                            GError            **error);
 gboolean _mbim_message_read_string_array  (const MbimMessage   *self,
                                            guint32              array_size,

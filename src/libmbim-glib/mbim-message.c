@@ -546,6 +546,7 @@ _mbim_message_read_string (const MbimMessage   *self,
                            guint32              relative_offset,
                            MbimStringEncoding   encoding,
                            gchar              **str,
+                           guint32             *bytes_read,
                            GError             **error)
 {
     guint64               required_size;
@@ -573,8 +574,13 @@ _mbim_message_read_string (const MbimMessage   *self,
                                 (information_buffer_offset + relative_offset + 4)));
     if (!size) {
         *str = NULL;
+        if (bytes_read)
+            *bytes_read = 0;
         return TRUE;
     }
+
+    if (bytes_read)
+        *bytes_read = size;
 
     required_size = (guint64)information_buffer_offset + (guint64)struct_start_offset + (guint64)offset + (guint64)size;
     if ((guint64)self->len < required_size) {
@@ -655,7 +661,7 @@ _mbim_message_read_string_array (const MbimMessage   *self,
         gchar *str;
 
         /* Read next string in the OL pair list */
-        if (!_mbim_message_read_string (self, struct_start_offset, offset, encoding, &str, error))
+        if (!_mbim_message_read_string (self, struct_start_offset, offset, encoding, &str, NULL, error))
             return FALSE;
 
         g_ptr_array_add (array, str);

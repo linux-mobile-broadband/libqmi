@@ -539,7 +539,14 @@ class Struct:
             '{\n'
             '    gboolean success = FALSE;\n'
             '    ${name} *out;\n'
-            '    guint32 offset = relative_offset;\n'
+            '    guint32 offset = relative_offset;\n')
+        if self.ms_struct_array_member == True:
+            for field in self.contents:
+                if field['format'] == 'string':
+                    template += (
+                        '    guint32 extra_bytes_read = 0;\n')
+                    break
+        template += (
             '\n'
             '    g_assert (self != NULL);\n'
             '\n'
@@ -646,11 +653,25 @@ class Struct:
                     '    offset += 8;\n')
             elif field['format'] == 'string':
                 translations['encoding'] = 'MBIM_STRING_ENCODING_UTF8' if 'encoding' in field and field['encoding'] == 'utf-8' else 'MBIM_STRING_ENCODING_UTF16'
-                inner_template += (
-                    '\n'
-                    '    if (!_mbim_message_read_string (self, relative_offset, offset, ${encoding}, &out->${field_name_underscore}, error))\n'
-                    '        goto out;\n'
-                    '    offset += 8;\n')
+                if self.ms_struct_array_member == True:
+                    inner_template += (
+                        '\n'
+                        '    {\n'
+                        '        guint32 str_bytes_read;\n'
+                        '\n'
+                        '        if (!_mbim_message_read_string (self, relative_offset, offset, ${encoding}, &out->${field_name_underscore}, &str_bytes_read, error))\n'
+                        '            goto out;\n'
+                        '        if (str_bytes_read % 4)\n'
+                        '            str_bytes_read = (str_bytes_read + (4 - (str_bytes_read % 4)));\n'
+                        '        extra_bytes_read += str_bytes_read;\n'
+                        '        offset += 8;\n'
+                        '    }\n')
+                else:
+                    inner_template += (
+                        '\n'
+                        '    if (!_mbim_message_read_string (self, relative_offset, offset, ${encoding}, &out->${field_name_underscore}, NULL, error))\n'
+                        '        goto out;\n'
+                        '    offset += 8;\n')
             elif field['format'] == 'string-array':
                 translations['encoding'] = 'MBIM_STRING_ENCODING_UTF8' if 'encoding' in field and field['encoding'] == 'utf-8' else 'MBIM_STRING_ENCODING_UTF16'
                 translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
@@ -713,12 +734,33 @@ class Struct:
             '    success = TRUE;\n'
             '\n'
             ' out:\n'
-            '    if (success) {\n'
-            '        if (bytes_read)\n'
-            '            *bytes_read = (offset - relative_offset);\n'
-            '        return out;\n'
-            '    }\n'
-            '\n')
+            '    if (success) {\n')
+        if self.ms_struct_array_member == True:
+            string_present = False
+            for field in self.contents:
+                if field['format'] == 'string':
+                    template += (
+                        '        if (bytes_read)\n'
+                        '            *bytes_read = (offset - relative_offset) + extra_bytes_read;\n'
+                        '        return out;\n'
+                        '    }\n'
+                        '\n')
+                    string_present = True
+                    break
+            if string_present == False:
+                template += (
+                    '        if (bytes_read)\n'
+                    '            *bytes_read = (offset - relative_offset);\n'
+                    '        return out;\n'
+                    '    }\n'
+                    '\n')
+        else:
+            template += (
+                '        if (bytes_read)\n'
+                '            *bytes_read = (offset - relative_offset);\n'
+                '        return out;\n'
+                '    }\n'
+                '\n')
 
         for field in self.contents:
             translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
@@ -876,6 +918,7 @@ class Struct:
                 '    guint32 intermediate_struct_offset;\n'
                 '    guint32 intermediate_struct_size;\n'
                 '    guint32 array_size;\n'
+                '    guint32 bytes_read = 0;\n'
                 '\n'
                 '    if (!_mbim_message_read_guint32 (self, offset, &intermediate_struct_offset, error))\n'
                 '        return FALSE;\n'
@@ -904,10 +947,10 @@ class Struct:
                 '\n'
                 '    out = g_ptr_array_new_with_free_func ((GDestroyNotify)_${name_underscore}_free);\n'
                 '\n'
-                '    for (i = 0; i < array_size; i++, intermediate_struct_offset += ${struct_size}) {\n'
+                '    for (i = 0; i < array_size; i++, intermediate_struct_offset += bytes_read) {\n'
                 '        ${name} *array_item;\n'
                 '\n'
-                '        array_item = _mbim_message_read_${name_underscore}_struct (self, intermediate_struct_offset, NULL, error);\n'
+                '        array_item = _mbim_message_read_${name_underscore}_struct (self, intermediate_struct_offset, &bytes_read, error);\n'
                 '        if (!array_item)\n'
                 '            return FALSE;\n'
                 '        g_ptr_array_add (out, array_item);\n'

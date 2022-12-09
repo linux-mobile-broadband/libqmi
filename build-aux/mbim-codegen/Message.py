@@ -1026,7 +1026,7 @@ class Message:
             elif field['format'] == 'string':
                 translations['encoding'] = 'MBIM_STRING_ENCODING_UTF8' if 'encoding' in field and field['encoding'] == 'utf-8' else 'MBIM_STRING_ENCODING_UTF16'
                 inner_template += (
-                    '        if ((out_${field} != NULL) && !_mbim_message_read_string (message, 0, offset, ${encoding}, &_${field}, error))\n'
+                    '        if ((out_${field} != NULL) && !_mbim_message_read_string (message, 0, offset, ${encoding}, &_${field}, NULL, error))\n'
                     '            goto out;\n'
                     '        offset += 8;\n')
             elif field['format'] == 'string-array':
@@ -1461,7 +1461,7 @@ class Message:
                 inner_template += (
                     '        g_autofree gchar *tmp = NULL;\n'
                     '\n'
-                    '        if (!_mbim_message_read_string (message, 0, offset, ${encoding}, &tmp, &inner_error))\n'
+                    '        if (!_mbim_message_read_string (message, 0, offset, ${encoding}, &tmp, NULL, &inner_error))\n'
                     '            goto out;\n'
                     '        offset += 8;\n'
                     '        ${if_show_field}{\n'
