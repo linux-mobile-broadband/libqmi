@@ -260,6 +260,9 @@ mbim_tlv_string_get (const MbimTlv  *self,
     /* Duplicate array unconditionally to avoid alignment issues as we don't
      * know if the 16bit array is aligned properly or not in the TLV */
     size = MBIM_TLV_GET_DATA_LENGTH (self);
+    /* If size == 0, an empty string is returned since 0-length strings are allowed */
+    if (!size)
+        return g_strdup ("");
     tmp = (gunichar2 *) g_memdup ((gconstpointer) MBIM_TLV_FIELD_DATA (self), size);
 
     /* For BE systems, convert from LE to BE */
