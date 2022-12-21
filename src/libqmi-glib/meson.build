@@ -27,6 +27,7 @@ qmi_enums_headers = files(
   'qmi-enums-wda.h',
   'qmi-enums-wds.h',
   'qmi-enums-wms.h',
+  'qmi-enums-ssc.h',
 )
 
 qmi_enums_private_header = files('qmi-enums-private.h')

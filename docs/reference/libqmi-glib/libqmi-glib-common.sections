@@ -34,6 +34,7 @@ HAVE_QMI_SERVICE_FOX
 HAVE_QMI_SERVICE_IMSP
 HAVE_QMI_SERVICE_IMSA
 HAVE_QMI_SERVICE_IMS
+HAVE_QMI_SERVICE_SSC
 </SECTION>
 
 <SECTION>
@@ -1370,6 +1371,17 @@ QMI_TYPE_IMSA_SERVICE_STATUS
 qmi_imsa_ims_registration_status_get_type
 qmi_imsa_registration_technology_get_type
 qmi_imsa_service_status_get_type
+</SECTION>
+
+<SECTION>
+<FILE>qmi-enums-ssc</FILE>
+<TITLE>SSC enumerations and flags</TITLE>
+QmiSscReportType
+<SUBSECTION Methods>
+qmi_ssc_report_type_get_string
+<SUBSECTION Standard>
+QMI_TYPE_SSC_REPORT_TYPE
+qmi_ssc_report_type_get_type
 </SECTION>
 
 <SECTION>

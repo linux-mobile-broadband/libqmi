@@ -61,6 +61,7 @@
 #include "qmi-ims.h"
 #include "qmi-imsp.h"
 #include "qmi-imsa.h"
+#include "qmi-ssc.h"
 #include "qmi-utils.h"
 #include "qmi-helpers.h"
 #include "qmi-error-types.h"
@@ -1337,7 +1338,11 @@ qmi_device_allocate_client (QmiDevice *self,
         ctx->client_type = QMI_TYPE_CLIENT_IMS;
 #endif
         break;
-
+    case QMI_SERVICE_SSC:
+#if defined HAVE_QMI_SERVICE_SSC
+        ctx->client_type = QMI_TYPE_CLIENT_SSC;
+#endif
+        break;
     case QMI_SERVICE_UNKNOWN:
         g_assert_not_reached ();
 

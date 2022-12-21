@@ -86,6 +86,7 @@
  * @QMI_SERVICE_RMS: Remote Management Service.
  * @QMI_SERVICE_OMA: Open Mobile Alliance device management service.
  * @QMI_SERVICE_FOX: Foxconn General Modem Service. Since: 1.32.
+ * @QMI_SERVICE_SSC: Snapdragon Sensore Core Service. Since: 1.34.
  * @QMI_SERVICE_FOTA: Firmware Over The Air service. Since: 1.24.
  * @QMI_SERVICE_GMS: Telit General Modem Service. Since: 1.24.
  * @QMI_SERVICE_GAS: Telit General Application Service. Since: 1.24.
@@ -150,6 +151,7 @@ typedef enum { /*< since=1.0 >*/
     QMI_SERVICE_GMS     = 0xE7,
     QMI_SERVICE_GAS     = 0xE8,
     QMI_SERVICE_ATR     = 0xED,
+    QMI_SERVICE_SSC     = 0x190,
 } QmiService;
 
 /**

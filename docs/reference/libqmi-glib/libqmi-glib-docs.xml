@@ -618,6 +618,21 @@
   </chapter>
 
   <chapter>
+    <title>Snapdragon Sensor Core Service (SSC)</title>
+    <xi:include href="xml/qmi-client-ssc.xml"/>
+    <xi:include href="xml/qmi-enums-ssc.xml"/>
+    <section>
+      <title>SSC Indications</title>
+      <xi:include href="xml/qmi-indication-ssc-report-small.xml"/>
+      <xi:include href="xml/qmi-indication-ssc-report-large.xml"/>
+    </section>
+    <section>
+      <title>SSC Requests</title>
+      <xi:include href="xml/qmi-message-ssc-control.xml"/>
+    </section>
+  </chapter>
+
+  <chapter>
     <title>Compatibility with older versions</title>
     <xi:include href="xml/qmi-compat.xml"/>
   </chapter>

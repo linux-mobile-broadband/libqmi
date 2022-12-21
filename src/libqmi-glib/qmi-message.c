@@ -1752,6 +1752,11 @@ qmi_message_get_printable_full (QmiMessage        *self,
         contents = __qmi_message_ims_get_printable (self, context, line_prefix);
 #endif
         break;
+    case QMI_SERVICE_SSC:
+#if defined HAVE_QMI_SERVICE_SSC
+        contents = __qmi_message_ssc_get_printable (self, context, line_prefix);
+#endif
+        break;
 
     case QMI_SERVICE_UNKNOWN:
         g_assert_not_reached ();
@@ -1866,6 +1871,7 @@ __qmi_message_is_abortable (QmiMessage        *self,
     case QMI_SERVICE_QOS:
     case QMI_SERVICE_FOX:
     case QMI_SERVICE_ATR:
+    case QMI_SERVICE_SSC:
     default:
         return FALSE;
     }

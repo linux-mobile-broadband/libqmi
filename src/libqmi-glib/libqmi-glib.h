@@ -109,6 +109,9 @@
 
 #include "qmi-ims.h"
 
+#include "qmi-enums-ssc.h"
+#include "qmi-ssc.h"
+
 /* generated */
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
