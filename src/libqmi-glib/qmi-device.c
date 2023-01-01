@@ -58,6 +58,7 @@
 #include "qmi-dpm.h"
 #include "qmi-fox.h"
 #include "qmi-atr.h"
+#include "qmi-imsp.h"
 #include "qmi-utils.h"
 #include "qmi-helpers.h"
 #include "qmi-error-types.h"
@@ -1319,6 +1320,11 @@ qmi_device_allocate_client (QmiDevice *self,
         ctx->client_type = QMI_TYPE_CLIENT_ATR;
 #endif
         break;
+    case QMI_SERVICE_IMSP:
+#if defined HAVE_QMI_SERVICE_IMSP
+        ctx->client_type = QMI_TYPE_CLIENT_IMSP;
+#endif
+        break;
 
     case QMI_SERVICE_UNKNOWN:
         g_assert_not_reached ();
@@ -1341,7 +1347,6 @@ qmi_device_allocate_client (QmiDevice *self,
     case QMI_SERVICE_RFSA:
     case QMI_SERVICE_CSVT:
     case QMI_SERVICE_QCMAP:
-    case QMI_SERVICE_IMSP:
     case QMI_SERVICE_IMSVT:
     case QMI_SERVICE_IMSA:
     case QMI_SERVICE_COEX:

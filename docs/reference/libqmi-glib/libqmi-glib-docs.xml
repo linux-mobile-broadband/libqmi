@@ -588,6 +588,16 @@
   </chapter>
 
   <chapter>
+    <title>IP Multimedia Subsystem Presence Service (IMSP)</title>
+    <xi:include href="xml/qmi-client-imsp.xml"/>
+    <xi:include href="xml/qmi-enums-imsp.xml"/>
+    <section>
+      <title>IMSP Requests</title>
+      <xi:include href="xml/qmi-message-imsp-get-enabler-state.xml"/>
+    </section>
+  </chapter>
+
+  <chapter>
     <title>Compatibility with older versions</title>
     <xi:include href="xml/qmi-compat.xml"/>
   </chapter>

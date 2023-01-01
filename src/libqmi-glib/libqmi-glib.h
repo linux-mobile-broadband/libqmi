@@ -101,6 +101,9 @@
 
 #include "qmi-atr.h"
 
+#include "qmi-enums-imsp.h"
+#include "qmi-imsp.h"
+
 /* generated */
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"

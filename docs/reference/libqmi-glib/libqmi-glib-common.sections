@@ -31,6 +31,7 @@ HAVE_QMI_SERVICE_WDS
 HAVE_QMI_SERVICE_WMS
 HAVE_QMI_SERVICE_DPM
 HAVE_QMI_SERVICE_FOX
+HAVE_QMI_SERVICE_IMSP
 </SECTION>
 
 <SECTION>
@@ -1331,6 +1332,19 @@ qmi_fox_firmware_version_type_get_string
 <SUBSECTION Standard>
 QMI_TYPE_FOX_FIRMWARE_VERSION_TYPE
 qmi_fox_firmware_version_type_get_type
+</SECTION>
+
+<SECTION>
+<FILE>qmi-enums-imsp</FILE>
+<TITLE>IMSP enumerations and flags</TITLE>
+QmiImspEnablerState
+<SUBSECTION Methods>
+qmi_imsp_enabler_state_get_string
+<SUBSECTION Private>
+qmi_imsp_enabler_state_build_string_from_mask
+<SUBSECTION Standard>
+QMI_TYPE_IMSP_ENABLER_STATE
+qmi_imsp_enabler_state_get_type
 </SECTION>
 
 <SECTION>
