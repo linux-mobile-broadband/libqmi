@@ -19,6 +19,7 @@ sources = files(
   'qmicli-dms.c',
   'qmicli-dpm.c',
   'qmicli-dsd.c',
+  'qmicli-imsa.c',
   'qmicli-imsp.c',
   'qmicli-fox.c',
   'qmicli-gas.c',

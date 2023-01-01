@@ -1742,6 +1742,11 @@ qmi_message_get_printable_full (QmiMessage        *self,
         contents = __qmi_message_imsp_get_printable (self, context, line_prefix);
 #endif
         break;
+    case QMI_SERVICE_IMSA:
+#if defined HAVE_QMI_SERVICE_IMSA
+        contents = __qmi_message_imsa_get_printable (self, context, line_prefix);
+#endif
+        break;
 
     case QMI_SERVICE_UNKNOWN:
         g_assert_not_reached ();
@@ -1766,7 +1771,6 @@ qmi_message_get_printable_full (QmiMessage        *self,
     case QMI_SERVICE_CSVT:
     case QMI_SERVICE_QCMAP:
     case QMI_SERVICE_IMSVT:
-    case QMI_SERVICE_IMSA:
     case QMI_SERVICE_COEX:
     case QMI_SERVICE_STX:
     case QMI_SERVICE_BIT:

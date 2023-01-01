@@ -598,6 +598,17 @@
   </chapter>
 
   <chapter>
+    <title>IP Multimedia Subsystem Application Service (IMSA)</title>
+    <xi:include href="xml/qmi-client-imsa.xml"/>
+    <xi:include href="xml/qmi-enums-imsa.xml"/>
+    <section>
+      <title>IMSA Requests</title>
+      <xi:include href="xml/qmi-message-imsa-get-ims-registration-status.xml"/>
+      <xi:include href="xml/qmi-message-imsa-get-ims-services-status.xml"/>
+    </section>
+  </chapter>
+
+  <chapter>
     <title>Compatibility with older versions</title>
     <xi:include href="xml/qmi-compat.xml"/>
   </chapter>

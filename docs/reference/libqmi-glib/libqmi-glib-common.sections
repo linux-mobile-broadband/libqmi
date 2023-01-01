@@ -32,6 +32,7 @@ HAVE_QMI_SERVICE_WMS
 HAVE_QMI_SERVICE_DPM
 HAVE_QMI_SERVICE_FOX
 HAVE_QMI_SERVICE_IMSP
+HAVE_QMI_SERVICE_IMSA
 </SECTION>
 
 <SECTION>
@@ -1345,6 +1346,29 @@ qmi_imsp_enabler_state_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_IMSP_ENABLER_STATE
 qmi_imsp_enabler_state_get_type
+</SECTION>
+
+<SECTION>
+<FILE>qmi-enums-imsa</FILE>
+<TITLE>IMSA enumerations and flags</TITLE>
+QmiImsaImsRegistrationStatus
+QmiImsaRegistrationTechnology
+QmiImsaServiceStatus
+<SUBSECTION Methods>
+qmi_imsa_ims_registration_status_get_string
+qmi_imsa_registration_technology_get_string
+qmi_imsa_service_status_get_string
+<SUBSECTION Private>
+qmi_imsa_ims_registration_status_build_string_from_mask
+qmi_imsa_registration_technology_build_string_from_mask
+qmi_imsa_service_status_build_string_from_mask
+<SUBSECTION Standard>
+QMI_TYPE_IMSA_IMS_REGISTRATION_STATUS
+QMI_TYPE_IMSA_REGISTRATION_TECHNOLOGY
+QMI_TYPE_IMSA_SERVICE_STATUS
+qmi_imsa_ims_registration_status_get_type
+qmi_imsa_registration_technology_get_type
+qmi_imsa_service_status_get_type
 </SECTION>
 
 <SECTION>
