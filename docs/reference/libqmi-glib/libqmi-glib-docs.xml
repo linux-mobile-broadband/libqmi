@@ -609,6 +609,15 @@
   </chapter>
 
   <chapter>
+    <title>IP Multimedia Subsystem Settings Service (IMS)</title>
+    <xi:include href="xml/qmi-client-ims.xml"/>
+    <section>
+      <title>IMS Requests</title>
+      <xi:include href="xml/qmi-message-ims-get-ims-services-enabled-setting.xml"/>
+    </section>
+  </chapter>
+
+  <chapter>
     <title>Compatibility with older versions</title>
     <xi:include href="xml/qmi-compat.xml"/>
   </chapter>

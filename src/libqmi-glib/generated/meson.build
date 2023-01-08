@@ -240,6 +240,7 @@ services = [
   'dms',
   'dpm',
   'dsd',
+  'ims',
   'imsa',
   'imsp',
   'fox',

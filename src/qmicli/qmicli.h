@@ -201,4 +201,12 @@ void          qmicli_imsa_run              (QmiDevice *device,
                                             GCancellable *cancellable);
 #endif
 
+#if defined HAVE_QMI_SERVICE_IMS
+GOptionGroup *qmicli_ims_get_option_group (void);
+gboolean      qmicli_ims_options_enabled  (void);
+void          qmicli_ims_run              (QmiDevice *device,
+                                           QmiClientIms *client,
+                                           GCancellable *cancellable);
+#endif
+
 #endif /* __QMICLI_H__ */

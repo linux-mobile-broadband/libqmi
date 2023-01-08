@@ -107,6 +107,8 @@
 #include "qmi-enums-imsa.h"
 #include "qmi-imsa.h"
 
+#include "qmi-ims.h"
+
 /* generated */
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
