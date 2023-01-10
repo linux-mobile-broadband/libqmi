@@ -1659,6 +1659,7 @@ report_indication (QmiClient *client,
     ctx->message = qmi_message_ref (message);
 
     source = g_idle_source_new ();
+    g_source_set_priority (source, G_PRIORITY_DEFAULT);
     g_source_set_callback (source, (GSourceFunc)process_indication_idle, ctx, NULL);
     g_source_attach (source, g_main_context_get_thread_default ());
     g_source_unref (source);
