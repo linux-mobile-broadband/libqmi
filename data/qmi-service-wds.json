@@ -2188,14 +2188,12 @@
       "service" : "WDS",
       "id"      : "0x0093",
       "since"   : "1.28",
-      "output"  : [ { "common-ref"   : "Operation Result" },
-                    { "name"          : "Action Result",
+      "output"  : [ { "name"          : "Action Result",
                       "id"            : "0x01",
                       "type"          : "TLV",
                       "since"         : "1.28",
                       "format"        : "guint8",
-                      "public-format" : "gboolean",
-                      "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
+                      "public-format" : "gboolean" } ] },
 
   // *********************************************************************************
   {  "name"    : "Get LTE Attach PDN List",

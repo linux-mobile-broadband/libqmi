@@ -3961,6 +3961,27 @@ gboolean qmi_message_uim_get_configuration_output_get_personalization_status_oth
 
 #endif /* HAVE_QMI_MESSAGE_UIM_GET_CONFIGURATION */
 
+#if defined HAVE_QMI_INDICATION_WDS_SET_LTE_ATTACH_PDN_LIST
+
+/**
+ * qmi_indication_wds_set_lte_attach_pdn_list_output_get_result:
+ * @self: a QmiIndicationWdsSetLteAttachPdnListOutput.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the result of the QMI operation.
+ *
+ * Returns: (skip): %TRUE if the QMI operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.28
+ * Deprecated: 1.34: This is a no-op.
+ */
+G_DEPRECATED
+gboolean qmi_indication_wds_set_lte_attach_pdn_list_output_get_result (
+    QmiIndicationWdsSetLteAttachPdnListOutput *self,
+    GError **error);
+
+#endif /* HAVE_QMI_INDICATION_WDS_SET_LTE_ATTACH_PDN_LIST */
+
 #endif /* QMI_DISABLE_DEPRECATED */
 
 #endif /* _LIBQMI_GLIB_QMI_COMPAT_H_ */

@@ -2572,6 +2572,19 @@ qmi_message_uim_get_configuration_output_get_personalization_status_other_slots 
 
 #endif /* HAVE_QMI_MESSAGE_UIM_GET_CONFIGURATION */
 
+#if defined HAVE_QMI_INDICATION_WDS_SET_LTE_ATTACH_PDN_LIST
+
+gboolean
+qmi_indication_wds_set_lte_attach_pdn_list_output_get_result (
+    QmiIndicationWdsSetLteAttachPdnListOutput *self,
+    GError **error)
+{
+    /* NO-OP */
+    return TRUE;
+}
+
+#endif /* HAVE_QMI_INDICATION_WDS_SET_LTE_ATTACH_PDN_LIST */
+
 /*****************************************************************************/
 
 GType
