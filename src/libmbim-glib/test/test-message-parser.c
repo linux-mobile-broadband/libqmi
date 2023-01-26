@@ -2928,6 +2928,86 @@ test_ms_basic_connect_v3_connect_3_unnamed_tlvs (void)
 }
 
 static void
+test_ms_basic_connect_v3_connect_disconnected (void)
+{
+    g_autoptr(GError)       error = NULL;
+    g_autoptr(MbimMessage)  response = NULL;
+    gboolean                result;
+    GList                  *unnamed_ies = NULL;
+    guint32                 session_id;
+    MbimActivationState     activation_state;
+    MbimVoiceCallState      voice_call_state;
+    MbimContextIpType       ip_type;
+    MbimAccessMediaType     media_type = MBIM_ACCESS_MEDIA_TYPE_UNKNOWN;
+    g_autofree gchar       *access_string = NULL;
+    const MbimUuid         *context_type;
+    guint32                 nw_error;
+
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x60, 0x00, 0x00, 0x00, /* length */
+        0x2F, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x0C, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x30, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x00, 0x00, 0x00, 0x00, /* session id */
+        0x03, 0x00, 0x00, 0x00, /* activation state */
+        0x00, 0x00, 0x00, 0x00, /* voice call state */
+        0x00, 0x00, 0x00, 0x00, /* ip type */
+        0xB4, 0x3F, 0x75, 0x8C, /* context type */
+        0xA5, 0x60, 0x4B, 0x46,
+        0xB3, 0x5E, 0xC5, 0x86,
+        0x96, 0x41, 0xFB, 0x54,
+        0x00, 0x00, 0x00, 0x00, /* nw error */
+        0x00, 0x00, 0x00, 0x00, /* media type */
+        0x0A, 0x00, 0x00, 0x00, /* access string */
+        0x00, 0x00, 0x00, 0x00
+        /* no unnamed TLVs */
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
+    test_message_printable (response, 3, 0);
+
+    result = (mbim_message_ms_basic_connect_v3_connect_response_parse (
+                  response,
+                  &session_id,
+                  &activation_state,
+                  &voice_call_state,
+                  &ip_type,
+                  &context_type,
+                  &nw_error,
+                  &media_type,
+                  &access_string,
+                  &unnamed_ies,
+                  &error));
+
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (session_id, ==, 0);
+    g_assert_cmpuint (activation_state, ==, MBIM_ACTIVATION_STATE_DEACTIVATED);
+    g_assert_cmpuint (voice_call_state, ==, MBIM_VOICE_CALL_STATE_NONE);
+    g_assert_cmpuint (ip_type, ==, MBIM_CONTEXT_IP_TYPE_DEFAULT);
+    g_assert_cmpuint (mbim_uuid_to_context_type (context_type), ==, MBIM_CONTEXT_TYPE_NONE);
+    g_assert_cmpuint (media_type, ==, MBIM_ACCESS_MEDIA_TYPE_UNKNOWN);
+    g_assert_cmpstr  (access_string, ==, "");
+    g_assert_cmpuint (g_list_length (unnamed_ies), ==, 0);
+}
+
+static void
 test_ms_basic_connect_extensions_device_caps_v3 (void)
 {
     g_autoptr(GError)       error = NULL;
@@ -3429,6 +3509,7 @@ int main (int argc, char **argv)
     g_test_add_func (PREFIX "/basic-connect-v3/connect/0-unnamed-tlvs-empty-access-string", test_ms_basic_connect_v3_connect_0_unnamed_tlvs_empty_access_string);
     g_test_add_func (PREFIX "/basic-connect-v3/connect/1-unnamed-tlv", test_ms_basic_connect_v3_connect_1_unnamed_tlv);
     g_test_add_func (PREFIX "/basic-connect-v3/connect/3-unnamed-tlvs", test_ms_basic_connect_v3_connect_3_unnamed_tlvs);
+    g_test_add_func (PREFIX "/basic-connect-v3/connect/disconnected", test_ms_basic_connect_v3_connect_disconnected);
     g_test_add_func (PREFIX "/basic-connect-extensions/device-caps-v3", test_ms_basic_connect_extensions_device_caps_v3);
     g_test_add_func (PREFIX "/basic-connect-extensions/wake-reason/command", test_ms_basic_connect_extensions_wake_reason_command);
     g_test_add_func (PREFIX "/basic-connect-extensions/wake-reason/command/payload", test_ms_basic_connect_extensions_wake_reason_command_payload);
