@@ -619,7 +619,7 @@ static const MbimUuid uuid_context_type_emergency_calling = {
 const MbimUuid *
 mbim_uuid_from_context_type (MbimContextType context_type)
 {
-    g_return_val_if_fail (context_type <= MBIM_CONTEXT_TYPE_LOCAL, &uuid_invalid);
+    g_return_val_if_fail (context_type <= MBIM_CONTEXT_TYPE_EMERGENCY_CALLING, &uuid_invalid);
 
     switch (context_type) {
     case MBIM_CONTEXT_TYPE_INVALID:
