@@ -1,4 +1,15 @@
 
+Overview of changes in libqmi 1.32.4
+----------------------------------------
+
+ * libqmi-glib:
+   ** Schedule indications with G_PRIORITY_DEFAULT to ensure correct processing
+      order between responses and indications.
+
+ * build:
+   ** If QRTR enabled the pkg-config should publicly require libqrtr-glib.
+
+
 Overview of changes in libqmi 1.32.2
 ----------------------------------------
 
