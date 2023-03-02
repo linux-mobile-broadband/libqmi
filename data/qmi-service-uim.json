@@ -64,7 +64,7 @@
                                                                                                               "public-format" : "QmiUimCardApplicationPersonalizationState" },
                                                                                                             { "name"          : "Personalization Feature",
                                                                                                               "format"        : "guint8",
-                                                                                                              "public-format" : "QmiUimCardApplicationPersonalizationFeature" },
+                                                                                                              "public-format" : "QmiUimCardApplicationPersonalizationFeatureStatus" },
                                                                                                             { "name"   : "Personalization Retries",
                                                                                                               "format" : "guint8" },
                                                                                                             { "name"   : "Personalization Unblock Retries",
