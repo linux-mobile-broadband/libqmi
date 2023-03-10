@@ -324,7 +324,7 @@ message_check (QmiMessage  *self,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
                      "QMUX length too short for QMUX header (%u < %" G_GSIZE_FORMAT ")",
-                     get_qmux_length (self), sizeof (struct qmux));
+                     self->len, 1 + sizeof (struct qmux));
         return FALSE;
     }
 

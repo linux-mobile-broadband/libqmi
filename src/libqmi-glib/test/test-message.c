@@ -90,8 +90,12 @@ test_message_parse_common (const guint8 *buffer,
 
         message = qmi_message_new_from_raw (array, &error);
         if (!message) {
-            if (error && (n_messages < n_expected_messages))
-                g_printerr ("error creating message from raw data: '%s'\n", error->message);
+            if (error) {
+                if (n_messages < n_expected_messages)
+                    g_printerr ("error creating message from raw data: '%s'\n", error->message);
+                else
+                    g_debug ("error creating message from raw data: '%s'", error->message);
+            }
             break;
         }
 
@@ -102,6 +106,22 @@ test_message_parse_common (const guint8 *buffer,
     } while (array->len > 0);
 
     g_assert_cmpuint (n_messages, ==, n_expected_messages);
+}
+
+static void
+test_message_parse_wrong_qmux (void)
+{
+    const guint8 buffer[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a };
+
+    test_message_parse_common (buffer, sizeof (buffer), 0);
+}
+
+static void
+test_message_parse_tiny (void)
+{
+    const guint8 buffer[] = { 0x01, 0x00, 0x02 };
+
+    test_message_parse_common (buffer, sizeof (buffer), 0);
 }
 
 static void
@@ -1601,6 +1621,8 @@ int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
+    g_test_add_func ("/libqmi-glib/message/parse/wrong-qmux",            test_message_parse_wrong_qmux);
+    g_test_add_func ("/libqmi-glib/message/parse/tiny",                  test_message_parse_tiny);
     g_test_add_func ("/libqmi-glib/message/parse/short",                 test_message_parse_short);
     g_test_add_func ("/libqmi-glib/message/parse/complete",              test_message_parse_complete);
     g_test_add_func ("/libqmi-glib/message/parse/complete-and-short",    test_message_parse_complete_and_short);
