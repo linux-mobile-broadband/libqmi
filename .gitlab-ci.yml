@@ -157,6 +157,21 @@ build-no-mbim-no-introspection:
     - ninja -C build
     - ninja -C build install
 
+build-no-deprecated:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - main
+    - merge_requests
+    - tags
+    - schedules
+  script:
+    - CFLAGS="-DQMI_DISABLE_DEPRECATED" meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=false
+    - ninja -C build
+    - ninja -C build install
+
 build-collection-minimal:
   stage: build
   extends:
