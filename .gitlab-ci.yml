@@ -60,6 +60,21 @@ build-introspection:
     - ninja -C build
     - ninja -C build install
 
+build-no-deprecated:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - main
+    - merge_requests
+    - tags
+    - schedules
+  script:
+    - CFLAGS="-DMBIM_DISABLE_DEPRECATED" meson setup build --prefix=/usr -Dwerror=true -Dintrospection=false
+    - ninja -C build
+    - ninja -C build install
+
 build-release:
   stage: build
   extends:
