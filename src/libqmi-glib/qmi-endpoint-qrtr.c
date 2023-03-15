@@ -284,7 +284,6 @@ handle_alloc_cid (QmiEndpointQrtr *self,
     gsize                 init_offset;
     guint8                service;
     guint                 cid;
-    QmiProtocolError      result = QMI_PROTOCOL_ERROR_NONE;
     g_autoptr(QmiMessage) response = NULL;
     g_autoptr(GError)     error = NULL;
 
@@ -292,21 +291,31 @@ handle_alloc_cid (QmiEndpointQrtr *self,
         !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &service, &error)) {
         g_debug ("[%s] error allocating CID: could not parse message: %s",
                  qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
-        result = QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE;
+        response = qmi_message_response_new (message, QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE);
+        if (!response)
+            return;
+
+        add_qmi_message_to_buffer (self, g_steal_pointer (&response));
+        return;
     }
 
     cid = allocate_client (self, service, &error);
     if (!cid) {
         g_debug ("[%s] error allocating CID: %s",
                  qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
-        result = QMI_PROTOCOL_ERROR_INTERNAL;
+        response = qmi_message_response_new (message, QMI_PROTOCOL_ERROR_INTERNAL);
+        if (!response)
+            return;
+
+        add_qmi_message_to_buffer (self, g_steal_pointer (&response));
+        return;
     }
 
-    response = qmi_message_response_new (message, result);
+    response = qmi_message_response_new (message, QMI_PROTOCOL_ERROR_NONE);
     if (!response)
         return;
 
-    if ((result == QMI_PROTOCOL_ERROR_NONE) && !construct_alloc_tlv (response, service, cid))
+    if (!construct_alloc_tlv (response, service, cid))
         return;
 
     add_qmi_message_to_buffer (self, g_steal_pointer (&response));
@@ -319,8 +328,7 @@ handle_release_cid (QmiEndpointQrtr *self,
     gsize                 offset = 0;
     gsize                 init_offset;
     guint8                service;
-    guint8                cid = 0;
-    QmiProtocolError      result = QMI_PROTOCOL_ERROR_NONE;
+    guint8                cid;
     g_autoptr(QmiMessage) response = NULL;
     g_autoptr(GError)     error = NULL;
 
@@ -329,16 +337,21 @@ handle_release_cid (QmiEndpointQrtr *self,
         !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &cid, &error)) {
         g_debug ("[%s] error releasing CID: could not parse message: %s",
                  qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
-        result = QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE;
+        response = qmi_message_response_new (message, QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE);
+        if (!response)
+            return;
+
+        add_qmi_message_to_buffer (self, g_steal_pointer (&response));
+        return;
     }
 
     release_client (self, service, cid);
 
-    response = qmi_message_response_new (message, result);
+    response = qmi_message_response_new (message, QMI_PROTOCOL_ERROR_NONE);
     if (!response)
         return;
 
-    if ((result == QMI_PROTOCOL_ERROR_NONE) && !construct_alloc_tlv (response, service, cid))
+    if (!construct_alloc_tlv (response, service, cid))
         return;
 
     add_qmi_message_to_buffer (self, g_steal_pointer (&response));
