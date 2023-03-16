@@ -72,12 +72,11 @@ static GOptionEntry entries[] = {
       NULL
     },
 #endif
-
     { "dsd-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DSD client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

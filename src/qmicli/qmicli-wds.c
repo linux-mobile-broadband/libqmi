@@ -296,7 +296,7 @@ static GOptionEntry entries[] = {
       "[(3gpp|3gpp2),#]"
     },
 #endif
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

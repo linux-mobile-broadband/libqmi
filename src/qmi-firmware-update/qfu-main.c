@@ -197,7 +197,7 @@ static GOptionEntry context_selection_entries[] = {
       "Select device by serial device path (e.g. /dev/ttyUSB2).",
       "[PATH]"
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 static GOptionEntry context_update_entries[] = {
@@ -233,7 +233,7 @@ static GOptionEntry context_update_entries[] = {
       "Don't wait to validate the running firmware after update.",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 static GOptionEntry context_reset_entries[] = {
@@ -241,7 +241,7 @@ static GOptionEntry context_reset_entries[] = {
       "Reset device into download mode.",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 static GOptionEntry context_update_download_entries[] = {
@@ -249,7 +249,7 @@ static GOptionEntry context_update_download_entries[] = {
       "Launch firmware update process while in download (boot & hold) mode.",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 static GOptionEntry context_verify_entries[] = {
@@ -257,7 +257,7 @@ static GOptionEntry context_verify_entries[] = {
       "Analyze and verify firmware images.",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 static GOptionEntry context_main_entries[] = {
@@ -310,7 +310,7 @@ static GOptionEntry context_main_entries[] = {
       "Show help examples.",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 static const gchar *context_description =

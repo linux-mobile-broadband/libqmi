@@ -67,7 +67,7 @@ static GOptionEntry entries[] = {
       "Just allocate or release a DPM client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

@@ -57,7 +57,7 @@ static GOptionEntry entries[] = {
       "Delete all network interface links from the given interface",
       "[IFACE]"
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *

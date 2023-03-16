@@ -52,7 +52,7 @@ static GOptionEntry entries[] = {
       "Set the expected data format in the WWAN iface",
       "[802-3|raw-ip|qmap-pass-through]"
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *
