@@ -56,7 +56,7 @@
  * @QMI_SERVICE_RMTFS: Remote file system service.
  * @QMI_SERVICE_TEST: Test service. Since: 1.8.
  * @QMI_SERVICE_LOC: Location service (~ PDS v2).
- * @QMI_SERVICE_SAR: Service access proxy service.
+ * @QMI_SERVICE_SAR: Specific absorption rate service.
  * @QMI_SERVICE_IMS: IMS settings service. Since: 1.8.
  * @QMI_SERVICE_ADC: Analog to digital converter driver service. Since: 1.8.
  * @QMI_SERVICE_CSD: Core sound driver service. Since: 1.8.
