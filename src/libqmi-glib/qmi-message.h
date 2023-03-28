@@ -57,11 +57,23 @@ G_BEGIN_DECLS
 /**
  * QMI_MESSAGE_QMUX_MARKER:
  *
- * First byte of every QMI message.
+ * First byte of every QMI QMUX message.
  *
  * Since: 1.0
  */
 #define QMI_MESSAGE_QMUX_MARKER (guint8) 0x01
+
+/**
+ * QMI_MESSAGE_QRTR_MARKER:
+ *
+ * Fake header added by libqmi to re-use existing QMUX message parsers for QRTR messages.
+ * QRTR QMI services with a service ID > 0xFF use this fake header where the service ID 
+ * is set to 16 bits instead of 8 bits. This header has no purpose outside of libqmi
+ * and is never send to the actual device implementing these QMI services.
+ *
+ * Since: 1.34
+ */
+#define QMI_MESSAGE_QRTR_MARKER (guint8) 0x02
 
 /**
  * QmiMessage:
@@ -303,6 +315,18 @@ const guint8 *qmi_message_get_raw (QmiMessage  *self,
 const guint8 *qmi_message_get_data (QmiMessage  *self,
                                     gsize       *length,
                                     GError     **error);
+
+/**
+ * qmi_message_get_marker:
+ * @self: a #QmiMessage.
+ *
+ * Gets the marker of the #QmiMessage.
+ *
+ * Returns: The message marker, or 0x00 if message is NULL.
+ *
+ * Since: 1.34
+ */
+guint8 qmi_message_get_marker (QmiMessage *self);
 
 /*****************************************************************************/
 /* TLV builder & writer */

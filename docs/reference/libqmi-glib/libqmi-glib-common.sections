@@ -1411,6 +1411,7 @@ qmi_protocol_error_get_type
 <FILE>qmi-message</FILE>
 <TITLE>QmiMessage</TITLE>
 QMI_MESSAGE_QMUX_MARKER
+QMI_MESSAGE_QRTR_MARKER
 QmiMessage
 qmi_message_new
 qmi_message_new_from_raw
@@ -1429,6 +1430,7 @@ qmi_message_get_message_id
 qmi_message_get_length
 qmi_message_get_raw
 qmi_message_get_data
+qmi_message_get_marker
 <SUBSECTION TLV writer>
 qmi_message_tlv_write_init
 qmi_message_tlv_write_reset

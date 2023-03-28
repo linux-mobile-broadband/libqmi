@@ -67,10 +67,16 @@
 
 #define PACKED __attribute__((packed))
 
-struct qmux {
+struct qmux_header {
   guint16 length;
   guint8 flags;
   guint8 service;
+  guint8 client;
+} PACKED;
+
+struct qrtr_header {
+  guint16 length;
+  guint16 service;
   guint8 client;
 } PACKED;
 
@@ -106,36 +112,55 @@ struct service_message {
 
 struct full_message {
     guint8 marker;
-    struct qmux qmux;
+    union {
+        struct qmux_header qmux;
+        struct qrtr_header qrtr;
+    } header;
     union {
         struct control_message control;
         struct service_message service;
     } qmi;
 } PACKED;
 
+/* qmux_header and qrtr_header must always be of the same size */
+G_STATIC_ASSERT (sizeof (struct qmux_header) == sizeof (struct qrtr_header));
+
 static inline gboolean
 message_is_control (QmiMessage *self)
 {
-    return ((struct full_message *)(self->data))->qmux.service == QMI_SERVICE_CTL;
+    if (((struct full_message *)(self->data))->marker == QMI_MESSAGE_QMUX_MARKER)
+        return ((struct full_message *)(self->data))->header.qmux.service == QMI_SERVICE_CTL;
+
+    return ((struct full_message *)(self->data))->header.qrtr.service == QMI_SERVICE_CTL;
 }
 
 static inline guint16
 get_qmux_length (QmiMessage *self)
 {
-    return GUINT16_FROM_LE (((struct full_message *)(self->data))->qmux.length);
+    if (((struct full_message *)(self->data))->marker == QMI_MESSAGE_QMUX_MARKER)
+    	return GUINT16_FROM_LE (((struct full_message *)(self->data))->header.qmux.length);
+
+    return GUINT16_FROM_LE (((struct full_message *)(self->data))->header.qrtr.length);
 }
 
 static inline void
 set_qmux_length (QmiMessage *self,
                  guint16 length)
 {
-    ((struct full_message *)(self->data))->qmux.length = GUINT16_TO_LE (length);
+    if (((struct full_message *)(self->data))->marker == QMI_MESSAGE_QMUX_MARKER)
+        ((struct full_message *)(self->data))->header.qmux.length = GUINT16_TO_LE (length);
+    else
+        ((struct full_message *)(self->data))->header.qrtr.length = GUINT16_TO_LE (length);
 }
 
 static inline guint8
 get_qmux_flags (QmiMessage *self)
 {
-    return ((struct full_message *)(self->data))->qmux.flags;
+    if (((struct full_message *)(self->data))->marker == QMI_MESSAGE_QMUX_MARKER)
+        return ((struct full_message *)(self->data))->header.qmux.flags;
+
+    /* QMI_MESSAGE_QRTR_MARKER does not support flags */
+    return 0x00;
 }
 
 static inline guint8
@@ -186,7 +211,10 @@ qmi_message_get_service (QmiMessage *self)
 {
     g_return_val_if_fail (self != NULL, QMI_SERVICE_UNKNOWN);
 
-    return (QmiService)((struct full_message *)(self->data))->qmux.service;
+    if (((struct full_message *)(self->data))->marker == QMI_MESSAGE_QMUX_MARKER)
+        return (QmiService)((struct full_message *)(self->data))->header.qmux.service;
+    else
+        return (QmiService)((struct full_message *)(self->data))->header.qrtr.service;
 }
 
 guint8
@@ -194,7 +222,10 @@ qmi_message_get_client_id (QmiMessage *self)
 {
     g_return_val_if_fail (self != NULL, 0);
 
-    return ((struct full_message *)(self->data))->qmux.client;
+    if (((struct full_message *)(self->data))->marker == QMI_MESSAGE_QMUX_MARKER)
+        return ((struct full_message *)(self->data))->header.qmux.client;
+
+    return ((struct full_message *)(self->data))->header.qrtr.client;
 }
 
 guint16
@@ -322,16 +353,17 @@ message_check (QmiMessage  *self,
     guint8     *end;
     struct tlv *tlv;
 
-    if (self->len < (1 + sizeof (struct qmux))) {
+    if (self->len < (1 + sizeof (struct qmux_header))) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
                      "QMUX length too short for QMUX header (%u < %" G_GSIZE_FORMAT ")",
-                     self->len, 1 + sizeof (struct qmux));
+                     self->len, 1 + sizeof (struct qmux_header));
         return FALSE;
     }
 
-    if (((struct full_message *)(self->data))->marker != QMI_MESSAGE_QMUX_MARKER) {
+    if (((struct full_message *)(self->data))->marker != QMI_MESSAGE_QMUX_MARKER &&
+        ((struct full_message *)(self->data))->marker != QMI_MESSAGE_QRTR_MARKER) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
@@ -355,9 +387,9 @@ message_check (QmiMessage  *self,
         return FALSE;
     }
 
-    header_length = sizeof (struct qmux) + (message_is_control (self) ?
-                                            sizeof (struct control_header) :
-                                            sizeof (struct service_header));
+    header_length = sizeof (struct qmux_header) + (message_is_control (self) ?
+                                                   sizeof (struct control_header) :
+                                                   sizeof (struct service_header));
 
     if (qmux_length < header_length) {
         g_set_error (error,
@@ -421,9 +453,10 @@ qmi_message_new (QmiService service,
                           NULL);
 
     /* Create array with enough size for the QMUX marker, the QMUX header and
-     * the QMI header */
+     * the QMI header. Use the qmux_header size for both QMUX and QRTR messages
+     * as they are the same size. */
     buffer_len = (1 +
-                  sizeof (struct qmux) +
+                  sizeof (struct qmux_header) +
                   (service == QMI_SERVICE_CTL ? sizeof (struct control_header) : sizeof (struct service_header)));
 
     /* NOTE:
@@ -438,10 +471,17 @@ qmi_message_new (QmiService service,
     g_byte_array_set_size (self, buffer_len);
 
     buffer = (struct full_message *)(self->data);
-    buffer->marker = QMI_MESSAGE_QMUX_MARKER;
-    buffer->qmux.flags = 0;
-    buffer->qmux.service = service;
-    buffer->qmux.client = client_id;
+    /* QMI messages of services up to 255 are QMUX compatible */
+    if (service <= G_MAXUINT8) {
+        buffer->marker = QMI_MESSAGE_QMUX_MARKER;
+        buffer->header.qmux.flags = 0;
+        buffer->header.qmux.service = (guint8) service;
+        buffer->header.qmux.client = client_id;
+    } else {
+        buffer->marker = QMI_MESSAGE_QRTR_MARKER;
+        buffer->header.qrtr.service = (guint16) service;
+        buffer->header.qrtr.client = client_id;
+    }
 
     if (service == QMI_SERVICE_CTL) {
         buffer->qmi.control.header.flags = 0;
@@ -483,18 +523,28 @@ qmi_message_new_from_data (QmiService   service,
         message_len = sizeof (struct service_header) +
             ((struct service_message *)(qmi_data->data))->header.tlv_length;
     }
-    buffer_len = (1 + sizeof (struct qmux) + message_len);
+
+    /* Use the size of qmux_header for both QMUX and QRTR as they are the same */
+    buffer_len = (1 + sizeof (struct qmux_header) + message_len);
+
     /* Create the GByteArray with buffer_len bytes preallocated */
     self = g_byte_array_sized_new (buffer_len);
     g_byte_array_set_size (self, buffer_len);
 
     /* Set up fake QMUX header */
     buffer = (struct full_message *)(self->data);
-    buffer->marker = QMI_MESSAGE_QMUX_MARKER;
-    buffer->qmux.length = GUINT16_TO_LE (buffer_len - 1);
-    buffer->qmux.flags = 0;
-    buffer->qmux.service = service;
-    buffer->qmux.client = client_id;
+    if (service <= G_MAXUINT8) {
+        buffer->marker = QMI_MESSAGE_QMUX_MARKER;
+        buffer->header.qmux.length = GUINT16_TO_LE (buffer_len - 1);
+        buffer->header.qmux.flags = 0;
+        buffer->header.qmux.service = (guint8) service;
+        buffer->header.qmux.client = client_id;
+    } else {
+        buffer->marker = QMI_MESSAGE_QRTR_MARKER;
+        buffer->header.qrtr.length = GUINT16_TO_LE (buffer_len - 1);
+        buffer->header.qrtr.service = (guint16) service;
+        buffer->header.qrtr.client = client_id;
+    }
 
     /* Move bytes from the qmi_data array to the newly created message */
     memcpy (&buffer->qmi, qmi_data->data, message_len);
@@ -523,7 +573,8 @@ qmi_message_response_new (QmiMessage       *request,
                                 qmi_message_get_message_id (request));
 
     /* Set sender type flag */
-    ((struct full_message *)(((GByteArray *)response)->data))->qmux.flags = 0x80;
+    if (qmi_message_get_service (request) <= G_MAXUINT8)
+        ((struct full_message *)(((GByteArray *)response)->data))->header.qmux.flags = 0x80;
 
     /* Set the response flag */
     if (message_is_control (request))
@@ -557,6 +608,14 @@ qmi_message_unref (QmiMessage *self)
     g_return_if_fail (self != NULL);
 
     g_byte_array_unref (self);
+}
+
+guint8
+qmi_message_get_marker (QmiMessage *self)
+{
+    g_return_val_if_fail (self != NULL, 0x00);
+
+    return ((struct full_message *)(self->data))->marker;
 }
 
 const guint8 *
@@ -1510,14 +1569,18 @@ qmi_message_new_from_raw (GByteArray *raw,
 
     g_return_val_if_fail (raw != NULL, NULL);
 
+    if (((struct full_message *)raw->data)->marker == QMI_MESSAGE_QMUX_MARKER)
+        message_len = GUINT16_FROM_LE (((struct full_message *)raw->data)->header.qmux.length);
+    else
+        message_len = GUINT16_FROM_LE (((struct full_message *)raw->data)->header.qrtr.length);
+
     /* If we didn't even read the QMUX header (comes after the 1-byte marker),
      * leave */
-    if (raw->len < (sizeof (struct qmux) + 1))
+    if (raw->len < (sizeof (struct qrtr_header) + 1))
         return NULL;
 
     /* We need to have read the length reported by the QMUX header (plus the
      * initial 1-byte marker) */
-    message_len = GUINT16_FROM_LE (((struct full_message *)raw->data)->qmux.length);
     if (raw->len < (message_len + 1))
         return NULL;
 
@@ -1608,17 +1671,29 @@ qmi_message_get_printable_full (QmiMessage        *self,
         line_prefix = "";
 
     printable = g_string_new ("");
-    g_string_append_printf (printable,
-                            "%sQMUX:\n"
-                            "%s  length  = %u\n"
-                            "%s  flags   = 0x%02x\n"
-                            "%s  service = \"%s\"\n"
-                            "%s  client  = %u\n",
-                            line_prefix,
-                            line_prefix, get_qmux_length (self),
-                            line_prefix, get_qmux_flags (self),
-                            line_prefix, qmi_service_get_string (qmi_message_get_service (self)),
-                            line_prefix, qmi_message_get_client_id (self));
+    if (qmi_message_get_marker (self) == QMI_MESSAGE_QMUX_MARKER) {
+        g_string_append_printf (printable,
+                                "%sQMUX:\n"
+                                "%s  length  = %u\n"
+                                "%s  flags   = 0x%02x\n"
+                                "%s  service = \"%s\"\n"
+                                "%s  client  = %u\n",
+                                line_prefix,
+                                line_prefix, get_qmux_length (self),
+                                line_prefix, get_qmux_flags (self),
+                                line_prefix, qmi_service_get_string (qmi_message_get_service (self)),
+                                line_prefix, qmi_message_get_client_id (self));
+    } else {
+        g_string_append_printf (printable,
+                                "%sQRTR:\n"
+                                "%s  length  = %u\n"
+                                "%s  service = \"%s\"\n"
+                                "%s  client  = %u\n",
+                                line_prefix,
+                                line_prefix, get_qmux_length (self),
+                                line_prefix, qmi_service_get_string (qmi_message_get_service (self)),
+                                line_prefix, qmi_message_get_client_id (self));
+    }
 
     if (qmi_message_get_service (self) == QMI_SERVICE_CTL)
         qmi_flags_str = qmi_ctl_flag_build_string_from_mask (get_qmi_flags (self));
