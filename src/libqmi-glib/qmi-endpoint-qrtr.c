@@ -44,6 +44,8 @@
 /* Constants for allocating/releasing clients */
 #define QMI_MESSAGE_CTL_ALLOCATE_CID 0x0022
 #define QMI_MESSAGE_CTL_RELEASE_CID 0x0023
+#define QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR 0xFF22
+#define QMI_MESSAGE_CTL_RELEASE_CID_QRTR 0xFF23
 #define QMI_MESSAGE_TLV_ALLOCATION_INFO 0x01
 #define QMI_MESSAGE_INPUT_TLV_SERVICE 0x01
 
@@ -138,7 +140,7 @@ client_message_cb (QrtrClient      *qrtr_client,
                    QmiEndpointQrtr *self)
 {
     QmiMessage        *message;
-    guint              service;
+    QmiService         service;
     guint              cid;
     g_autoptr(GError)  error = NULL;
 
@@ -263,7 +265,7 @@ release_client (QmiEndpointQrtr *self,
 
 static gboolean
 construct_alloc_tlv (QmiMessage *message,
-                     guint8      service,
+                     guint16     service,
                      guint8      client)
 {
     gsize init_offset;
@@ -271,8 +273,14 @@ construct_alloc_tlv (QmiMessage *message,
     init_offset = qmi_message_tlv_write_init (message,
                                               QMI_MESSAGE_TLV_ALLOCATION_INFO,
                                               NULL);
+    if (service > G_MAXUINT8)
+        return init_offset &&
+            qmi_message_tlv_write_guint16 (message, QMI_ENDIAN_LITTLE, service, NULL) &&
+            qmi_message_tlv_write_guint8 (message, client, NULL) &&
+            qmi_message_tlv_write_complete (message, init_offset, NULL);
+
     return init_offset &&
-        qmi_message_tlv_write_guint8 (message, service, NULL) &&
+        qmi_message_tlv_write_guint8 (message, (guint8) service, NULL) &&
         qmi_message_tlv_write_guint8 (message, client, NULL) &&
         qmi_message_tlv_write_complete (message, init_offset, NULL);
 }
@@ -283,13 +291,14 @@ handle_alloc_cid (QmiEndpointQrtr *self,
 {
     gsize                 offset = 0;
     gsize                 init_offset;
-    guint8                service;
+    QmiService            service;
     guint                 cid;
     g_autoptr(QmiMessage) response = NULL;
     g_autoptr(GError)     error = NULL;
 
     if (((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_TLV_ALLOCATION_INFO, NULL, &error)) == 0) ||
-        !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &service, &error)) {
+        (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID && !qmi_message_tlv_read_guint8 (message, init_offset, &offset, (guint8 *) &service, &error)) ||
+        (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR && !qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, (guint16 *) &service, &error))) {
         g_debug ("[%s] error allocating CID: could not parse message: %s",
                  qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
         response = qmi_message_response_new (message, QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE);
@@ -299,6 +308,16 @@ handle_alloc_cid (QmiEndpointQrtr *self,
         add_qmi_message_to_buffer (self, g_steal_pointer (&response));
         return;
     }
+
+    /* Cast service ID based on message ID */
+    if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID)
+        service = (guint8) service;
+    else if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR)
+        service = (guint16) service;
+    else
+        g_assert_not_reached ();
+
+    g_debug("Extracted service: %d", service);
 
     cid = allocate_client (self, service, &error);
     if (!cid) {
@@ -328,13 +347,14 @@ handle_release_cid (QmiEndpointQrtr *self,
 {
     gsize                 offset = 0;
     gsize                 init_offset;
-    guint8                service;
+    QmiService            service;
     guint8                cid;
     g_autoptr(QmiMessage) response = NULL;
     g_autoptr(GError)     error = NULL;
 
     if (((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_TLV_ALLOCATION_INFO, NULL, &error)) == 0) ||
-        !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &service, &error) ||
+        (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID && !qmi_message_tlv_read_guint8 (message, init_offset, &offset, (guint8 *) &service, &error)) ||
+        (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID_QRTR && !qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, (guint16 *) &service, &error)) ||
         !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &cid, &error)) {
         g_debug ("[%s] error releasing CID: could not parse message: %s",
                  qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
@@ -390,9 +410,11 @@ handle_ctl_message (QmiEndpointQrtr *self,
 {
     switch (qmi_message_get_message_id (message)) {
         case QMI_MESSAGE_CTL_ALLOCATE_CID:
+        case QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR:
             handle_alloc_cid (self, message);
             break;
         case QMI_MESSAGE_CTL_RELEASE_CID:
+        case QMI_MESSAGE_CTL_RELEASE_CID_QRTR:
             handle_release_cid (self, message);
             break;
         case QMI_MESSAGE_CTL_SYNC:
