@@ -50,9 +50,11 @@
 #define QMI_MESSAGE_OUTPUT_TLV_RESULT 0x02
 #define QMI_MESSAGE_OUTPUT_TLV_ALLOCATION_INFO 0x01
 #define QMI_MESSAGE_CTL_ALLOCATE_CID 0x0022
+#define QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR 0xFF22
 
 #define QMI_MESSAGE_INPUT_TLV_RELEASE_INFO 0x01
 #define QMI_MESSAGE_CTL_RELEASE_CID 0x0023
+#define QMI_MESSAGE_CTL_RELEASE_CID_QRTR 0xFF23
 
 #define QMI_MESSAGE_CTL_INTERNAL_PROXY_OPEN 0xFF00
 #define QMI_MESSAGE_CTL_INTERNAL_PROXY_OPEN_INPUT_TLV_DEVICE_PATH 0x01
@@ -597,7 +599,7 @@ track_cid (Client     *client,
     guint16        error_status;
     guint16        error_code;
     GError        *error = NULL;
-    guint8         service_tmp;
+    QmiService     service_tmp;
     QmiClientInfo  info;
     gint           i;
 
@@ -617,13 +619,14 @@ track_cid (Client     *client,
 
     offset = 0;
     if (((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_OUTPUT_TLV_ALLOCATION_INFO, NULL, &error)) == 0) ||
-        !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &service_tmp, &error) ||
+	(qmi_message_get_marker (message) == QMI_MESSAGE_QMUX_MARKER && !qmi_message_tlv_read_guint8 (message, init_offset, &offset, (guint8 *) &service_tmp, &error)) ||
+	(qmi_message_get_marker (message) == QMI_MESSAGE_QRTR_MARKER && !qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, (guint16 *) &service_tmp, &error)) ||
         !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &(info.cid), &error)) {
         g_warning ("invalid 'CTL allocate CID' response: missing or invalid allocation info TLV: %s", error->message);
         g_error_free (error);
         return;
     }
-    info.service = (QmiService)service_tmp;
+    info.service = service_tmp;
 
     /* Check if it already exists */
     i = qmi_client_info_array_lookup_cid (client->qmi_client_info_array, info.service, info.cid);
@@ -644,7 +647,7 @@ untrack_cid (QmiProxy   *self,
     gsize          offset = 0;
     gsize          init_offset;
     GError        *error = NULL;
-    guint8         service_tmp;
+    QmiService     service_tmp;
     QmiClientInfo  info;
     gint           i;
 
@@ -652,13 +655,14 @@ untrack_cid (QmiProxy   *self,
     g_assert (qmi_message_is_request (message));
 
     if (((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_INPUT_TLV_RELEASE_INFO, NULL, &error)) == 0) ||
-        !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &service_tmp, &error) ||
+	(qmi_message_get_marker (message) == QMI_MESSAGE_QMUX_MARKER && !qmi_message_tlv_read_guint8 (message, init_offset, &offset, (guint8 *) &service_tmp, &error)) ||
+	(qmi_message_get_marker (message) == QMI_MESSAGE_QRTR_MARKER && !qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, (guint16 *) &service_tmp, &error)) ||
         !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &(info.cid), &error)) {
         g_warning ("invalid 'CTL release CID' request: missing or invalid release info TLV: %s", error->message);
         g_error_free (error);
         return;
     }
-    info.service = (QmiService)service_tmp;
+    info.service = service_tmp;
 
     /* Check if it already exists in the client */
     i = qmi_client_info_array_lookup_cid (client->qmi_client_info_array, info.service, info.cid);
@@ -833,7 +837,7 @@ device_command_ready (QmiDevice    *device,
 
     if (qmi_message_get_service (response) == QMI_SERVICE_CTL) {
         qmi_message_set_transaction_id (response, request->in_trid);
-        if (qmi_message_get_message_id (response) == QMI_MESSAGE_CTL_ALLOCATE_CID)
+        if (qmi_message_get_message_id (response) == QMI_MESSAGE_CTL_ALLOCATE_CID || qmi_message_get_message_id (response) == QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR)
             track_cid (request->client, response);
     }
 
@@ -882,7 +886,7 @@ process_message (QmiProxy   *self,
         qmi_message_set_transaction_id (message, 0);
         /* Try to untrack QMI client as soon as we detect the associated
          * release message, no need to wait for the response. */
-        if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID)
+        if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID || qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID_QRTR)
             untrack_cid (self, client, message);
     } else
         track_implicit_cid (self, client, message);
@@ -919,7 +923,8 @@ parse_request (QmiProxy *self,
          * If we broke framing, an error should be reported and the device
          * should get closed */
         if (client->buffer->len > 0 &&
-            client->buffer->data[0] != QMI_MESSAGE_QMUX_MARKER) {
+            client->buffer->data[0] != QMI_MESSAGE_QMUX_MARKER &&
+            client->buffer->data[0] != QMI_MESSAGE_QRTR_MARKER) {
             /* TODO: Report fatal error */
             g_warning ("QMI framing error detected");
             return;
