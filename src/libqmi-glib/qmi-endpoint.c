@@ -62,12 +62,13 @@ qmi_endpoint_parse_buffer (QmiEndpoint        *self,
         GError *inner_error = NULL;
         QmiMessage *message;
 
-        /* Every message received must start with the QMUX marker.
+        /* Every message received must start with the QMUX or QRTR marker.
          * If it doesn't, we broke framing :-/
          * If we broke framing, an error should be reported and the device
          * should get closed */
         if (self->priv->buffer->len > 0 &&
-            self->priv->buffer->data[0] != QMI_MESSAGE_QMUX_MARKER) {
+            self->priv->buffer->data[0] != QMI_MESSAGE_QMUX_MARKER &&
+            self->priv->buffer->data[0] != QMI_MESSAGE_QRTR_MARKER) {
             g_set_error (error,
                          QMI_PROTOCOL_ERROR,
                          QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE,
