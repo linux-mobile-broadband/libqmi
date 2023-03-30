@@ -322,7 +322,7 @@ const guint8 *qmi_message_get_data (QmiMessage  *self,
  *
  * Gets the marker of the #QmiMessage.
  *
- * Returns: The message marker, or 0x00 if message is NULL.
+ * Returns: The message marker.
  *
  * Since: 1.34
  */
