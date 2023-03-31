@@ -114,11 +114,13 @@ process_next_command (TestPortContext *ctx,
     gchar        *received;
     GByteArray   *response;
 
-    /* Every message received must start with the QMUX marker.
+    /* Every message received must start with the QMUX or QRTR marker.
      * If it doesn't, we broke framing :-/
      * If we broke framing, an error should be reported and the device
      * should get closed */
-    if (buffer->len > 0 && buffer->data[0] != QMI_MESSAGE_QMUX_MARKER)
+    if (buffer->len > 0 &&
+        buffer->data[0] != QMI_MESSAGE_QMUX_MARKER &&
+        buffer->data[0] != QMI_MESSAGE_QRTR_MARKER)
         g_assert_not_reached ();
 
     message = qmi_message_new_from_raw (buffer, &error);
