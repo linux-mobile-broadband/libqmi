@@ -4,6 +4,7 @@
  * libmbim-glib -- GLib/GIO based library to control MBIM devices
  *
  * Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2022 Intel Corporation
  */
 
 #ifndef _LIBMBIM_GLIB_MBIM_ERRORS_H_
@@ -129,6 +130,13 @@ typedef enum { /*< since=1.0 >*/
  * @MBIM_STATUS_ERROR_SMS_LANG_NOT_SUPPORTED: Language not supported in SMS.
  * @MBIM_STATUS_ERROR_SMS_ENCODING_NOT_SUPPORTED: Encoding not supported in SMS.
  * @MBIM_STATUS_ERROR_SMS_FORMAT_NOT_SUPPORTED: Format not supported in SMS.
+ * @MBIM_STATUS_ERROR_INVALID_SIGNATURE: Invalid signature. Defined by Google for the carrier lock operation. Since 1.30.
+ * @MBIM_STATUS_ERROR_INVALID_IMEI: Invalid IMEI. Defined by Google for the carrier lock operation. Since 1.30.
+ * @MBIM_STATUS_ERROR_INVALID_TIMESTAMP: Invalid timestamp. Defined by Google for the carrier lock operation. Since 1.30.
+ * @MBIM_STATUS_ERROR_NETWORK_LIST_TOO_LARGE: List of networks too large. Defined by Google for the carrier lock operation. Since 1.30.
+ * @MBIM_STATUS_ERROR_SIGNATURE_ALGORITHM_NOT_SUPPORTED: Signature algorithm not supported. Defined by Google for the carrier lock operation. Since 1.30.
+ * @MBIM_STATUS_ERROR_FEATURE_NOT_SUPPORTED: Feature not supported. Defined by Google for the carrier lock operation. Since 1.30.
+ * @MBIM_STATUS_ERROR_DECODE_OR_PARSING_ERROR: Decode or parsing error. Defined by Google for the carrier lock operation. Since 1.30.
  *
  * Status of the MBIM request.
  *
@@ -178,7 +186,15 @@ typedef enum { /*< since=1.0 >*/
     MBIM_STATUS_ERROR_SMS_NETWORK_TIMEOUT              = 101, /*< nick=SmsNetworkTimeout >*/
     MBIM_STATUS_ERROR_SMS_LANG_NOT_SUPPORTED           = 102, /*< nick=SmsLangNotSupported >*/
     MBIM_STATUS_ERROR_SMS_ENCODING_NOT_SUPPORTED       = 103, /*< nick=SmsEncodingNotSupported >*/
-    MBIM_STATUS_ERROR_SMS_FORMAT_NOT_SUPPORTED         = 104  /*< nick=SmsFormatNotSupported >*/
+    MBIM_STATUS_ERROR_SMS_FORMAT_NOT_SUPPORTED         = 104, /*< nick=SmsFormatNotSupported >*/
+    /* google defined error for carrier lock */
+    MBIM_STATUS_ERROR_INVALID_SIGNATURE                 = 0x91000001, /*< nick=InvalidSignature >*/
+    MBIM_STATUS_ERROR_INVALID_IMEI                      = 0x91000002, /*< nick=InvalidImei >*/
+    MBIM_STATUS_ERROR_INVALID_TIMESTAMP                 = 0x91000003, /*< nick=InvalidTimeStamp >*/
+    MBIM_STATUS_ERROR_NETWORK_LIST_TOO_LARGE            = 0x91000004, /*< nick=NetworkListTooLarge >*/
+    MBIM_STATUS_ERROR_SIGNATURE_ALGORITHM_NOT_SUPPORTED = 0x91000005, /*< nick=SignatureAlgorithmNotSupported >*/
+    MBIM_STATUS_ERROR_FEATURE_NOT_SUPPORTED             = 0x91000006, /*< nick=FeatureNotSupported >*/
+    MBIM_STATUS_ERROR_DECODE_OR_PARSING_ERROR           = 0x91000007, /*< nick=DecodeOrParsingError >*/
 } MbimStatusError;
 
 #endif /* _LIBMBIM_GLIB_MBIM_ERRORS_H_ */

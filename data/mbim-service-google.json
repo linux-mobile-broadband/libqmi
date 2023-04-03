@@ -1,0 +1,31 @@
+[
+  // *********************************************************************************
+  { "type" : "Service",
+    "name" : "Google" },
+
+  // *********************************************************************************
+  { "name"         : "Carrier Lock",
+    "type"         : "Command",
+    "since"        : "1.30",
+    "set"          : [ { "name"        : "Data",
+                         "format"      : "ref-byte-array-no-offset" } ],
+    "query"        : [],
+    "response"     : [ { "name"          : "CarrierLockStatus",
+                         "format"        : "guint32",
+                         "public-format" : "MbimCarrierLockStatus" },
+                       { "name"          : "CarrierLockModemState",
+                         "format"        : "guint32",
+                         "public-format" : "MbimCarrierLockModemState" },
+                       { "name"          : "CarrierLockCause",
+                         "format"        : "guint32",
+                         "public-format" : "MbimCarrierLockCause" } ],
+    "notification" : [ { "name"          : "CarrierLockStatus",
+                         "format"        : "guint32",
+                         "public-format" : "MbimCarrierLockStatus" },
+                       { "name"          : "CarrierLockModemState",
+                         "format"        : "guint32",
+                         "public-format" : "MbimCarrierLockModemState" },
+                       { "name"          : "CarrierLockCause",
+                         "format"        : "guint32",
+                         "public-format" : "MbimCarrierLockCause" } ] }
+]

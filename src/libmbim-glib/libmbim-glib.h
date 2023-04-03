@@ -48,6 +48,7 @@
 #include "mbim-ms-voice-extensions.h"
 #include "mbim-intel-mutual-authentication.h"
 #include "mbim-intel-tools.h"
+#include "mbim-google.h"
 
 /* backwards compatibility */
 #include "mbim-compat.h"

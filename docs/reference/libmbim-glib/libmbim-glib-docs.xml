@@ -115,6 +115,11 @@
   </chapter>
 
   <chapter>
+    <title>Google-defined Services</title>
+    <xi:include href="xml/mbim-google.xml"/>
+  </chapter>
+
+  <chapter>
     <title>libmbim-defined Services</title>
     <xi:include href="xml/mbim-proxy-control.xml"/>
   </chapter>

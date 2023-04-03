@@ -15,6 +15,7 @@
 #include "mbim-ms-firmware-id.h"
 #include "mbim-ms-basic-connect-extensions.h"
 #include "mbim-ms-uicc-low-level-access.h"
+#include "mbim-google.h"
 #include "mbim-message.h"
 #include "mbim-tlv.h"
 #include "mbim-cid.h"
@@ -2141,7 +2142,7 @@ test_ms_basic_connect_extensions_base_stations (void)
     g_autoptr(MbimMessage)                         response = NULL;
     gboolean                                       result;
     MbimDataClass                                  system_type;
-	g_autoptr(MbimCellInfoServingGsm)              gsm_serving_cell = NULL;
+    g_autoptr(MbimCellInfoServingGsm)              gsm_serving_cell = NULL;
     g_autoptr(MbimCellInfoServingUmts)             umts_serving_cell = NULL;
     g_autoptr(MbimCellInfoServingTdscdma)          tdscdma_serving_cell = NULL;
     g_autoptr(MbimCellInfoServingLte)              lte_serving_cell = NULL;
@@ -3392,6 +3393,109 @@ test_ms_uicc_low_level_access_application_list (void)
     g_assert (memcmp (applications[0]->pin_key_references, expected_pin_key_references, sizeof (expected_pin_key_references)) == 0);
 }
 
+static void
+test_google_carrier_lock (void)
+{
+    g_autoptr(GError)         error = NULL;
+    g_autoptr(MbimMessage)    response = NULL;
+    gboolean                  result;
+    MbimCarrierLockStatus     carrier_lock_status;
+    MbimCarrierLockModemState modem_state;
+    MbimCarrierLockCause      carrier_lock_cause;
+
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x3C, 0x00, 0x00, 0x00, /* length */
+        0x03, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done message */
+        0x3E, 0x1E, 0x92, 0xCF, /* service id */
+        0xC5, 0x3D, 0x4F, 0x14,
+        0x85, 0xD0, 0xA8, 0x6A,
+        0xD9, 0xE1, 0x22, 0x45,
+        0x01, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x0C, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x01, 0x00, 0x00, 0x00, /* carrier lock status*/
+        0x00, 0x00, 0x00, 0x00, /* modem state */
+        0x00, 0x00, 0x00, 0x00, /* carrier lock cause */
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
+    test_message_printable (response, 1, 0);
+
+    result = mbim_message_google_carrier_lock_response_parse (
+                 response,
+                 &carrier_lock_status,
+                 &modem_state,
+                 &carrier_lock_cause,
+                 &error);
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (carrier_lock_status, ==, MBIM_CARRIER_LOCK_STATUS_APPLIED);
+    g_assert_cmpuint (modem_state, ==, MBIM_CARRIER_LOCK_MODEM_STATE_DEREGISTERED);
+    g_assert_cmpuint (carrier_lock_cause, ==, MBIM_CARRIER_LOCK_CAUSE_NOT_APPLICABLE);
+}
+
+static void
+test_google_carrier_lock_notification (void)
+{
+    g_autoptr(GError)         error = NULL;
+    g_autoptr(MbimMessage)    response = NULL;
+    gboolean                  result;
+    MbimCarrierLockStatus     carrier_lock_status;
+    MbimCarrierLockModemState modem_state;
+    MbimCarrierLockCause      carrier_lock_cause;
+
+    const guint8 buffer [] =  {
+        /* header */
+        0x07, 0x00, 0x00, 0x80, /* type */
+        0x38, 0x00, 0x00, 0x00, /* length */
+        0x03, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done message */
+        0x3E, 0x1E, 0x92, 0xCF, /* service id */
+        0xC5, 0x3D, 0x4F, 0x14,
+        0x85, 0xD0, 0xA8, 0x6A,
+        0xD9, 0xE1, 0x22, 0x45,
+        0x01, 0x00, 0x00, 0x00, /* command id */
+        0x0C, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x01, 0x00, 0x00, 0x00, /* carrier lock status */
+        0x00, 0x00, 0x00, 0x00, /* modem state */
+        0x00, 0x00, 0x00, 0x00, /* carrier lock cause */
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (mbim_message_validate (response, &error));
+    g_assert_no_error (error);
+
+    test_message_printable (response, 1, 0);
+
+    result = mbim_message_google_carrier_lock_notification_parse (
+                 response,
+                 &carrier_lock_status,
+                 &modem_state,
+                 &carrier_lock_cause,
+                 &error);
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (carrier_lock_status, ==, MBIM_CARRIER_LOCK_STATUS_APPLIED);
+    g_assert_cmpuint (modem_state, ==, MBIM_CARRIER_LOCK_MODEM_STATE_DEREGISTERED);
+    g_assert_cmpuint (carrier_lock_cause, ==, MBIM_CARRIER_LOCK_CAUSE_NOT_APPLICABLE);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -3434,6 +3538,8 @@ int main (int argc, char **argv)
     g_test_add_func (PREFIX "/basic-connect-extensions/wake-reason/command/payload", test_ms_basic_connect_extensions_wake_reason_command_payload);
     g_test_add_func (PREFIX "/basic-connect-extensions/wake-reason/packet", test_ms_basic_connect_extensions_wake_reason_packet);
     g_test_add_func (PREFIX "/ms-uicc-low-level-access/application-list", test_ms_uicc_low_level_access_application_list);
+    g_test_add_func (PREFIX "/google/carrier-lock-response", test_google_carrier_lock);
+    g_test_add_func (PREFIX "/google/carrier-lock-notify", test_google_carrier_lock_notification);
 
 #undef PREFIX
 

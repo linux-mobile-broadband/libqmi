@@ -10,6 +10,7 @@ mbimcli_sources = files(
   'mbimcli-intel-thermal-rf.c',
   'mbimcli-ms-basic-connect-extensions.c',
   'mbimcli-ms-firmware-id.c',
+  'mbimcli-google.c',
   'mbimcli-ms-host-shutdown.c',
   'mbimcli-ms-sar.c',
   'mbimcli-ms-uicc-low-level-access.c',

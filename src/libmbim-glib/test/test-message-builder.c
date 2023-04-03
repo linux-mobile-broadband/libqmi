@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /*
  * Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2023 Intel Corporation
  */
 
 #include <config.h>
@@ -19,6 +20,7 @@
 #include "mbim-dss.h"
 #include "mbim-ms-host-shutdown.h"
 #include "mbim-ms-basic-connect-extensions.h"
+#include "mbim-google.h"
 
 static void
 test_message_trace (const guint8 *computed,
@@ -1771,6 +1773,70 @@ test_ms_basic_connect_v3_connect_set (void)
     mbim_message_unref (message);
 }
 
+static void
+test_google_carrier_lock_set (void)
+{
+    g_autoptr(GError)      error = NULL;
+    g_autoptr(MbimMessage) message = NULL;
+
+    const guint8 expected_message [] = {
+        /* header */
+        0x03, 0x00, 0x00, 0x00, /* type */
+        0x40, 0x00, 0x00, 0x00, /* length */
+        0x01, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_message */
+        0x3E, 0x1E, 0x92, 0xCF, /* service id */
+        0xC5, 0x3D, 0x4F, 0x14,
+        0x85, 0xD0, 0xA8, 0x6A,
+        0xD9, 0xE1, 0x22, 0x45,
+        0x01, 0x00, 0x00, 0x00, /* command id */
+        0x01, 0x00, 0x00, 0x00, /* command type */
+        0x10, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x0A, 0x00, 0x00, 0x00, /* data buffer */
+        0x56, 0x24, 0x46, 0x95,
+        0xAB, 0xCD, 0x25, 0x59,
+        0x14, 0x35, 0x00, 0x00,
+    };
+
+    const guint8 data [] = {
+        0x56, 0x24, 0x46, 0x95,
+        0xAB, 0xCD, 0x25, 0x59,
+        0x14, 0x35,
+    };
+    message = mbim_message_google_carrier_lock_set_new (
+                  sizeof (data),
+                  data,
+                  &error);
+
+    g_assert_no_error (error);
+    g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+
+    mbim_message_set_transaction_id (message, 1);
+
+    test_message_trace ((const guint8 *)((GByteArray *)message)->data,
+                        ((GByteArray *)message)->len,
+                        expected_message,
+                        sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_get_transaction_id (message), ==, 1);
+    g_assert_cmpuint (mbim_message_get_message_type   (message), ==, MBIM_MESSAGE_TYPE_COMMAND);
+    g_assert_cmpuint (mbim_message_get_message_length (message), ==, sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_command_get_service      (message), ==, MBIM_SERVICE_GOOGLE);
+    g_assert_cmpuint (mbim_message_command_get_cid          (message), ==, MBIM_CID_GOOGLE_CARRIER_LOCK);
+    g_assert_cmpuint (mbim_message_command_get_command_type (message), ==, MBIM_MESSAGE_COMMAND_TYPE_SET);
+
+    g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
+    g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    test_message_printable (message, 1, 0);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -1798,6 +1864,7 @@ int main (int argc, char **argv)
     g_test_add_func (PREFIX "/ms-basic-connect-extensions/registration-parameters/set/1-unnamed-tlv", test_ms_basic_connect_extensions_registration_parameters_set_1_unnamed_tlv);
     g_test_add_func (PREFIX "/ms-basic-connect-extensions/registration-parameters/set/3-unnamed-tlvs", test_ms_basic_connect_extensions_registration_parameters_set_3_unnamed_tlvs);
     g_test_add_func (PREFIX "/ms-basic-connect-v3/connect/set", test_ms_basic_connect_v3_connect_set);
+    g_test_add_func (PREFIX "/google/carrier-lock/set", test_google_carrier_lock_set);
 
 #undef PREFIX
 

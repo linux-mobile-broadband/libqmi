@@ -472,6 +472,20 @@ typedef enum { /*< since=1.30 >*/
 } MbimCidIntelTools;
 
 /**
+ * MbimCidGoogle:
+ * @MBIM_CID_GOOGLE_UNKNOWN: Unknown command.
+ * @MBIM_CID_GOOGLE_CARRIER_LOCK: Carrier lock.
+ *
+ * MBIM commands in the %MBIM_SERVICE_GOOGLE service.
+ *
+ * Since: 1.30
+ */
+typedef enum { /*< since=1.30 >*/
+    MBIM_CID_GOOGLE_UNKNOWN      = 0,
+    MBIM_CID_GOOGLE_CARRIER_LOCK = 1,
+} MbimCidGoogle;
+
+/**
  * mbim_cid_can_set:
  * @service: a #MbimService.
  * @cid: a command ID.

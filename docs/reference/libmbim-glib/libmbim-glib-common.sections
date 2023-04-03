@@ -35,6 +35,7 @@ MBIM_UUID_INTEL_THERMAL_RF
 MBIM_UUID_MS_VOICE_EXTENSIONS
 MBIM_UUID_INTEL_MUTUAL_AUTHENTICATION
 MBIM_UUID_INTEL_TOOLS
+MBIM_UUID_GOOGLE
 <SUBSECTION Methods>
 mbim_service_get_string
 mbim_service_lookup_name
@@ -79,6 +80,7 @@ MbimCidIntelThermalRf
 MbimCidMsVoiceExtensions
 MbimCidIntelMutualAuthentication
 MbimCidIntelTools
+MbimCidGoogle
 <SUBSECTION Methods>
 mbim_cid_can_set
 mbim_cid_can_query
@@ -106,6 +108,7 @@ mbim_cid_intel_thermal_rf_get_string
 mbim_cid_ms_voice_extensions_get_string
 mbim_cid_intel_mutual_authentication_get_string
 mbim_cid_intel_tools_get_string
+mbim_cid_google_get_string
 <SUBSECTION Private>
 mbim_cid_atds_build_string_from_mask
 mbim_cid_basic_connect_build_string_from_mask
@@ -129,6 +132,7 @@ mbim_cid_intel_thermal_rf_build_string_from_mask
 mbim_cid_ms_voice_extensions_build_string_from_mask
 mbim_cid_intel_mutual_authentication_build_string_from_mask
 mbim_cid_intel_tools_build_string_from_mask
+mbim_cid_google_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_CID_ATDS
 MBIM_TYPE_CID_AUTH
@@ -152,6 +156,7 @@ MBIM_TYPE_CID_INTEL_THERMAL_RF
 MBIM_TYPE_CID_MS_VOICE_EXTENSIONS
 MBIM_TYPE_CID_INTEL_MUTUAL_AUTHENTICATION
 MBIM_TYPE_CID_INTEL_TOOLS
+MBIM_TYPE_CID_GOOGLE
 mbim_cid_atds_get_type
 mbim_cid_auth_get_type
 mbim_cid_basic_connect_get_type
@@ -174,6 +179,7 @@ mbim_cid_intel_thermal_rf_get_type
 mbim_cid_ms_voice_extensions_get_type
 mbim_cid_intel_mutual_authentication_get_type
 mbim_cid_intel_tools_get_type
+mbim_cid_google_get_type
 </SECTION>
 
 <SECTION>
@@ -428,6 +434,9 @@ MbimUiccFileAccessibility
 MbimUiccFileType
 MbimUiccFileStructure
 MbimTraceCommand
+MbimCarrierLockStatus
+MbimCarrierLockModemState
+MbimCarrierLockCause
 <SUBSECTION Methods>
 mbim_device_type_get_string
 mbim_cellular_class_build_string_from_mask
@@ -524,6 +533,9 @@ mbim_uicc_file_accessibility_get_string
 mbim_uicc_file_type_get_string
 mbim_uicc_file_structure_get_string
 mbim_trace_command_get_string
+mbim_carrier_lock_status_get_string
+mbim_carrier_lock_modem_state_get_string
+mbim_carrier_lock_cause_get_string
 <SUBSECTION Private>
 mbim_device_type_build_string_from_mask
 mbim_cellular_class_get_string
@@ -621,6 +633,9 @@ mbim_uicc_file_accessibility_build_string_from_mask
 mbim_uicc_file_type_build_string_from_mask
 mbim_uicc_file_structure_build_string_from_mask
 mbim_trace_command_build_string_from_mask
+mbim_carrier_lock_status_build_string_from_mask
+mbim_carrier_lock_modem_state_build_string_from_mask
+mbim_carrier_lock_cause_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_ACTIVATION_COMMAND
 MBIM_TYPE_ACTIVATION_STATE
@@ -722,6 +737,9 @@ MBIM_TYPE_UICC_FILE_ACCESSIBILITY
 MBIM_TYPE_UICC_FILE_TYPE
 MBIM_TYPE_UICC_FILE_STRUCTURE
 MBIM_TYPE_TRACE_COMMAND
+MBIM_TYPE_CARRIER_LOCK_STATUS
+MBIM_TYPE_CARRIER_LOCK_MODEM_STATE
+MBIM_TYPE_CARRIER_LOCK_CAUSE
 mbim_activation_command_get_type
 mbim_activation_state_get_type
 mbim_auth_protocol_get_type
@@ -822,6 +840,9 @@ mbim_uicc_file_accessibility_get_type
 mbim_uicc_file_type_get_type
 mbim_uicc_file_structure_get_type
 mbim_trace_command_get_type
+mbim_carrier_lock_status_get_type
+mbim_carrier_lock_modem_state_get_type
+mbim_carrier_lock_cause_get_type
 </SECTION>
 
 <SECTION>

@@ -2035,6 +2035,57 @@ typedef enum { /*< since=1.28 >*/
     MBIM_TRACE_COMMAND_FLASH_INTERVAL = 3,
 } MbimTraceCommand;
 
+/*****************************************************************************/
+/* 'Google Carrier Lock' enums */
+
+/**
+ * MbimCarrierLockStatus:
+ * @MBIM_CARRIER_LOCK_STATUS_NOT_APPLIED: Carrier lock not applied.
+ * @MBIM_CARRIER_LOCK_STATUS_APPLIED: Carrier lock applied.
+ *
+ * Status of carrier lock.
+ *
+ * Since: 1.30
+ */
+typedef enum { /*< since=1.30 >*/
+    MBIM_CARRIER_LOCK_STATUS_NOT_APPLIED = 0,
+    MBIM_CARRIER_LOCK_STATUS_APPLIED     = 1,
+} MbimCarrierLockStatus;
+
+/**
+ * MbimCarrierLockModemState:
+ * @MBIM_CARRIER_LOCK_MODEM_STATE_DEREGISTERED: Modem deregistered.
+ * @MBIM_CARRIER_LOCK_MODEM_STATE_DEREGISTRATION_IN_PROGRESS: Modem de-registration in progress.
+ * @MBIM_CARRIER_LOCK_MODEM_STATE_REGISTRATION_IN_PROGRESS: Modem registration state in progress.
+ * @MBIM_CARRIER_LOCK_MODEM_STATE_REGISTERED: Modem registered.
+ *
+ * State of modem after a carrier lock state update.
+ *
+ * Since: 1.30
+ */
+typedef enum { /*< since=1.30 >*/
+    MBIM_CARRIER_LOCK_MODEM_STATE_DEREGISTERED               = 0,
+    MBIM_CARRIER_LOCK_MODEM_STATE_DEREGISTRATION_IN_PROGRESS = 1,
+    MBIM_CARRIER_LOCK_MODEM_STATE_REGISTRATION_IN_PROGRESS   = 2,
+    MBIM_CARRIER_LOCK_MODEM_STATE_REGISTERED                 = 3,
+} MbimCarrierLockModemState;
+
+/**
+ * MbimCarrierLockCause:
+ * @MBIM_CARRIER_LOCK_CAUSE_NOT_APPLICABLE: Cause not applicable.
+ * @MBIM_CARRIER_LOCK_CAUSE_SIM_LOCK_POLICY_MISMATCH: Sim lock policy mismatch.
+ * @MBIM_CARRIER_LOCK_CAUSE_SIM_LOCK_POLICY_MATCHED: Sim lock policy matched.
+ *
+ * Carrier lock cause.
+ *
+ * Since: 1.30
+ */
+typedef enum { /*< since=1.30 >*/
+    MBIM_CARRIER_LOCK_CAUSE_NOT_APPLICABLE           = 0,
+    MBIM_CARRIER_LOCK_CAUSE_SIM_LOCK_POLICY_MISMATCH = 1,
+    MBIM_CARRIER_LOCK_CAUSE_SIM_LOCK_POLICY_MATCHED  = 2,
+} MbimCarrierLockCause;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */

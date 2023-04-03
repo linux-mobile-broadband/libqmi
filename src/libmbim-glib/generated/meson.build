@@ -110,6 +110,7 @@ services_data = [
   ['ussd'],
   ['intel-mutual-authentication'],
   ['intel-tools'],
+  ['google'],
 ]
 
 foreach service_data: services_data
