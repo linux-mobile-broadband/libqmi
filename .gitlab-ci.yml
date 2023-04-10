@@ -44,7 +44,7 @@ build-no-introspection:
     - ninja -C build
     - ninja -C build install
 
-build-introspection:
+build-debug:
   stage: build
   extends:
   - .fdo.distribution-image@ubuntu
@@ -55,9 +55,11 @@ build-introspection:
     - tags
     - schedules
   script:
-    - meson setup build --prefix=/usr -Dwerror=true
+    - meson setup build --buildtype=debug --prefix=/usr -Dgtk_doc=true -Dwerror=true
     - ninja -C build
     - ninja -C build install
+    - ninja -C build dist
+    - ninja -C build uninstall
 
 build-no-deprecated:
   stage: build
