@@ -202,6 +202,35 @@ build-collection-basic:
     - ninja -C build
     - ninja -C build install
 
+build-debug:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - main
+    - merge_requests
+    - tags
+    - schedules
+  script:
+    - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
+    - pushd libmbim
+    - meson setup build --prefix=/usr -Dgtk_doc=true
+    - ninja -C build
+    - ninja -C build install
+    - popd
+    - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib.git
+    - pushd libqrtr-glib
+    - meson setup build --prefix=/usr -Dgtk_doc=true
+    - ninja -C build
+    - ninja -C build install
+    - popd
+    - meson setup build --buildtype=debug --prefix=/usr -Dwerror=true -Dgtk_doc=true
+    - ninja -C build
+    - ninja -C build install
+    - ninja -C build dist
+    - ninja -C build uninstall
+
 build-release:
   stage: build
   extends:
