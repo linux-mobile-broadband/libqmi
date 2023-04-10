@@ -26,10 +26,9 @@ build container:
   stage: container prep
   only:
     - main
-    - branches
     - merge_requests
     - tags
-    - pushes
+    - schedules
 
 build-no-qrtr-no-mbim-no-rmnet-no-introspection:
   stage: build
