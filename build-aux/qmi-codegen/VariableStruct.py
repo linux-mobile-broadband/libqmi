@@ -45,6 +45,8 @@ class VariableStruct(Variable):
         self.public_format = self.element_type
         self.private_format = self.public_format
 
+        self.since = dictionary['since'] if 'since' in dictionary else ''
+
         # Load members of this struct
         self.members = []
         for member_dictionary in dictionary['contents']:
@@ -108,7 +110,7 @@ class VariableStruct(Variable):
             member['object'].emit_types(hfile, cfile, since, static)
 
         translations = { 'format' : self.public_format,
-                         'since'  : since }
+                         'since'  : since if not self.since else self.since }
         template = '\n'
         hfile.write(string.Template(template).substitute(translations))
 
