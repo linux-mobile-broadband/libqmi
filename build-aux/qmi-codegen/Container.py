@@ -74,10 +74,12 @@ class Container:
                            copy = dict(common)
                            if 'prerequisites' in field_dictionary:
                                copy['prerequisites'] = field_dictionary['prerequisites']
-                           # Fix 'since' in the copy
+                           # If an explicit 'since' is given in the field, prefer it over any other one
                            if 'since' in field_dictionary:
                                copy['since'] = field_dictionary['since']
-                           else:
+                           # If the common type does not have any explicit 'since', take the one from the message
+                           # If the common type has a 'since', take it only if it is newer than the one from the message
+                           elif not 'since' in copy or utils.version_compare(copy['since'],self.since) > 0:
                                copy['since'] = self.since
                            new_dict.append(copy)
                            break
