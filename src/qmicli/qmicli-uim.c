@@ -1519,10 +1519,10 @@ get_card_status_ready (QmiClientUim *client,
                  card->upuk_retries);
 
         for (j = 0; j < card->applications->len; j++) {
-            QmiMessageUimGetCardStatusOutputCardStatusCardsElementApplicationsElement *app;
+            QmiMessageUimGetCardStatusOutputCardStatusCardsElementApplicationsElementV2 *app;
             gchar *str;
 
-            app = &g_array_index (card->applications, QmiMessageUimGetCardStatusOutputCardStatusCardsElementApplicationsElement, j);
+            app = &g_array_index (card->applications, QmiMessageUimGetCardStatusOutputCardStatusCardsElementApplicationsElementV2, j);
 
             str = qmicli_get_raw_data_printable (app->application_identifier_value, 80, "");
 
@@ -1542,7 +1542,7 @@ get_card_status_ready (QmiClientUim *client,
                          "\t\t\tDisable retries:     '%u'\n"
                          "\t\t\tUnblock retries:     '%u'\n",
                          qmi_uim_card_application_personalization_state_get_string (app->personalization_state),
-                         qmi_uim_card_application_personalization_feature_get_string (app->personalization_feature),
+                         qmi_uim_card_application_personalization_feature_status_get_string (app->personalization_feature),
                          app->personalization_retries,
                          app->personalization_unblock_retries);
             else

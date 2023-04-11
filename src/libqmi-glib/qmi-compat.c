@@ -2599,4 +2599,28 @@ qmi_wds_get_current_settings_requested_settings_build_string_from_mask (QmiDepre
     return qmi_wds_requested_settings_build_string_from_mask ((QmiWdsRequestedSettings)mask);
 }
 
+/*****************************************************************************/
+
+#if defined HAVE_QMI_MESSAGE_UIM_GET_CARD_STATUS
+
+GType
+qmi_message_uim_get_card_status_output_card_status_cards_element_applications_element_get_type (void)
+{
+    return qmi_message_uim_get_card_status_output_card_status_cards_element_applications_element_v2_get_type ();
+}
+
+#endif /* HAVE_QMI_MESSAGE_UIM_GET_CARD_STATUS */
+
+/*****************************************************************************/
+
+#if defined HAVE_QMI_INDICATION_UIM_CARD_STATUS
+
+GType
+qmi_indication_uim_card_status_output_card_status_cards_element_applications_element_get_type (void)
+{
+  return qmi_indication_uim_card_status_output_card_status_cards_element_applications_element_v2_get_type ();
+}
+
+#endif /* HAVE_QMI_INDICATION_UIM_CARD_STATUS */
+
 #endif /* QMI_DISABLE_DEPRECATED */

@@ -1284,6 +1284,20 @@ GType qmi_wds_get_current_settings_requested_settings_get_type (void) G_GNUC_CON
 G_DEPRECATED_FOR (qmi_wds_requested_settings_build_string_from_mask)
 gchar *qmi_wds_get_current_settings_requested_settings_build_string_from_mask (QmiDeprecatedWdsGetCurrentSettingsRequestedSettings mask);
 
+/**
+ * QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_UNKNOWN:
+ *
+ * Unknown personalization feature.
+ *
+ * This name was originally defined in the #QmiUimCardApplicationPersonalizationFeatureStatus
+ * enum, which was renamed to #QmiUimCardApplicationPersonalizationFeatureStatus.
+ *
+ * Since: 1.10
+ * Deprecated: 1.34.0: Use #QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_STATUS_UNKNOWN instead.
+ */
+G_DEPRECATED typedef int QmiDeprecatedUimCardApplicationPersonalizationFeature;
+#define QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_UNKNOWN (QmiDeprecatedUimCardApplicationPersonalizationFeature) QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_STATUS_UNKNOWN
+
 /******************************************************************************/
 /* Conditional method definitions */
 
@@ -3981,6 +3995,108 @@ gboolean qmi_indication_wds_set_lte_attach_pdn_list_output_get_result (
     GError **error);
 
 #endif /* HAVE_QMI_INDICATION_WDS_SET_LTE_ATTACH_PDN_LIST */
+
+#if defined HAVE_QMI_MESSAGE_UIM_GET_CARD_STATUS
+
+/**
+ * QmiMessageUimGetCardStatusOutputCardStatusCardsElementApplicationsElement:
+ * @type: a #QmiUimCardApplicationType.
+ * @state: a #QmiUimCardApplicationState.
+ * @personalization_state: a #QmiUimCardApplicationPersonalizationState.
+ * @personalization_feature: a #QmiUimCardApplicationPersonalizationFeature.
+ * @personalization_retries: a #guint8.
+ * @personalization_unblock_retries: a #guint8.
+ * @application_identifier_value: a #GArray of #guint8 elements.
+ * @upin_replaces_pin1: a #gboolean.
+ * @pin1_state: a #QmiUimPinState.
+ * @pin1_retries: a #guint8.
+ * @puk1_retries: a #guint8.
+ * @pin2_state: a #QmiUimPinState.
+ * @pin2_retries: a #guint8.
+ * @puk2_retries: a #guint8.
+ *
+ * A QmiMessageUimGetCardStatusOutputCardStatusCardsElementApplicationsElement struct.
+ *
+ * This type is binary compatible with #QmiMessageUimGetCardStatusOutputCardStatusCardsElementApplicationsElementV2
+ * as the size and format of both structs is the same. The only thing that changed is the
+ * representation of one of the enumeration fields.
+ *
+ * Since: 1.10
+ * Deprecated: 1.34. Use #QmiMessageUimGetCardStatusOutputCardStatusCardsElementApplicationsElementV2 instead.
+ */
+G_DEPRECATED_FOR (QmiMessageUimGetCardStatusOutputCardStatusCardsElementApplicationsElementV2)
+typedef struct _QmiMessageUimGetCardStatusOutputCardStatusCardsElementApplicationsElement {
+    QmiUimCardApplicationType type;
+    QmiUimCardApplicationState state;
+    QmiUimCardApplicationPersonalizationState personalization_state;
+    QmiUimCardApplicationPersonalizationFeature personalization_feature;
+    guint8 personalization_retries;
+    guint8 personalization_unblock_retries;
+    GArray *application_identifier_value;
+    gboolean upin_replaces_pin1;
+    QmiUimPinState pin1_state;
+    guint8 pin1_retries;
+    guint8 puk1_retries;
+    QmiUimPinState pin2_state;
+    guint8 pin2_retries;
+    guint8 puk2_retries;
+} QmiMessageUimGetCardStatusOutputCardStatusCardsElementApplicationsElement;
+
+G_DEPRECATED_FOR (qmi_message_uim_get_card_status_output_card_status_cards_element_applications_element_v2_get_type)
+GType qmi_message_uim_get_card_status_output_card_status_cards_element_applications_element_get_type (void) G_GNUC_CONST;
+
+#endif /* HAVE_QMI_MESSAGE_UIM_GET_CARD_STATUS */
+
+#if defined HAVE_QMI_INDICATION_UIM_CARD_STATUS
+
+/**
+ * QmiIndicationUimCardStatusOutputCardStatusCardsElementApplicationsElement:
+ * @type: a #QmiUimCardApplicationType.
+ * @state: a #QmiUimCardApplicationState.
+ * @personalization_state: a #QmiUimCardApplicationPersonalizationState.
+ * @personalization_feature: a #QmiUimCardApplicationPersonalizationFeature.
+ * @personalization_retries: a #guint8.
+ * @personalization_unblock_retries: a #guint8.
+ * @application_identifier_value: a #GArray of #guint8 elements.
+ * @upin_replaces_pin1: a #gboolean.
+ * @pin1_state: a #QmiUimPinState.
+ * @pin1_retries: a #guint8.
+ * @puk1_retries: a #guint8.
+ * @pin2_state: a #QmiUimPinState.
+ * @pin2_retries: a #guint8.
+ * @puk2_retries: a #guint8.
+ *
+ * A QmiIndicationUimCardStatusOutputCardStatusCardsElementApplicationsElement struct.
+ *
+ * This type is binary compatible with #QmiIndicationUimCardStatusOutputCardStatusCardsElementApplicationsElementV2
+ * as the size and format of both structs is the same. The only thing that changed is the
+ * representation of one of the enumeration fields.
+ *
+ * Since: 1.22
+ * Deprecated: 1.34. Use #QmiIndicationUimCardStatusOutputCardStatusCardsElementApplicationsElementV2 instead.
+ */
+G_DEPRECATED_FOR (QmiIndicationUimCardStatusOutputCardStatusCardsElementApplicationsElementV2)
+typedef struct _QmiIndicationUimCardStatusOutputCardStatusCardsElementApplicationsElement {
+    QmiUimCardApplicationType type;
+    QmiUimCardApplicationState state;
+    QmiUimCardApplicationPersonalizationState personalization_state;
+    QmiUimCardApplicationPersonalizationFeature personalization_feature;
+    guint8 personalization_retries;
+    guint8 personalization_unblock_retries;
+    GArray *application_identifier_value;
+    gboolean upin_replaces_pin1;
+    QmiUimPinState pin1_state;
+    guint8 pin1_retries;
+    guint8 puk1_retries;
+    QmiUimPinState pin2_state;
+    guint8 pin2_retries;
+    guint8 puk2_retries;
+} QmiIndicationUimCardStatusOutputCardStatusCardsElementApplicationsElement;
+
+G_DEPRECATED_FOR (qmi_indication_uim_card_status_output_card_status_cards_element_applications_element_v2_get_type)
+GType qmi_indication_uim_card_status_output_card_status_cards_element_applications_element_get_type (void) G_GNUC_CONST;
+
+#endif /* HAVE_QMI_INDICATION_UIM_CARD_STATUS */
 
 #endif /* QMI_DISABLE_DEPRECATED */
 
