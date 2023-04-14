@@ -3,7 +3,7 @@
 /*
  * mbim-proxy -- A proxy to communicate with MBIM ports
  *
- * Copyright (C) 2014 Aleksander Morgado <aleksander@gnu.org>
+ * Copyright (C) 2014-2023 Aleksander Morgado <aleksander@aleksander.es>
  * Copyright (C) 2014 Smith Micro Software, Inc.
  */
 
@@ -134,7 +134,7 @@ print_version_and_exit (void)
 {
     g_print ("\n"
              PROGRAM_NAME " " PROGRAM_VERSION "\n"
-             "Copyright (C) 2013-2021 Aleksander Morgado\n"
+             "Copyright (C) 2013-2023 Aleksander Morgado\n"
              "Copyright (C) 2014-2018 Greg Suarez\n"
              "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl-2.0.html>\n"
              "This is free software: you are free to change and redistribute it.\n"
