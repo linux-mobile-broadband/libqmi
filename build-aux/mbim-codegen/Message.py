@@ -1271,11 +1271,22 @@ class Message:
                     '    show_field = mbim_utils_get_show_personal_info ();\n')
                 break
 
-        if message_type == 'response':
-            template += (
-                '\n'
-                '    if (!mbim_message_response_get_result (message, MBIM_MESSAGE_TYPE_COMMAND_DONE, NULL))\n'
-                '        return NULL;\n')
+        if fields != []:
+            if message_type == 'set' or message_type == 'query':
+                template += (
+                    '\n'
+                    '    if (!mbim_message_command_get_raw_information_buffer (message, NULL))\n'
+                    '        return NULL;\n')
+            elif message_type == 'response':
+                template += (
+                    '\n'
+                    '    if (!mbim_message_command_done_get_raw_information_buffer (message, NULL))\n'
+                    '        return NULL;\n')
+            elif message_type == 'notification':
+                template += (
+                    '\n'
+                    '    if (!mbim_message_indicate_status_get_raw_information_buffer (message, NULL))\n'
+                    '        return NULL;\n')
 
         template += (
             '\n'
