@@ -479,23 +479,23 @@ query_device_caps_ready (MbimDevice   *device,
 {
     g_autoptr(MbimMessage)  response = NULL;
     g_autoptr(GError)       error = NULL;
-    MbimDeviceType          device_type;
-    const gchar            *device_type_str;
-    MbimVoiceClass          voice_class;
-    const gchar            *voice_class_str;
-    MbimCellularClass       cellular_class;
+    MbimDeviceType          device_type = MBIM_DEVICE_TYPE_UNKNOWN;
+    const gchar            *device_type_str = NULL;
+    MbimVoiceClass          voice_class = MBIM_VOICE_CLASS_UNKNOWN;
+    const gchar            *voice_class_str = NULL;
+    MbimCellularClass       cellular_class = MBIM_CELLULAR_CLASS_NONE;
     g_autofree gchar       *cellular_class_str = NULL;
-    MbimSimClass            sim_class;
+    MbimSimClass            sim_class = MBIM_SIM_CLASS_NONE;
     g_autofree gchar       *sim_class_str = NULL;
-    MbimDataClass           data_class = 0;
-    MbimDataClassV3         data_class_v3 = 0;
+    MbimDataClass           data_class = MBIM_DATA_CLASS_NONE;
+    MbimDataClassV3         data_class_v3 = MBIM_DATA_CLASS_V3_NONE;
     g_autofree gchar       *data_class_str = NULL;
-    MbimDataSubclass        data_subclass;
-    MbimSmsCaps             sms_caps;
+    MbimDataSubclass        data_subclass = MBIM_DATA_SUBCLASS_NONE;
+    MbimSmsCaps             sms_caps = MBIM_SMS_CAPS_NONE;
     g_autofree gchar       *sms_caps_str = NULL;
-    MbimCtrlCaps            ctrl_caps;
+    MbimCtrlCaps            ctrl_caps = MBIM_CTRL_CAPS_NONE;
     g_autofree gchar       *ctrl_caps_str = NULL;
-    guint32                 max_sessions;
+    guint32                 max_sessions = 0;
     guint32                 wcdma_band_class = 0;
     guint32                 lte_band_class_array_size = 0;
     g_autofree guint16     *lte_band_class_array = NULL;
@@ -505,7 +505,7 @@ query_device_caps_ready (MbimDevice   *device,
     g_autofree gchar       *device_id = NULL;
     g_autofree gchar       *firmware_info = NULL;
     g_autofree gchar       *hardware_info = NULL;
-    guint32                 executor_index;
+    guint32                 executor_index = 0;
 
     response = mbim_device_command_finish(device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {

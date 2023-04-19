@@ -46,6 +46,7 @@ typedef enum { /*< since=1.0 >*/
 
 /**
  * MbimCellularClass:
+ * @MBIM_CELLULAR_CLASS_NONE: None. Since 1.30.
  * @MBIM_CELLULAR_CLASS_GSM: Device is 3GPP.
  * @MBIM_CELLULAR_CLASS_CDMA: Device is 3GPP2.
  *
@@ -54,6 +55,7 @@ typedef enum { /*< since=1.0 >*/
  * Since: 1.0
  */
 typedef enum { /*< since=1.0 >*/
+    MBIM_CELLULAR_CLASS_NONE = 0,
     MBIM_CELLULAR_CLASS_GSM  = 1 << 0,
     MBIM_CELLULAR_CLASS_CDMA = 1 << 1
 } MbimCellularClass;
@@ -78,6 +80,7 @@ typedef enum { /*< since=1.0 >*/
 
 /**
  * MbimSimClass:
+ * @MBIM_SIM_CLASS_NONE: None. Since 1.30.
  * @MBIM_SIM_CLASS_LOGICAL: No physical SIM.
  * @MBIM_SIM_CLASS_REMOVABLE: Physical removable SIM.
  *
@@ -86,12 +89,14 @@ typedef enum { /*< since=1.0 >*/
  * Since: 1.0
  */
 typedef enum { /*< since=1.0 >*/
+    MBIM_SIM_CLASS_NONE      = 0,
     MBIM_SIM_CLASS_LOGICAL   = 1 << 0,
     MBIM_SIM_CLASS_REMOVABLE = 1 << 1
 } MbimSimClass;
 
 /**
  * MbimDataClass:
+ * @MBIM_DATA_CLASS_NONE: None. Since 1.30.
  * @MBIM_DATA_CLASS_GPRS: GPRS.
  * @MBIM_DATA_CLASS_EDGE: EDGE.
  * @MBIM_DATA_CLASS_UMTS: UMTS.
@@ -121,6 +126,7 @@ typedef enum { /*< since=1.0 >*/
  * Since: 1.0
  */
 typedef enum { /*< since=1.0 >*/
+    MBIM_DATA_CLASS_NONE        = 0,
     MBIM_DATA_CLASS_GPRS        = 1 << 0,
     MBIM_DATA_CLASS_EDGE        = 1 << 1,
     MBIM_DATA_CLASS_UMTS        = 1 << 2,
@@ -143,6 +149,7 @@ typedef enum { /*< since=1.0 >*/
 
 /**
  * MbimSmsCaps:
+ * @MBIM_SMS_CAPS_NONE: None. Since 1.30.
  * @MBIM_SMS_CAPS_PDU_RECEIVE: Can receive in PDU mode.
  * @MBIM_SMS_CAPS_PDU_SEND: Can send in PDU mode.
  * @MBIM_SMS_CAPS_TEXT_RECEIVE: Can receive in text mode.
@@ -153,6 +160,7 @@ typedef enum { /*< since=1.0 >*/
  * Since: 1.0
  */
 typedef enum { /*< since=1.0 >*/
+    MBIM_SMS_CAPS_NONE         = 0,
     MBIM_SMS_CAPS_PDU_RECEIVE  = 1 << 0,
     MBIM_SMS_CAPS_PDU_SEND     = 1 << 1,
     MBIM_SMS_CAPS_TEXT_RECEIVE = 1 << 2,
@@ -1795,6 +1803,7 @@ typedef enum { /*< since=1.28 >*/
 
 /**
  * MbimDataClassV3:
+ * @MBIM_DATA_CLASS_V3_NONE: None. Since 1.30.
  * @MBIM_DATA_CLASS_V3_GPRS: GPRS.
  * @MBIM_DATA_CLASS_V3_EDGE: EDGE.
  * @MBIM_DATA_CLASS_V3_UMTS: UMTS.
@@ -1821,6 +1830,7 @@ typedef enum { /*< since=1.28 >*/
  * Since: 1.28
  */
 typedef enum { /*< since=1.28 >*/
+    MBIM_DATA_CLASS_V3_NONE        = 0,
     MBIM_DATA_CLASS_V3_GPRS        = 1 << 0,
     MBIM_DATA_CLASS_V3_EDGE        = 1 << 1,
     MBIM_DATA_CLASS_V3_UMTS        = 1 << 2,
