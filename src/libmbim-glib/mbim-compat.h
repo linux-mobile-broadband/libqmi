@@ -302,6 +302,7 @@ typedef int MbimDeprecatedCidMsBasicConnectExtensions;
  * Since: 1.4
  * Deprecated: 1.30: Use mbim_sms_status_flag_build_string_from_mask() instead.
  */
+G_DEPRECATED_FOR (mbim_sms_status_flag_build_string_from_mask)
 const gchar *mbim_sms_status_flag_get_string (MbimSmsStatusFlag val);
 
 #endif /* MBIM_DISABLE_DEPRECATED */
