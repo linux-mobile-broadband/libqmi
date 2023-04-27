@@ -102,6 +102,7 @@
 /* generated */
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
+#include "qmi-flag-types.h"
 #include "qmi-flags64-types.h"
 
 #if QMI_QRTR_SUPPORTED

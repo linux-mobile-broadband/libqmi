@@ -19,6 +19,7 @@ private_headers = [
   'qmi-enums-private.h',
   'qmi-enum-types-private.h',
   'qmi-file.h',
+  'qmi-flag-types-private.h',
   'qmi-helpers.h',
   'qmi-net-port-manager.h',
   'qmi-net-port-manager-rmnet.h',

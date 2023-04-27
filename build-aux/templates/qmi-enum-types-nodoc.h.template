@@ -17,13 +17,7 @@ GType @enum_name@_get_type (void) G_GNUC_CONST;
 /* Define type-specific symbols */
 #define __@ENUMNAME@_IS_@TYPE@__
 
-#if defined __@ENUMNAME@_IS_ENUM__
 const gchar *@enum_name@_get_string (@EnumName@ val);
-#endif
-
-#if defined __@ENUMNAME@_IS_FLAGS__
-gchar *@enum_name@_build_string_from_mask (@EnumName@ mask);
-#endif
 
 /*** END value-header ***/
 

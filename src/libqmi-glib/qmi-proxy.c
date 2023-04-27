@@ -33,6 +33,7 @@
 
 #include "config.h"
 #include "qmi-enum-types.h"
+#include "qmi-flag-types.h"
 #include "qmi-error-types.h"
 #include "qmi-device.h"
 #include "qmi-ctl.h"

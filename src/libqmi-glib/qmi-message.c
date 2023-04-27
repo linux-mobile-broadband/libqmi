@@ -38,7 +38,9 @@
 #include "qmi-helpers.h"
 #include "qmi-enums-private.h"
 #include "qmi-enum-types-private.h"
+#include "qmi-flag-types-private.h"
 #include "qmi-enum-types.h"
+#include "qmi-flag-types.h"
 #include "qmi-error-types.h"
 
 #include "qmi-ctl.h"

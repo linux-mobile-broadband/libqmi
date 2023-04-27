@@ -61,6 +61,7 @@
 #include "qmi-helpers.h"
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
+#include "qmi-flag-types.h"
 #include "qmi-proxy.h"
 #include "qmi-net-port-manager-qmiwwan.h"
 #include "qmi-version.h"

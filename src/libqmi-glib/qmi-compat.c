@@ -24,6 +24,7 @@
 #include "qmi-compat.h"
 #include "qmi-helpers.h"
 #include "qmi-enum-types.h"
+#include "qmi-flag-types.h"
 
 #ifndef QMI_DISABLE_DEPRECATED
 

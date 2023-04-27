@@ -35,6 +35,7 @@
 #include "qmi-endpoint-qrtr.h"
 #include "qmi-errors.h"
 #include "qmi-enum-types.h"
+#include "qmi-flag-types.h"
 #include "qmi-error-types.h"
 #include "qmi-message.h"
 

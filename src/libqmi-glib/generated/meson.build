@@ -57,7 +57,7 @@ gen_sources += custom_target(
   capture: true,
 )
 
-# Enum/Flag types
+# Enum types
 enum_types = 'qmi-enum-types'
 
 gen_headers += custom_target(
@@ -67,6 +67,7 @@ gen_headers += custom_target(
   command: [
     python,
     qmi_mkenums,
+    '--enums-only',
     '--fhead', '#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include "qmi-enums.h"\n#include "qmi-enums-wds.h"\n#include "qmi-enums-dms.h"\n#include "qmi-enums-nas.h"\n#include "qmi-enums-wms.h"\n#include "qmi-enums-pds.h"\n#include "qmi-enums-pdc.h"\n#include "qmi-enums-pbm.h"\n#include "qmi-enums-uim.h"\n#include "qmi-enums-sar.h"\n#include "qmi-enums-oma.h"\n#include "qmi-enums-wda.h"\n#include "qmi-enums-voice.h"\n#include "qmi-enums-loc.h"\n#include "qmi-enums-qos.h"\n#include "qmi-enums-gas.h"\n#include "qmi-enums-dsd.h"\n#include "qmi-enums-fox.h"\n#include "qmi-device.h"\n',
     '--template', files(templates_dir / enum_types + '.h.template'),
     '--ftail', '#endif /* __LIBQMI_GLIB_ENUM_TYPES_H__ */\n',
@@ -83,13 +84,48 @@ gen_sources += custom_target(
   command: [
     python,
     qmi_mkenums,
+    '--enums-only',
     '--fhead', '#include "qmi-enum-types.h"\n',
     '--template', files(templates_dir / enum_types + '.c.template'),
     '@INPUT@'],
   capture: true,
 )
 
-# Private Enum/Flag types
+# Flag types
+enum_types = 'qmi-flag-types'
+
+gen_headers += custom_target(
+  enum_types + '.h',
+  input: qmi_enums_headers,
+  output: enum_types + '.h',
+  command: [
+    python,
+    qmi_mkenums,
+    '--flags-only',
+    '--fhead', '#ifndef __LIBQMI_GLIB_FLAG_TYPES_H__\n#define __LIBQMI_GLIB_FLAG_TYPES_H__\n#include "qmi-enums.h"\n#include "qmi-enums-wds.h"\n#include "qmi-enums-dms.h"\n#include "qmi-enums-nas.h"\n#include "qmi-enums-wms.h"\n#include "qmi-enums-pds.h"\n#include "qmi-enums-pdc.h"\n#include "qmi-enums-pbm.h"\n#include "qmi-enums-uim.h"\n#include "qmi-enums-sar.h"\n#include "qmi-enums-oma.h"\n#include "qmi-enums-wda.h"\n#include "qmi-enums-voice.h"\n#include "qmi-enums-loc.h"\n#include "qmi-enums-qos.h"\n#include "qmi-enums-gas.h"\n#include "qmi-enums-dsd.h"\n#include "qmi-enums-fox.h"\n#include "qmi-device.h"\n',
+    '--template', files(templates_dir / enum_types + '.h.template'),
+    '--ftail', '#endif /* __LIBQMI_GLIB_FLAG_TYPES_H__ */\n',
+    '@INPUT@'],
+  capture: true,
+  install: true,
+  install_dir: qmi_glib_pkgincludedir,
+)
+
+gen_sources += custom_target(
+  enum_types + '.c',
+  input: qmi_enums_headers,
+  output: enum_types + '.c',
+  command: [
+    python,
+    qmi_mkenums,
+    '--flags-only',
+    '--fhead', '#include "qmi-flag-types.h"\n',
+    '--template', files(templates_dir / enum_types + '.c.template'),
+    '@INPUT@'],
+  capture: true,
+)
+
+# Private Enum types
 enum_types = 'qmi-enum-types-private'
 
 private_gen_headers += custom_target(
@@ -99,6 +135,7 @@ private_gen_headers += custom_target(
   command: [
     python,
     qmi_mkenums,
+    '--enums-only',
     '--fhead', '#ifndef __LIBQMI_GLIB_ENUM_TYPES_PRIVATE_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_PRIVATE_H__\n#include "qmi-enums-private.h"\n',
     '--template', files(templates_dir / enum_types + '.h.template'),
     '--ftail', '#endif /* __LIBQMI_GLIB_ENUM_TYPES_PRIVATE_H__ */\n',
@@ -113,7 +150,40 @@ private_gen_sources += custom_target(
   command: [
     python,
     qmi_mkenums,
+    '--enums-only',
     '--fhead', '#include "qmi-enum-types-private.h"\n',
+    '--template', files(templates_dir / enum_types + '.c.template'),
+    '@INPUT@'],
+  capture: true,
+)
+
+# Private Flag types
+enum_types = 'qmi-flag-types-private'
+
+private_gen_headers += custom_target(
+  enum_types + '.h',
+  input: qmi_enums_private_header,
+  output: enum_types + '.h',
+  command: [
+    python,
+    qmi_mkenums,
+    '--flags-only',
+    '--fhead', '#ifndef __LIBQMI_GLIB_FLAG_TYPES_PRIVATE_H__\n#define __LIBQMI_GLIB_FLAG_TYPES_PRIVATE_H__\n#include "qmi-enums-private.h"\n',
+    '--template', files(templates_dir / enum_types + '.h.template'),
+    '--ftail', '#endif /* __LIBQMI_GLIB_FLAG_TYPES_PRIVATE_H__ */\n',
+    '@INPUT@'],
+  capture: true,
+)
+
+private_gen_sources += custom_target(
+  enum_types + '.c',
+  input: qmi_enums_private_header,
+  output: enum_types + '.c',
+  command: [
+    python,
+    qmi_mkenums,
+    '--flags-only',
+    '--fhead', '#include "qmi-flag-types-private.h"\n',
     '--template', files(templates_dir / enum_types + '.c.template'),
     '@INPUT@'],
   capture: true,
