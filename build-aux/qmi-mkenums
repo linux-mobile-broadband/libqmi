@@ -350,6 +350,10 @@ parser.add_argument('--vtail', default=[], dest='vtail', action='append',
                     help='Value tail, produced after iterating over enum values')
 parser.add_argument('--comments', default='', dest='comment_tmpl',
                     help='Comment structure')
+parser.add_argument('--enums-only', default=False, action='store_true', dest='enumsonly',
+                    help='Only process enums, not flags')
+parser.add_argument('--flags-only', default=False, action='store_true', dest='flagsonly',
+                    help='Only process flags, not enums')
 parser.add_argument('--template', default='', dest='template',
                     help='Template file')
 parser.add_argument('--output', default=None, dest='output')
@@ -382,6 +386,9 @@ if options.template != '':
 
 idprefix += options.idprefix
 symprefix += options.symprefix
+
+enumsonly = options.enumsonly
+flagsonly = options.flagsonly
 
 # This is a hack to maintain some semblance of backward compatibility with
 # the old, Perl-based glib-mkenums. The old tool had an implicit ordering
@@ -555,6 +562,11 @@ def process_file(curfilename):
             # figure out if this was a flags or enums enumeration
             if flags is None:
                 flags = seenbitshift
+
+            if flags and enumsonly:
+                continue
+            elif not flags and flagsonly:
+                continue
 
             # Autogenerate a prefix
             if enum_prefix is None:
