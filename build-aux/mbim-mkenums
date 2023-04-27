@@ -2,8 +2,6 @@
 
 # qmi-mkenums is ported from glib-mkenums.
 # Same license applies.
-# The 'since' tag support was introduced in upstream GLib 2.66,
-# so remove this custom mkenums once 2.66 is required in the project.
 
 # If the code below looks horrible and unpythonic, do not panic.
 #
