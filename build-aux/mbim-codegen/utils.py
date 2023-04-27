@@ -98,6 +98,7 @@ def add_source_start(f, output_name):
         "#include \"mbim-message-private.h\"\n"
         "#include \"mbim-tlv-private.h\"\n"
         "#include \"mbim-enum-types.h\"\n"
+        "#include \"mbim-flag-types.h\"\n"
         "#include \"mbim-error-types.h\"\n"
         "#include \"mbim-device.h\"\n"
         "#include \"mbim-utils.h\"\n")

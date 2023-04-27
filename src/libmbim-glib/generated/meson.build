@@ -55,7 +55,7 @@ gen_sources += custom_target(
   capture: true,
 )
 
-# Enum/Flag types
+# Enum types
 enum_types = 'mbim-enum-types'
 
 gen_headers += custom_target(
@@ -65,6 +65,7 @@ gen_headers += custom_target(
   command: [
     python,
     mbim_mkenums,
+    '--enums-only',
     '--fhead', '#ifndef __LIBMBIM_GLIB_ENUM_TYPES_H__\n#define __LIBMBIM_GLIB_ENUM_TYPES_H__\n#include "mbim-uuid.h"\n#include "mbim-cid.h"\n#include "mbim-message.h"\n#include "mbim-enums.h"\n#include "mbim-tlv.h"\n',
     '--template', files(templates_dir / enum_types + '.h.template'),
     '--ftail', '#endif /* __LIBMBIM_GLIB_ENUM_TYPES_H__ */\n',
@@ -81,7 +82,42 @@ gen_sources += custom_target(
   command: [
     python,
     mbim_mkenums,
+    '--enums-only',
     '--fhead', '#include "mbim-enum-types.h"\n',
+    '--template', files(templates_dir / enum_types + '.c.template'),
+    '@INPUT@'],
+  capture: true,
+)
+
+# Flag types
+enum_types = 'mbim-flag-types'
+
+gen_headers += custom_target(
+  enum_types + '.h',
+  input: mbim_enums_headers,
+  output: enum_types + '.h',
+  command: [
+    python,
+    mbim_mkenums,
+    '--flags-only',
+    '--fhead', '#ifndef __LIBMBIM_GLIB_FLAG_TYPES_H__\n#define __LIBMBIM_GLIB_FLAG_TYPES_H__\n#include "mbim-uuid.h"\n#include "mbim-cid.h"\n#include "mbim-message.h"\n#include "mbim-enums.h"\n#include "mbim-tlv.h"\n',
+    '--template', files(templates_dir / enum_types + '.h.template'),
+    '--ftail', '#endif /* __LIBMBIM_GLIB_FLAG_TYPES_H__ */\n',
+    '@INPUT@'],
+  capture: true,
+  install: true,
+  install_dir: mbim_glib_pkgincludedir,
+)
+
+gen_sources += custom_target(
+  enum_types + '.c',
+  input: mbim_enums_headers,
+  output: enum_types + '.c',
+  command: [
+    python,
+    mbim_mkenums,
+    '--flags-only',
+    '--fhead', '#include "mbim-flag-types.h"\n',
     '--template', files(templates_dir / enum_types + '.c.template'),
     '@INPUT@'],
   capture: true,
