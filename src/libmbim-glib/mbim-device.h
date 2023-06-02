@@ -504,6 +504,9 @@ void mbim_device_command (MbimDevice          *self,
  *
  * Finishes an operation started with mbim_device_command().
  *
+ * The returned #MbimMessage is ensured to be valid and complete (i.e. not a
+ * partial fragment). There is no need to call mbim_message_validate() again.
+ *
  * Returns: a #MbimMessage response, or #NULL if @error is set. The returned value should be freed with mbim_message_unref().
  *
  * Since: 1.0
