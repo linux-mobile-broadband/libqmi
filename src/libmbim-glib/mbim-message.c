@@ -240,6 +240,12 @@ _mbim_message_validate_complete_fragment (const MbimMessage  *self,
     gsize message_size = 0;
     gsize message_header_size = 0;
 
+    if (MBIM_MESSAGE_FRAGMENT_GET_CURRENT (self) != 0) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "Invalid current fragment in complete message");
+        return FALSE;
+    }
+
     /* Before reading the information buffer length we must validate that the
      * message type header is readable. */
     switch (MBIM_MESSAGE_GET_MESSAGE_TYPE (self)) {
@@ -315,7 +321,12 @@ _mbim_message_validate_fragment (const MbimMessage  *self,
     if (MBIM_MESSAGE_FRAGMENT_GET_TOTAL (self) > 1)
         return _mbim_message_validate_partial_fragment (self, error);
 
-    return _mbim_message_validate_complete_fragment (self, error);
+    if (MBIM_MESSAGE_FRAGMENT_GET_TOTAL (self) == 1)
+        return _mbim_message_validate_complete_fragment (self, error);
+
+    g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                 "Invalid total fragment number");
+    return FALSE;
 }
 
 gboolean
