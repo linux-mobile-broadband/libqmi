@@ -15,13 +15,25 @@ int
 LLVMFuzzerTestOneInput (const uint8_t *data,
                         size_t         size)
 {
-    g_autoptr(MbimMessage) message = NULL;
-    g_autoptr(GError)      error = NULL;
+    g_autofree gchar       *printable = NULL;
+    g_autoptr(MbimMessage)  message = NULL;
+    g_autoptr(GError)       error = NULL;
 
     if (!size)
       return 0;
 
     message = mbim_message_new (data, size);
-    mbim_message_validate (message, &error);
+    if (!mbim_message_validate (message, &error)) {
+        g_printerr ("error: %s\n", error->message);
+        return 0;
+    }
+
+    printable = mbim_message_get_printable_full (message, 1, 0, "---- ", FALSE, &error);
+    if (!printable) {
+        g_printerr ("error: %s\n", error->message);
+        return 0;
+    }
+
+    g_print ("%s\n", printable);
     return 0;
 }
