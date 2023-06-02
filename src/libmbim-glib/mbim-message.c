@@ -314,12 +314,25 @@ _mbim_message_validate_complete_fragment (const MbimMessage  *self,
     return TRUE;
 }
 
-static gboolean
-_mbim_message_validate_fragment (const MbimMessage  *self,
+gboolean
+_mbim_message_validate_internal (const MbimMessage  *self,
+                                 gboolean            allow_fragment,
                                  GError            **error)
 {
-    if (MBIM_MESSAGE_FRAGMENT_GET_TOTAL (self) > 1)
-        return _mbim_message_validate_partial_fragment (self, error);
+    if (!_mbim_message_validate_type_header (self, error))
+        return FALSE;
+
+    if (!MBIM_MESSAGE_IS_FRAGMENT (self))
+        return TRUE;
+
+    if (MBIM_MESSAGE_FRAGMENT_GET_TOTAL (self) > 1) {
+        if (allow_fragment)
+            return _mbim_message_validate_partial_fragment (self, error);
+
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "Incomplete partial fragment message");
+        return FALSE;
+    }
 
     if (MBIM_MESSAGE_FRAGMENT_GET_TOTAL (self) == 1)
         return _mbim_message_validate_complete_fragment (self, error);
@@ -333,13 +346,8 @@ gboolean
 mbim_message_validate (const MbimMessage  *self,
                        GError            **error)
 {
-    if (!_mbim_message_validate_type_header (self, error))
-        return FALSE;
-
-    if (!MBIM_MESSAGE_IS_FRAGMENT (self))
-        return TRUE;
-
-    return _mbim_message_validate_fragment (self, error);
+    /* No fragments allowed in the API message validation */
+    return _mbim_message_validate_internal (self, FALSE, error);
 }
 
 /*****************************************************************************/
@@ -1928,7 +1936,7 @@ mbim_message_get_printable_full (const MbimMessage  *self,
 
     g_return_val_if_fail (self != NULL, NULL);
     g_return_val_if_fail (line_prefix != NULL, NULL);
-    g_return_val_if_fail (mbim_message_validate (self, NULL), NULL);
+    g_return_val_if_fail (_mbim_message_validate_internal (self, TRUE, NULL), NULL);
 
     if (mbimex_version_major > 3) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,

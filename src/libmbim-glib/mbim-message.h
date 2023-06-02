@@ -281,8 +281,11 @@ void mbim_message_set_transaction_id (MbimMessage *self,
  *
  * Validates the contents of the headers in the MBIM message.
  *
- * This operation may be used to ensure that the message is full and of a valid
- * type.
+ * This operation may be used to ensure that the message contains all bytes
+ * it is expected to contain and that it is of a valid type.
+ *
+ * This operation also ensures the message is complete and not a partial
+ * MBIM fragment.
  *
  * This operation does not validate that the specific contents of a given
  * message type are available, that is done by the methods retrieving those

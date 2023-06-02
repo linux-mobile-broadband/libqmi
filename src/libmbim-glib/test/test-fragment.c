@@ -116,7 +116,7 @@ test_fragment_receive_multiple (void)
 
     bytearray = g_byte_array_new ();
     g_byte_array_append (bytearray, buffer, sizeof (buffer));
-    g_assert (mbim_message_validate ((const MbimMessage *)bytearray, &error));
+    g_assert (_mbim_message_validate_internal ((const MbimMessage *)bytearray, TRUE, &error));
     g_assert_no_error (error);
 
     /* First fragment creates the message */
@@ -127,7 +127,7 @@ test_fragment_receive_multiple (void)
     g_assert         (_mbim_message_fragment_collector_complete (message) == FALSE);
 
     g_byte_array_remove_range (bytearray, 0, mbim_message_get_message_length ((const MbimMessage *)bytearray));
-    g_assert (mbim_message_validate ((const MbimMessage *)bytearray, &error));
+    g_assert (_mbim_message_validate_internal ((const MbimMessage *)bytearray, TRUE, &error));
     g_assert_no_error (error);
 
     /* Add second fragment */
@@ -138,7 +138,7 @@ test_fragment_receive_multiple (void)
     g_assert         (_mbim_message_fragment_collector_complete (message) == FALSE);
 
     g_byte_array_remove_range (bytearray, 0, mbim_message_get_message_length ((const MbimMessage *)bytearray));
-    g_assert (mbim_message_validate ((const MbimMessage *)bytearray, &error));
+    g_assert (_mbim_message_validate_internal ((const MbimMessage *)bytearray, TRUE, &error));
     g_assert_no_error (error);
 
     /* Add third fragment */
@@ -149,7 +149,7 @@ test_fragment_receive_multiple (void)
     g_assert         (_mbim_message_fragment_collector_complete (message) == FALSE);
 
     g_byte_array_remove_range (bytearray, 0, mbim_message_get_message_length ((const MbimMessage *)bytearray));
-    g_assert (mbim_message_validate ((const MbimMessage *)bytearray, &error));
+    g_assert (_mbim_message_validate_internal ((const MbimMessage *)bytearray, TRUE, &error));
     g_assert_no_error (error);
 
     /* Add fourth fragment */

@@ -1193,7 +1193,7 @@ parse_request (MbimProxy *self,
         g_autoptr(GError)      error = NULL;
 
         /* Invalid message? */
-        if (!mbim_message_validate ((const MbimMessage *)client->buffer, &error)) {
+        if (!_mbim_message_validate_internal ((const MbimMessage *)client->buffer, TRUE, &error)) {
             /* No full message yet */
             if (g_error_matches (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INCOMPLETE_MESSAGE))
                 return;

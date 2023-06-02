@@ -1132,7 +1132,7 @@ parse_response (MbimDevice *self)
         message = (const MbimMessage *)self->priv->response;
 
         /* Invalid message? */
-        if (!mbim_message_validate (message, &error)) {
+        if (!_mbim_message_validate_internal (message, TRUE, &error)) {
             /* No full message yet */
             if (g_error_matches (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INCOMPLETE_MESSAGE))
                 return;
