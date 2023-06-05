@@ -6,6 +6,7 @@ test_units = [
   'cid',
   'message',
   'fragment',
+  'message-fuzzer-samples',
   'message-parser',
   'message-builder',
   'proxy-helpers',
