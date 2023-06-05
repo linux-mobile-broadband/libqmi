@@ -46,6 +46,7 @@ static gboolean noop_flag;
 static gboolean verbose_flag;
 static gboolean verbose_full_flag;
 static gboolean silent_flag;
+static gchar *printable_str;
 static gboolean version_flag;
 
 static GOptionEntry main_entries[] = {
@@ -88,6 +89,10 @@ static GOptionEntry main_entries[] = {
     { "silent", 0, 0, G_OPTION_ARG_NONE, &silent_flag,
       "Run action with no logs; not even the error/warning ones",
       NULL
+    },
+    { "printable", 0, 0, G_OPTION_ARG_STRING, &printable_str,
+      "Get the printable info of the given hex encoded MBIM message",
+      "[(Data)]"
     },
     { "version", 'V', 0, G_OPTION_ARG_NONE, &version_flag,
       "Print version",
@@ -187,6 +192,40 @@ print_version_and_exit (void)
              "This is free software: you are free to change and redistribute it.\n"
              "There is NO WARRANTY, to the extent permitted by law.\n"
              "\n");
+    exit (EXIT_SUCCESS);
+}
+
+/*****************************************************************************/
+
+G_GNUC_NORETURN
+static void
+print_printable_str_and_exit (const gchar *hex)
+{
+    g_autofree gchar       *printable = NULL;
+    g_autoptr(MbimMessage)  message = NULL;
+    g_autoptr(GError)       error = NULL;
+    gsize                   data_size = 0;
+    g_autofree guint8      *data      = NULL;
+
+    data = mbimcli_read_buffer_from_string (hex, -1, &data_size, &error);
+    if (!data) {
+        g_printerr ("Failed to read data: %s\n", error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    message = mbim_message_new (data, data_size);
+    if (!mbim_message_validate (message, &error)) {
+        g_printerr ("error: message validation failed: %s\n", error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    printable = mbim_message_get_printable_full (message, 1, 0, "---- ", FALSE, &error);
+    if (!printable) {
+        g_printerr ("error: printable info retrieval failed: %s\n", error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    g_print ("%s\n", printable);
     exit (EXIT_SUCCESS);
 }
 
@@ -545,6 +584,9 @@ int main (int argc, char **argv)
         mbim_utils_set_traces_enabled (TRUE);
         mbim_utils_set_show_personal_info (TRUE);
     }
+
+    if (printable_str)
+        print_printable_str_and_exit (printable_str);
 
     /* No device path given? */
     if (!device_str) {
