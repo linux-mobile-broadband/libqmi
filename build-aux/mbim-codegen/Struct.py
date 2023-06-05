@@ -541,11 +541,9 @@ class Struct:
             '    ${name} *out;\n'
             '    guint32 offset = relative_offset;\n')
         if self.ms_struct_array_member == True:
-            for field in self.contents:
-                if field['format'] == 'string':
-                    template += (
-                        '    guint32 extra_bytes_read = 0;\n')
-                    break
+            template += (
+                '    guint32 extra_bytes_read = 0;\n')
+
         template += (
             '\n'
             '    g_assert (self != NULL);\n'
@@ -570,6 +568,11 @@ class Struct:
                     '        offset += 16;\n'
                     '    }\n')
             elif field['format'] in ['ref-byte-array', 'ref-byte-array-no-offset']:
+                # Unsupported because ms-struct-array requires the read bytes of the struct to contain the size read
+                # fro the variable buffer, which is currently not implemented for this type.
+                if self.ms_struct_array_member == True:
+                    raise ValueError('type unsupported in \'ms-struct-array\'')
+
                 translations['has_offset'] = 'TRUE' if field['format'] == 'ref-byte-array' else 'FALSE'
                 if 'array-size-field' in field:
                     translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
@@ -597,6 +600,11 @@ class Struct:
                         '        offset += 8;\n'
                         '    }\n')
             elif field['format'] == 'unsized-byte-array':
+                # Unsupported because ms-struct-array requires the read bytes of the struct to contain the size read
+                # fro the variable buffer, which is currently not implemented for this type.
+                if self.ms_struct_array_member == True:
+                    raise ValueError('type unsupported in \'ms-struct-array\'')
+
                 inner_template += (
                     '\n'
                     '    {\n'
@@ -673,6 +681,11 @@ class Struct:
                         '        goto out;\n'
                         '    offset += 8;\n')
             elif field['format'] == 'string-array':
+                # Unsupported because ms-struct-array requires the read bytes of the struct to contain the size read
+                # fro the variable buffer, which is currently not implemented for this type.
+                if self.ms_struct_array_member == True:
+                    raise ValueError('type \'ref-byte-array\' unsupported in \'ms-struct-array\'')
+
                 translations['encoding'] = 'MBIM_STRING_ENCODING_UTF8' if 'encoding' in field and field['encoding'] == 'utf-8' else 'MBIM_STRING_ENCODING_UTF16'
                 translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
                 inner_template += (
@@ -692,6 +705,11 @@ class Struct:
                     '        offset += 4;\n'
                     '    }\n')
             elif field['format'] == 'ref-ipv4':
+                # Unsupported because ms-struct-array requires the read bytes of the struct to contain the size read
+                # fro the variable buffer, which is currently not implemented for this type.
+                if self.ms_struct_array_member == True:
+                    raise ValueError('type \'ref-byte-array\' unsupported in \'ms-struct-array\'')
+
                 inner_template += (
                     '\n'
                     '    {\n'
@@ -714,6 +732,11 @@ class Struct:
                     '        offset += 16;\n'
                     '    }\n')
             elif field['format'] == 'ref-ipv6':
+                # Unsupported because ms-struct-array requires the read bytes of the struct to contain the size read
+                # fro the variable buffer, which is currently not implemented for this type.
+                if self.ms_struct_array_member == True:
+                    raise ValueError('type \'ref-byte-array\' unsupported in \'ms-struct-array\'')
+
                 inner_template += (
                     '\n'
                     '    {\n'
@@ -736,24 +759,12 @@ class Struct:
             ' out:\n'
             '    if (success) {\n')
         if self.ms_struct_array_member == True:
-            string_present = False
-            for field in self.contents:
-                if field['format'] == 'string':
-                    template += (
-                        '        if (bytes_read)\n'
-                        '            *bytes_read = (offset - relative_offset) + extra_bytes_read;\n'
-                        '        return out;\n'
-                        '    }\n'
-                        '\n')
-                    string_present = True
-                    break
-            if string_present == False:
-                template += (
-                    '        if (bytes_read)\n'
-                    '            *bytes_read = (offset - relative_offset);\n'
-                    '        return out;\n'
-                    '    }\n'
-                    '\n')
+            template += (
+                '        if (bytes_read)\n'
+                '            *bytes_read = (offset - relative_offset) + extra_bytes_read;\n'
+                '        return out;\n'
+                '    }\n'
+                '\n')
         else:
             template += (
                 '        if (bytes_read)\n'
