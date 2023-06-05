@@ -773,6 +773,12 @@ class Struct:
             cfile.write(string.Template(template).substitute(translations))
 
         if self.struct_array_member == True:
+            # struct size is REQUIRED to be non-zero at this point, because that ensures
+            # that the struct has exclusively fixed-sized variables, required to iterate
+            # the elements with "offset += ${struct_size}".
+            if self.size == 0:
+                raise ValueError('Struct ' + self.name + ' has unexpected variable length fields')
+
             template = (
                 '\n'
                 'static gboolean\n'
