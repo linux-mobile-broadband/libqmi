@@ -41,7 +41,7 @@ static GOptionEntry entries[] = {
       "Query Google Carrier Lock",
       NULL
     },
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 GOptionGroup *
