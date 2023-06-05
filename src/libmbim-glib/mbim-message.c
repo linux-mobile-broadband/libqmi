@@ -819,8 +819,11 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
     if (!has_offset && !has_length) {
         /* If array size is requested, it's case (e) */
         if (array_size) {
-            /* no need to validate required size, as it's implicitly validated based on the message
-             * length */
+            if ((guint64)self->len < (information_buffer_offset + relative_offset)) {
+                g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                             "cannot compute byte array length: wrong offsets");
+                return FALSE;
+            }
             *array_size = self->len - (information_buffer_offset + relative_offset);
         } else {
             guint64 required_size;
