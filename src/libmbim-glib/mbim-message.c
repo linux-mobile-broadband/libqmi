@@ -636,35 +636,33 @@ _mbim_message_read_string_array (const MbimMessage   *self,
                                  guint32              struct_start_offset,
                                  guint32              relative_offset_array_start,
                                  MbimStringEncoding   encoding,
-                                 gchar             ***array,
+                                 gchar             ***out_array,
                                  GError             **error)
 {
-    guint32  offset;
-    guint32  i;
-    GError  *inner_error = NULL;
+    guint32              offset;
+    guint32              i;
+    g_autoptr(GPtrArray) array = NULL;
 
-    g_assert (array != NULL);
+    g_assert (out_array != NULL);
 
     if (!array_size) {
-        *array = NULL;
+        *out_array = NULL;
         return TRUE;
     }
 
-    *array = g_new0 (gchar *, array_size + 1);
-    for (i = 0, offset = relative_offset_array_start;
-         i < array_size;
-         offset += 8, i++) {
+    array = g_ptr_array_new ();
+    for (i = 0, offset = relative_offset_array_start; i < array_size; offset += 8, i++) {
+        gchar *str;
+
         /* Read next string in the OL pair list */
-        if (!_mbim_message_read_string (self, struct_start_offset, offset, encoding, &((*array)[i]), &inner_error))
-            break;
+        if (!_mbim_message_read_string (self, struct_start_offset, offset, encoding, &str, error))
+            return FALSE;
+
+        g_ptr_array_add (array, str);
     }
 
-    if (inner_error) {
-        g_strfreev (*array);
-        g_propagate_error (error, inner_error);
-        return FALSE;
-    }
-
+    g_ptr_array_add (array, NULL);
+    *out_array = (gchar **) g_ptr_array_free (g_steal_pointer (&array), FALSE);
     return TRUE;
 }
 
