@@ -15,6 +15,7 @@ libhelpers_dep = declare_dependency(
 
 sources = files(
   'qmicli.c',
+  'qmicli-atr.c',
   'qmicli-dms.c',
   'qmicli-dpm.c',
   'qmicli-dsd.c',

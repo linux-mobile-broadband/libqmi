@@ -177,4 +177,12 @@ void          qmicli_fox_run              (QmiDevice *device,
                                            GCancellable *cancellable);
 #endif
 
+#if defined HAVE_QMI_SERVICE_ATR
+GOptionGroup *qmicli_atr_get_option_group (void);
+gboolean      qmicli_atr_options_enabled  (void);
+void          qmicli_atr_run              (QmiDevice *device,
+                                           QmiClientAtr *client,
+                                           GCancellable *cancellable);
+#endif
+
 #endif /* __QMICLI_H__ */

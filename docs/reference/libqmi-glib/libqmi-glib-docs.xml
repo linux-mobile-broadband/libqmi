@@ -575,6 +575,19 @@
   </chapter>
 
   <chapter>
+    <title>Telit AT Relay Service (ATR)</title>
+    <xi:include href="xml/qmi-client-atr.xml"/>
+    <section>
+      <title>ATR Indications</title>
+      <xi:include href="xml/qmi-indication-atr-received.xml"/>
+    </section>
+    <section>
+      <title>ATR Requests</title>
+      <xi:include href="xml/qmi-message-atr-send.xml"/>
+    </section>
+  </chapter>
+
+  <chapter>
     <title>Compatibility with older versions</title>
     <xi:include href="xml/qmi-compat.xml"/>
   </chapter>

@@ -99,6 +99,8 @@
 #include "qmi-enums-fox.h"
 #include "qmi-fox.h"
 
+#include "qmi-atr.h"
+
 /* generated */
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"

@@ -476,6 +476,13 @@ allocate_client_ready (QmiDevice *dev,
 #else
         break;
 #endif
+    case QMI_SERVICE_ATR:
+#if defined HAVE_QMI_SERVICE_ATR
+        qmicli_atr_run (dev, QMI_CLIENT_ATR (client), cancellable);
+        return;
+#else
+        break;
+#endif
     case QMI_SERVICE_UNKNOWN:
     case QMI_SERVICE_CTL:
     case QMI_SERVICE_AUTH:
@@ -933,6 +940,13 @@ parse_actions (void)
     }
 #endif
 
+#if defined HAVE_QMI_SERVICE_ATR
+    if (qmicli_atr_options_enabled ()) {
+        service = QMI_SERVICE_ATR;
+        actions_enabled++;
+    }
+#endif
+
     /* Cannot mix actions from different services */
     if (actions_enabled > 1) {
         g_printerr ("error: cannot execute multiple actions of different services\n");
@@ -1008,6 +1022,9 @@ int main (int argc, char **argv)
 #endif
 #if defined HAVE_QMI_SERVICE_FOX
     g_option_context_add_group (context, qmicli_fox_get_option_group ());
+#endif
+#if defined HAVE_QMI_SERVICE_ATR
+    g_option_context_add_group (context, qmicli_atr_get_option_group ());
 #endif
     g_option_context_add_group (context, qmicli_link_management_get_option_group ());
     g_option_context_add_group (context, qmicli_qmiwwan_get_option_group ());

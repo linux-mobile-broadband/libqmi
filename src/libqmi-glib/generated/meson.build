@@ -236,6 +236,7 @@ generated = custom_target(
 private_gen_sources += [generated[0], generated[1]]
 
 services = [
+  'atr',
   'dms',
   'dpm',
   'dsd',
