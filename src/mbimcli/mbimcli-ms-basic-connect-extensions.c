@@ -50,6 +50,7 @@ static gboolean  query_registration_parameters_flag;
 static gchar    *set_registration_parameters_str;
 static gboolean  query_modem_configuration_flag;
 static gboolean  query_wake_reason_flag;
+static gboolean  device_reset_flag;
 
 static gboolean query_pco_arg_parse (const gchar  *option_name,
                                      const gchar  *value,
@@ -110,6 +111,10 @@ static GOptionEntry entries[] = {
       "Query base stations info",
       NULL
     },
+    { "ms-device-reset", 0, 0, G_OPTION_ARG_NONE, &device_reset_flag,
+      "Reset device",
+      NULL
+    },    
     { "ms-query-version", 0, 0,G_OPTION_ARG_STRING , &query_version_str,
       "Exchange supported version information. Since MBIMEx v2.0.",
       "[(MBIM version),(MBIM extended version)]"
@@ -211,6 +216,7 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
                  !!set_provisioned_contexts_str +
                  query_base_stations_flag +
                  !!query_version_str +
+                 device_reset_flag +
                  query_registration_parameters_flag +
                  !!set_registration_parameters_str +
                  query_modem_configuration_flag +
@@ -1649,6 +1655,32 @@ query_wake_reason_ready (MbimDevice   *device,
     shutdown (FALSE);
 }
 
+static void
+device_reset_ready (MbimDevice   *device,
+                    GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_basic_connect_extensions_device_reset_response_parse (response, &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully requested device reset\n",
+            mbim_device_get_path_display (device));
+
+    shutdown (TRUE);
+}
+
 void
 mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                                          GCancellable *cancellable)
@@ -1951,6 +1983,18 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)registration_parameters_ready,
+                             NULL);
+        return;
+    }
+
+    if (device_reset_flag) {
+        request = mbim_message_ms_basic_connect_extensions_device_reset_set_new (NULL);
+
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)device_reset_ready,
                              NULL);
         return;
     }
