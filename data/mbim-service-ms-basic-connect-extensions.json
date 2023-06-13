@@ -569,5 +569,13 @@
                      "struct-type"   : "MbimCellInfoNeighboringLte" },
                    { "name"          : "CdmaCells",
                      "format"        : "ms-struct-array",
-                     "struct-type"   : "MbimCellInfoCdma" } ] }
+                     "struct-type"   : "MbimCellInfoCdma" } ] },
+
+  // *********************************************************************************
+
+  { "name"         : "Device Reset",
+    "type"         : "Command",
+    "since"        : "1.30",
+    "set"          : [],
+    "response"     : [] }
 ]
