@@ -48,12 +48,19 @@ static Context *ctx;
 
 /* Options */
 static gchar    *send_str;
+static gchar    *send_only_str;
 static gboolean  noop_flag;
 
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_ATR_SEND && defined HAVE_QMI_INDICATION_ATR_RECEIVED
     { "atr-send", 0, 0, G_OPTION_ARG_STRING, &send_str,
-      "Send an AT command",
+      "Send an AT command and wait for the reply",
+      "[AT command]"
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_ATR_SEND
+    { "atr-send-only", 0, 0, G_OPTION_ARG_STRING, &send_only_str,
+      "Send an AT command without waiting for the reply",
       "[AT command]"
     },
 #endif
@@ -89,6 +96,7 @@ qmicli_atr_options_enabled (void)
         return !!n_actions;
 
     n_actions = (!!send_str +
+                 !!send_only_str +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -258,6 +266,61 @@ send_ready (QmiClientAtr *client,
 #endif /* HAVE_QMI_MESSAGE_ATR_SEND
         * HAVE_QMI_INDICATION_ATR_RECEIVED */
 
+#if defined HAVE_QMI_MESSAGE_ATR_SEND
+
+/******************************************************************************/
+/* Send and don't wait for the reply */
+
+static void
+send_only_ready (QmiClientAtr *client,
+                 GAsyncResult *res)
+{
+    g_autoptr(QmiMessageAtrSendOutput) output = NULL;
+    g_autoptr(GError)                  error = NULL;
+
+    output = qmi_client_atr_send_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_atr_send_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't send AT command: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Successfully sent AT command\n");
+    operation_shutdown (TRUE);
+}
+
+static void
+generic_send (const gchar         *cmd,
+              GAsyncReadyCallback  cb)
+{
+    g_autofree gchar                  *at_cmd = NULL;
+    g_autoptr(QmiMessageAtrSendInput)  input = NULL;
+
+    g_debug ("Asynchronously sending AT command...");
+
+    at_cmd = g_strconcat (cmd, "\r", NULL);
+    input = send_input_create (at_cmd);
+    if (!input) {
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    qmi_client_atr_send (ctx->client,
+                         input,
+                         10,
+                         ctx->cancellable,
+                         cb,
+                         NULL);
+}
+
+#endif /* HAVE_QMI_MESSAGE_ATR_SEND */
+
 /******************************************************************************/
 /* Common */
 
@@ -281,25 +344,14 @@ qmicli_atr_run (QmiDevice    *device,
 
 #if defined HAVE_QMI_MESSAGE_ATR_SEND && defined HAVE_QMI_INDICATION_ATR_RECEIVED
     if (send_str) {
-        g_autofree gchar                  *at_cmd = NULL;
-        g_autoptr(QmiMessageAtrSendInput)  input = NULL;
+        generic_send (send_str, (GAsyncReadyCallback)send_ready);
+        return;
+    }
+#endif
 
-        g_debug ("Asynchronously sending AT command...");
-
-        at_cmd = g_strconcat (send_str, "\r", NULL);
-        input = send_input_create (at_cmd);
-        if (!input) {
-            operation_shutdown (FALSE);
-            return;
-        }
-
-        qmi_client_atr_send (ctx->client,
-                             input,
-                             10,
-                             ctx->cancellable,
-                             (GAsyncReadyCallback)send_ready,
-                             NULL);
-
+#if defined HAVE_QMI_MESSAGE_ATR_SEND
+    if (send_only_str) {
+        generic_send (send_only_str, (GAsyncReadyCallback)send_only_ready);
         return;
     }
 #endif
