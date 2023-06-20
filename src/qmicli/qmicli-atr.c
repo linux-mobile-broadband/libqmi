@@ -43,12 +43,14 @@ typedef struct {
     GCancellable *cancellable;
     guint         timeout_id;
     guint         received_indication_id;
+    gboolean      monitor;
 } Context;
 static Context *ctx;
 
 /* Options */
 static gchar    *send_str;
 static gchar    *send_only_str;
+static gboolean  monitor_indications_flag;
 static gboolean  noop_flag;
 
 static GOptionEntry entries[] = {
@@ -62,6 +64,12 @@ static GOptionEntry entries[] = {
     { "atr-send-only", 0, 0, G_OPTION_ARG_STRING, &send_only_str,
       "Send an AT command without waiting for the reply",
       "[AT command]"
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_ATR_SEND && defined HAVE_QMI_INDICATION_ATR_RECEIVED
+    { "atr-monitor", 0, 0, G_OPTION_ARG_NONE, &monitor_indications_flag,
+      "Watch for unsolicited indications",
+      NULL
     },
 #endif
     { "atr-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
@@ -97,6 +105,7 @@ qmicli_atr_options_enabled (void)
 
     n_actions = (!!send_str +
                  !!send_only_str +
+                 monitor_indications_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -106,7 +115,7 @@ qmicli_atr_options_enabled (void)
 
     /* Actions that require receiving QMI indication messages must specify that
      * indications are expected. */
-    if (!!send_str)
+    if (!!send_str || monitor_indications_flag)
         qmicli_expect_indications ();
 
     checked = TRUE;
@@ -221,14 +230,30 @@ indication_received (QmiClientAtr                   *client,
         return;
     }
 
-    /* No need to print an additional '\n', since the indication already has '\r\n' */
-    g_print ("%s", received);
-    /* The reply can arrive with multiple indications, so we need to check if the
-     * indication has the final response */
-    if (is_final_response (received)) {
-        g_print ("Successfully received final response\n");
-        operation_shutdown (TRUE);
+    if (ctx->monitor) {
+        /* When monitoring we don't want to print final responses
+         * e.g. the initial ATE0 reply or the ones for the commands sent with
+         * atr-send-only using the same cid
+         * The comparison with "ATE0" is for avoid printing the echo of the
+         * mandatory initial command */
+        if (!is_final_response (received) && g_strcmp0 (received, "ATE0\r"))
+            g_print ("%s", received);
+    } else {
+        /* No need to print an additional '\n', since the indication already has '\r\n' */
+        g_print ("%s", received);
+        /* The reply can arrive with multiple indications, so we need to check if the
+        * indication has the final response */
+        if (is_final_response (received)) {
+            g_print ("Successfully received final response\n");
+            operation_shutdown (TRUE);
+        }
     }
+}
+
+static void
+monitoring_cancelled (GCancellable *cancellable)
+{
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -251,11 +276,19 @@ send_ready (QmiClientAtr *client,
         return;
     }
 
-    /* Wait for the response asynchronously: 120 seconds should be enough also
-     * for long-lasting commands (e.g. AT+COPS=?) */
-    ctx->timeout_id = g_timeout_add_seconds (120,
-                                             (GSourceFunc) send_timed_out,
-                                             NULL);
+    if (ctx->monitor) {
+        /* User can use Ctrl+C to cancel the monitoring at any time */
+        g_cancellable_connect (ctx->cancellable,
+                               G_CALLBACK (monitoring_cancelled),
+                               NULL,
+                               NULL);
+        g_print ("Monitoring unsolicited indications: press Ctrl+C to stop\n");
+    } else
+        /* Wait for the response asynchronously: 120 seconds should be enough also
+         * for long-lasting commands (e.g. AT+COPS=?) */
+        ctx->timeout_id = g_timeout_add_seconds (120,
+                                                 (GSourceFunc) send_timed_out,
+                                                 NULL);
 
     ctx->received_indication_id = g_signal_connect (ctx->client,
                                                     "received",
@@ -337,7 +370,7 @@ qmicli_atr_run (QmiDevice    *device,
                 GCancellable *cancellable)
 {
     /* Initialize context */
-    ctx = g_slice_new (Context);
+    ctx = g_slice_new0 (Context);
     ctx->device = g_object_ref (device);
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
@@ -345,6 +378,18 @@ qmicli_atr_run (QmiDevice    *device,
 #if defined HAVE_QMI_MESSAGE_ATR_SEND && defined HAVE_QMI_INDICATION_ATR_RECEIVED
     if (send_str) {
         generic_send (send_str, (GAsyncReadyCallback)send_ready);
+        return;
+    }
+
+    if (monitor_indications_flag) {
+        /* To really open the AT communication and receive unsolicited
+         * indications it is mandatory to send an initial AT command.
+         * The command ATE0 has been chosen so that, if needed, commands
+         * can be sent by a different qmicli instance reusing the monitoring
+         * cid with --atr-send-only. This avoids also polluting the monitoring
+         * operation with the comands echo */
+        ctx->monitor = TRUE;
+        generic_send ("ATE0", (GAsyncReadyCallback)send_ready);
         return;
     }
 #endif
