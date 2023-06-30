@@ -656,7 +656,7 @@ _mbim_message_read_string_array (const MbimMessage   *self,
         return TRUE;
     }
 
-    array = g_ptr_array_new ();
+    array = g_ptr_array_new_with_free_func (g_free);
     for (i = 0, offset = relative_offset_array_start; i < array_size; offset += 8, i++) {
         gchar *str;
 
