@@ -45,18 +45,6 @@ gboolean mbim_helpers_list_links_wwan (const gchar   *base_ifname,
                                        GPtrArray    **out_links,
                                        GError       **error);
 
-#if !GLIB_CHECK_VERSION(2,54,0)
-
-/* Pointer Array lookup with a GEqualFunc, imported from GLib 2.54 */
-#define g_ptr_array_find_with_equal_func mbim_ptr_array_find_with_equal_func
-G_GNUC_INTERNAL
-gboolean mbim_ptr_array_find_with_equal_func (GPtrArray     *haystack,
-                                              gconstpointer  needle,
-                                              GEqualFunc     equal_func,
-                                              guint         *index_);
-
-#endif
-
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_HELPERS_H_ */
