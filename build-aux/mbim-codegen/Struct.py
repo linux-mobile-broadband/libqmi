@@ -119,13 +119,7 @@ class Struct:
             elif field['format'] == 'ipv4':
                 inner_template = (
                     ' * @${field_name_underscore}: a #MbimIPv4.\n')
-            elif field['format'] == 'ref-ipv4':
-                inner_template = (
-                    ' * @${field_name_underscore}: a #MbimIPv4.\n')
             elif field['format'] == 'ipv6':
-                inner_template = (
-                    ' * @${field_name_underscore}: a #MbimIPv6\n')
-            elif field['format'] == 'ref-ipv6':
                 inner_template = (
                     ' * @${field_name_underscore}: a #MbimIPv6\n')
             else:
@@ -179,13 +173,7 @@ class Struct:
             elif field['format'] == 'ipv4':
                 inner_template = (
                     '    MbimIPv4 ${field_name_underscore};\n')
-            elif field['format'] == 'ref-ipv4':
-                inner_template = (
-                    '    MbimIPv4 ${field_name_underscore};\n')
             elif field['format'] == 'ipv6':
-                inner_template = (
-                    '    MbimIPv6 ${field_name_underscore};\n')
-            elif field['format'] == 'ref-ipv6':
                 inner_template = (
                     '    MbimIPv6 ${field_name_underscore};\n')
             else:
@@ -257,11 +245,7 @@ class Struct:
                     '    g_strfreev (var->${field_name_underscore});\n')
             elif field['format'] == 'ipv4':
                 pass
-            elif field['format'] == 'ref-ipv4':
-                pass
             elif field['format'] == 'ipv6':
-                pass
-            elif field['format'] == 'ref-ipv6':
                 pass
             else:
                 raise ValueError('Cannot handle format \'%s\' in struct clear' % field['format'])
@@ -479,21 +463,17 @@ class Struct:
                     '        }\n')
 
             elif field['format'] == 'ipv4' or \
-                 field['format'] == 'ref-ipv4' or \
-                 field['format'] == 'ipv6' or \
-                 field['format'] == 'ref-ipv6':
+                 field['format'] == 'ipv6':
                 inner_template += (
                     '        ${if_show_field}{\n'
                     '            g_autoptr(GInetAddress)  addr = NULL;\n'
                     '            g_autofree gchar        *tmpstr = NULL;\n'
                     '\n')
 
-                if field['format'] == 'ipv4' or \
-                   field['format'] == 'ref-ipv4':
+                if field['format'] == 'ipv4':
                     inner_template += (
                         '            addr = g_inet_address_new_from_bytes ((guint8 *)&(self->${field_name_underscore}.addr), G_SOCKET_FAMILY_IPV4);\n')
-                elif field['format'] == 'ipv6' or \
-                   field['format'] == 'ref-ipv6':
+                elif field['format'] == 'ipv6':
                     inner_template += (
                         '            addr = g_inet_address_new_from_bytes ((guint8 *)&(self->${field_name_underscore}.addr), G_SOCKET_FAMILY_IPV6);\n')
 
@@ -699,22 +679,6 @@ class Struct:
                     '        memcpy (&(out->${field_name_underscore}), tmp, 4);\n'
                     '        offset += 4;\n'
                     '    }\n')
-            elif field['format'] == 'ref-ipv4':
-                # Unsupported because ms-struct-array requires the read bytes of the struct to contain the size read
-                # fro the variable buffer, which is currently not implemented for this type.
-                if self.ms_struct_array_member == True:
-                    raise ValueError('type \'ref-byte-array\' unsupported in \'ms-struct-array\'')
-
-                inner_template += (
-                    '\n'
-                    '    {\n'
-                    '        const MbimIPv4 *tmp;\n'
-                    '\n'
-                    '        if (!_mbim_message_read_ipv4 (self, offset, TRUE, &tmp, error))\n'
-                    '            goto out;\n'
-                    '        memcpy (&(out->${field_name_underscore}), tmp, 4);\n'
-                    '        offset += 4;\n'
-                    '    }\n')
             elif field['format'] == 'ipv6':
                 inner_template += (
                     '\n'
@@ -725,22 +689,6 @@ class Struct:
                     '            goto out;\n'
                     '        memcpy (&(out->${field_name_underscore}), tmp, 16);\n'
                     '        offset += 16;\n'
-                    '    }\n')
-            elif field['format'] == 'ref-ipv6':
-                # Unsupported because ms-struct-array requires the read bytes of the struct to contain the size read
-                # fro the variable buffer, which is currently not implemented for this type.
-                if self.ms_struct_array_member == True:
-                    raise ValueError('type \'ref-byte-array\' unsupported in \'ms-struct-array\'')
-
-                inner_template += (
-                    '\n'
-                    '    {\n'
-                    '        const MbimIPv6 *tmp;\n'
-                    '\n'
-                    '        if (!_mbim_message_read_ipv6 (self, offset, FALSE, &tmp, error))\n'
-                    '            goto out;\n'
-                    '        memcpy (&(out->${field_name_underscore}), tmp, 16);\n'
-                    '        offset += 4;\n'
                     '    }\n')
             else:
                 raise ValueError('Cannot handle format \'%s\' in struct' % field['format'])
@@ -1022,12 +970,8 @@ class Struct:
                 inner_template = ('    _mbim_struct_builder_append_string_array (builder, value->${field}, value->${array_size_field});\n')
             elif field['format'] == 'ipv4':
                 inner_template = ('    _mbim_struct_builder_append_ipv4 (builder, &value->${field}, FALSE);\n')
-            elif field['format'] == 'ref-ipv4':
-                inner_template = ('    _mbim_struct_builder_append_ipv4 (builder, &value->${field}, TRUE);\n')
             elif field['format'] == 'ipv6':
                 inner_template = ('    _mbim_struct_builder_append_ipv6 (builder, &value->${field}, FALSE);\n')
-            elif field['format'] == 'ref-ipv6':
-                inner_template = ('    _mbim_struct_builder_append_ipv6 (builder, &value->${field}, TRUE);\n')
             else:
                 raise ValueError('Cannot handle format \'%s\' in struct' % field['format'])
 
