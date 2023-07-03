@@ -1043,7 +1043,7 @@ class Message:
                     '        offset += 8;\n')
             elif field['format'] == 'ref-ipv4':
                 inner_template += (
-                    '        if ((out_${field} != NULL) && !_mbim_message_read_ipv4 (message, offset, TRUE, out_${field}, error))\n'
+                    '        if ((out_${field} != NULL) && !_mbim_message_read_ipv4 (message, offset, TRUE, out_${field}, NULL, error))\n'
                     '            goto out;\n'
                     '        offset += 4;\n')
             elif field['format'] == 'ipv4-array':
@@ -1053,7 +1053,7 @@ class Message:
                     '        offset += 4;\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template += (
-                    '        if ((out_${field} != NULL) && !_mbim_message_read_ipv6 (message, offset, TRUE, out_${field}, error))\n'
+                    '        if ((out_${field} != NULL) && !_mbim_message_read_ipv6 (message, offset, TRUE, out_${field}, NULL, error))\n'
                     '            goto out;\n'
                     '        offset += 4;\n')
             elif field['format'] == 'ipv6-array':
@@ -1561,7 +1561,7 @@ class Message:
                 if field['format'] == 'ref-ipv4':
                     inner_template += (
                         '        array_size = 1;\n'
-                        '        if (!_mbim_message_read_ipv4 (message, offset, TRUE, &tmp, &inner_error))\n'
+                        '        if (!_mbim_message_read_ipv4 (message, offset, TRUE, &tmp, NULL, &inner_error))\n'
                         '            goto out;\n'
                         '        offset += 4;\n')
                 elif field['format'] == 'ipv4-array':
@@ -1573,7 +1573,7 @@ class Message:
                 elif field['format'] == 'ref-ipv6':
                     inner_template += (
                         '        array_size = 1;\n'
-                        '        if (!_mbim_message_read_ipv6 (message, offset, TRUE, &tmp, &inner_error))\n'
+                        '        if (!_mbim_message_read_ipv6 (message, offset, TRUE, &tmp, NULL, &inner_error))\n'
                         '            goto out;\n'
                         '        offset += 4;\n')
                 elif field['format'] == 'ipv6-array':

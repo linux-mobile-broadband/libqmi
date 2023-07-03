@@ -853,18 +853,25 @@ gboolean
 _mbim_message_read_ipv4 (const MbimMessage  *self,
                          guint32             relative_offset,
                          gboolean            ref,
-                         const MbimIPv4    **ipv4,
+                         const MbimIPv4    **ipv4_ptr,  /* unsafe if unaligned */
+                         MbimIPv4           *ipv4_value,
                          GError            **error)
 {
     guint64 required_size;
     guint32 information_buffer_offset;
     guint32 offset;
 
-    g_assert (ipv4 != NULL);
+    g_assert (ipv4_ptr || ipv4_value);
+    g_assert (!(ipv4_ptr && ipv4_value));
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
     if (ref) {
+        /* Read operations with a reference are expected only on certain message
+         * API methods, where the output is required to be a pointer as well, to
+         * indicate whether the field exists or not. */
+        g_assert (ipv4_ptr);
+
         required_size = (guint64)information_buffer_offset + (guint64)relative_offset + 4;
         if ((guint64)self->len < required_size) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
@@ -875,7 +882,7 @@ _mbim_message_read_ipv4 (const MbimMessage  *self,
 
         offset = mbim_helpers_read_unaligned_guint32 (self->data + information_buffer_offset + relative_offset);
         if (!offset) {
-            *ipv4 = NULL;
+            *ipv4_ptr = NULL;
             return TRUE;
         }
     } else
@@ -889,8 +896,20 @@ _mbim_message_read_ipv4 (const MbimMessage  *self,
         return FALSE;
     }
 
-    *ipv4 = (const MbimIPv4 *) G_STRUCT_MEMBER_P (self->data,
-                                                  (information_buffer_offset + offset));
+    /* This explicit cast to a MbimIPv4 may fail if the contents are not correctly aligned,
+     * but so far in the currently supported MBIM messages where a MbimIPv4 is returned
+     * the 32bit alignment is ensured:
+     * - MBIM Basic Connect "IP Configuration" response.
+     * - MBIM Basic Connect "IP Configuration" notification.
+     *
+     * We keep this limitation instead of making it an alignment-safe read because otherwise
+     * it would require new API/ABI compat methods.
+     */
+    if (ipv4_ptr)
+        *ipv4_ptr = (const MbimIPv4 *) (self->data +information_buffer_offset + offset);
+
+    if (ipv4_value)
+        memcpy (ipv4_value, self->data +information_buffer_offset + offset, 4);
     return TRUE;
 }
 
@@ -944,18 +963,25 @@ gboolean
 _mbim_message_read_ipv6 (const MbimMessage  *self,
                          guint32             relative_offset,
                          gboolean            ref,
-                         const MbimIPv6    **ipv6,
+                         const MbimIPv6    **ipv6_ptr,  /* unsafe if unaligned */
+                         MbimIPv6           *ipv6_value,
                          GError            **error)
 {
     guint64 required_size;
     guint32 information_buffer_offset;
     guint32 offset;
 
-    g_assert (ipv6 != NULL);
+    g_assert (ipv6_ptr || ipv6_value);
+    g_assert (!(ipv6_ptr && ipv6_value));
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
     if (ref) {
+        /* Read operations with a reference are expected only on certain message
+         * API methods, where the output is required to be a pointer as well, to
+         * indicate whether the field exists or not. */
+        g_assert (ipv6_ptr);
+
         required_size = (guint64)information_buffer_offset + (guint64)relative_offset + 4;
         if ((guint64)self->len < required_size) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
@@ -966,7 +992,7 @@ _mbim_message_read_ipv6 (const MbimMessage  *self,
 
         offset = mbim_helpers_read_unaligned_guint32 (self->data + information_buffer_offset + relative_offset);
         if (!offset) {
-            *ipv6 = NULL;
+            *ipv6_ptr = NULL;
             return TRUE;
         }
     } else
@@ -980,8 +1006,20 @@ _mbim_message_read_ipv6 (const MbimMessage  *self,
         return FALSE;
     }
 
-    *ipv6 = (const MbimIPv6 *) G_STRUCT_MEMBER_P (self->data,
-                                                  (information_buffer_offset + offset));
+    /* This explicit cast to a MbimIPv6 may fail if the contents are not correctly aligned,
+     * but so far in the currently supported MBIM messages where a MbimIPv6 is returned
+     * the 32bit alignment is ensured:
+     * - MBIM Basic Connect "IP Configuration" response.
+     * - MBIM Basic Connect "IP Configuration" notification.
+     *
+     * We keep this limitation instead of making it an alignment-safe read because otherwise
+     * it would require new API/ABI compat methods.
+     */
+    if (ipv6_ptr)
+        *ipv6_ptr = (const MbimIPv6 *) (self->data +information_buffer_offset + offset);
+
+    if (ipv6_value)
+        memcpy (ipv6_value, self->data +information_buffer_offset + offset, 16);
     return TRUE;
 }
 

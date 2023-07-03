@@ -671,25 +671,15 @@ class Struct:
             elif field['format'] == 'ipv4':
                 inner_template += (
                     '\n'
-                    '    {\n'
-                    '        const MbimIPv4 *tmp;\n'
-                    '\n'
-                    '        if (!_mbim_message_read_ipv4 (self, offset, FALSE, &tmp, error))\n'
-                    '            goto out;\n'
-                    '        memcpy (&(out->${field_name_underscore}), tmp, 4);\n'
-                    '        offset += 4;\n'
-                    '    }\n')
+                    '    if (!_mbim_message_read_ipv4 (self, offset, FALSE, NULL, &(out->${field_name_underscore}), error))\n'
+                    '        goto out;\n'
+                    '    offset += 4;\n')
             elif field['format'] == 'ipv6':
                 inner_template += (
                     '\n'
-                    '    {\n'
-                    '        const MbimIPv6 *tmp;\n'
-                    '\n'
-                    '        if (!_mbim_message_read_ipv6 (self, offset, FALSE, &tmp, error))\n'
-                    '            goto out;\n'
-                    '        memcpy (&(out->${field_name_underscore}), tmp, 16);\n'
-                    '        offset += 16;\n'
-                    '    }\n')
+                    '    if (!_mbim_message_read_ipv6 (self, offset, FALSE, NULL, &(out->${field_name_underscore}), error))\n'
+                    '        goto out;\n'
+                    '    offset += 16;\n')
             else:
                 raise ValueError('Cannot handle format \'%s\' in struct' % field['format'])
 
