@@ -74,14 +74,10 @@ def validate_fields(fields):
         elif field['format'] == 'ms-struct-array':
             if 'struct-type' not in field:
                 raise ValueError('Field type \'ms-struct-array\' requires \'struct-type\' field')
-        elif field['format'] == 'ipv4':
-            pass
         elif field['format'] == 'ref-ipv4':
             pass
         elif field['format'] == 'ipv4-array':
             flag_always_read_field(fields, field['array-size-field'])
-        elif field['format'] == 'ipv6':
-            pass
         elif field['format'] == 'ref-ipv6':
             pass
         elif field['format'] == 'ipv6-array':
@@ -274,14 +270,10 @@ class Message:
                 inner_template = (' * @${field}: (in)(array zero-terminated=1)(element-type ${struct}): the \'${name}\' field, given as an array of #${struct} items.\n')
             elif field['format'] == 'ms-struct-array':
                 raise ValueError('type \'ms-struct-array\' unsupported as input')
-            elif field['format'] == 'ipv4':
-                inner_template = (' * @${field}: (in): the \'${name}\' field, given as a #MbimIPv4.\n')
             elif field['format'] == 'ref-ipv4':
                 inner_template = (' * @${field}: (in): the \'${name}\' field, given as a #MbimIPv4.\n')
             elif field['format'] == 'ipv4-array':
                 inner_template = (' * @${field}: (in)(array zero-terminated=1)(element-type MbimIPv4): the \'${name}\' field, given as an array of #MbimIPv4 items.\n')
-            elif field['format'] == 'ipv6':
-                inner_template = (' * @${field}: (in): the \'${name}\' field, given as a #MbimIPv6.\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template = (' * @${field}: (in): the \'${name}\' field, given as a #MbimIPv6.\n')
             elif field['format'] == 'ipv6-array':
@@ -344,14 +336,10 @@ class Message:
                 inner_template = ('    const ${struct} *const *${field},\n')
             elif field['format'] == 'ms-struct-array':
                 raise ValueError('type \'ms-struct-array\' unsupported as input')
-            elif field['format'] == 'ipv4':
-                inner_template = ('    const MbimIPv4 *${field},\n')
             elif field['format'] == 'ref-ipv4':
                 inner_template = ('    const MbimIPv4 *${field},\n')
             elif field['format'] == 'ipv4-array':
                 inner_template = ('    const MbimIPv4 *${field},\n')
-            elif field['format'] == 'ipv6':
-                inner_template = ('    const MbimIPv6 *${field},\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template = ('    const MbimIPv6 *${field},\n')
             elif field['format'] == 'ipv6-array':
@@ -413,14 +401,10 @@ class Message:
                 inner_template = ('    const ${struct} *const *${field},\n')
             elif field['format'] == 'ms-struct-array':
                 raise ValueError('type \'ms-struct-array\' unsupported as input')
-            elif field['format'] == 'ipv4':
-                inner_template = ('    const MbimIPv4 *${field},\n')
             elif field['format'] == 'ref-ipv4':
                 inner_template = ('    const MbimIPv4 *${field},\n')
             elif field['format'] == 'ipv4-array':
                 inner_template = ('    const MbimIPv4 *${field},\n')
-            elif field['format'] == 'ipv6':
-                inner_template = ('    const MbimIPv6 *${field},\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template = ('    const MbimIPv6 *${field},\n')
             elif field['format'] == 'ipv6-array':
@@ -497,14 +481,10 @@ class Message:
                 inner_template += ('        _mbim_message_command_builder_append_${struct_underscore}_ref_struct_array (builder, ${field}, ${array_size_field});\n')
             elif field['format'] == 'ms-struct-array':
                 raise ValueError('type \'ms-struct-array\' unsupported as input')
-            elif field['format'] == 'ipv4':
-                inner_template += ('        _mbim_message_command_builder_append_ipv4 (builder, ${field}, FALSE);\n')
             elif field['format'] == 'ref-ipv4':
                 inner_template += ('        _mbim_message_command_builder_append_ipv4 (builder, ${field}, TRUE);\n')
             elif field['format'] == 'ipv4-array':
                 inner_template += ('        _mbim_message_command_builder_append_ipv4_array (builder, ${field}, ${array_size_field});\n')
-            elif field['format'] == 'ipv6':
-                inner_template += ('        _mbim_message_command_builder_append_ipv6 (builder, ${field}, FALSE);\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template += ('        _mbim_message_command_builder_append_ipv6 (builder, ${field}, TRUE);\n')
             elif field['format'] == 'ipv6-array':
@@ -586,14 +566,10 @@ class Message:
             elif field['format'] == 'ms-struct-array':
                 inner_template = (' * @out_${field}_count: (out)(optional)(transfer none): return location for a #guint32, or %NULL if the field is not needed.\n'
                                   ' * @out_${field}: (out)(optional)(nullable)(transfer full)(array zero-terminated=1)(element-type ${struct}): return location for a newly allocated array of #${struct} items, or %NULL if the \'${name}\' field is not needed. The availability of this field is not always guaranteed, and therefore %NULL may be given as a valid output. Free the returned value with ${struct_underscore}_array_free().\n')
-            elif field['format'] == 'ipv4':
-                inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimIPv4, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ref-ipv4':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimIPv4, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ipv4-array':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer full)(array zero-terminated=1)(element-type MbimIPv4): return location for a newly allocated array of #MbimIPv4 items, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
-            elif field['format'] == 'ipv6':
-                inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimIPv6, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimIPv6, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ipv6-array':
@@ -656,14 +632,10 @@ class Message:
             elif field['format'] == 'ms-struct-array':
                 inner_template = ('    guint32 *out_${field}_count,\n'
                                   '    ${struct}Array **out_${field},\n')
-            elif field['format'] == 'ipv4':
-                inner_template = ('    const MbimIPv4 **out_${field},\n')
             elif field['format'] == 'ref-ipv4':
                 inner_template = ('    const MbimIPv4 **out_${field},\n')
             elif field['format'] == 'ipv4-array':
                 inner_template = ('    MbimIPv4 **out_${field},\n')
-            elif field['format'] == 'ipv6':
-                inner_template = ('    const MbimIPv6 **out_${field},\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template = ('    const MbimIPv6 **out_${field},\n')
             elif field['format'] == 'ipv6-array':
@@ -726,14 +698,10 @@ class Message:
             elif field['format'] == 'ms-struct-array':
                 inner_template = ('    guint32 *out_${field}_count,\n'
                                   '    ${struct}Array **out_${field},\n')
-            elif field['format'] == 'ipv4':
-                inner_template = ('    const MbimIPv4 **out_${field},\n')
             elif field['format'] == 'ref-ipv4':
                 inner_template = ('    const MbimIPv4 **out_${field},\n')
             elif field['format'] == 'ipv4-array':
                 inner_template = ('    MbimIPv4 **out_${field},\n')
-            elif field['format'] == 'ipv6':
-                inner_template = ('    const MbimIPv6 **out_${field},\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template = ('    const MbimIPv6 **out_${field},\n')
             elif field['format'] == 'ipv6-array':
@@ -891,10 +859,8 @@ class Message:
                      field['format'] == 'ms-struct' or \
                      field['format'] == 'struct-array' or \
                      field['format'] == 'ref-struct-array' or \
-                     field['format'] == 'ipv4' or \
                      field['format'] == 'ref-ipv4' or \
                      field['format'] == 'ipv4-array' or \
-                     field['format'] == 'ipv6' or \
                      field['format'] == 'ref-ipv6' or \
                      field['format'] == 'ipv6-array':
                     inner_template += (
@@ -1075,11 +1041,6 @@ class Message:
                     '        if ((out_${field} != NULL) && !_mbim_message_read_${struct_name}_ms_struct_array (message, offset, out_${field}_count, &_${field}, error))\n'
                     '            goto out;\n'
                     '        offset += 8;\n')
-            elif field['format'] == 'ipv4':
-                inner_template += (
-                    '        if ((out_${field} != NULL) && !_mbim_message_read_ipv4 (message, offset, FALSE, out_${field}, error))\n'
-                    '            goto out;\n'
-                    '        offset += 4;\n')
             elif field['format'] == 'ref-ipv4':
                 inner_template += (
                     '        if ((out_${field} != NULL) && !_mbim_message_read_ipv4 (message, offset, TRUE, out_${field}, error))\n'
@@ -1090,11 +1051,6 @@ class Message:
                     '        if ((out_${field} != NULL) && !_mbim_message_read_ipv4_array (message, _${array_size_field}, offset, &_${field}, error))\n'
                     '            goto out;\n'
                     '        offset += 4;\n')
-            elif field['format'] == 'ipv6':
-                inner_template += (
-                    '        if ((out_${field} != NULL) && !_mbim_message_read_ipv6 (message, offset, FALSE, out_${field}, error))\n'
-                    '            goto out;\n'
-                    '        offset += 16;\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template += (
                     '        if ((out_${field} != NULL) && !_mbim_message_read_ipv6 (message, offset, TRUE, out_${field}, error))\n'
@@ -1580,21 +1536,17 @@ class Message:
                     '            g_string_append_printf (str, "%s  }\'", line_prefix);\n'
                     '        }\n')
 
-            elif field['format'] == 'ipv4' or \
-                 field['format'] == 'ref-ipv4' or \
+            elif field['format'] == 'ref-ipv4' or \
                  field['format'] == 'ipv4-array' or \
-                 field['format'] == 'ipv6' or \
                  field['format'] == 'ref-ipv6' or \
                  field['format'] == 'ipv6-array':
-                if field['format'] == 'ipv4' or \
-                   field['format'] == 'ref-ipv4':
+                if field['format'] == 'ref-ipv4':
                     inner_template += (
                         '        const MbimIPv4 *tmp;\n')
                 elif field['format'] == 'ipv4-array':
                     inner_template += (
                         '        g_autofree MbimIPv4 *tmp = NULL;\n')
-                elif field['format'] == 'ipv6' or \
-                     field['format'] == 'ref-ipv6':
+                elif field['format'] == 'ref-ipv6':
                     inner_template += (
                         '        const MbimIPv6 *tmp;\n')
                 elif field['format'] == 'ipv6-array':
@@ -1606,13 +1558,7 @@ class Message:
                     '        guint i;\n'
                     '\n')
 
-                if field['format'] == 'ipv4':
-                    inner_template += (
-                        '        array_size = 1;\n'
-                        '        if (!_mbim_message_read_ipv4 (message, offset, FALSE, &tmp, &inner_error))\n'
-                        '            goto out;\n'
-                        '        offset += 4;\n')
-                elif field['format'] == 'ref-ipv4':
+                if field['format'] == 'ref-ipv4':
                     inner_template += (
                         '        array_size = 1;\n'
                         '        if (!_mbim_message_read_ipv4 (message, offset, TRUE, &tmp, &inner_error))\n'
@@ -1624,12 +1570,6 @@ class Message:
                         '        if (!_mbim_message_read_ipv4_array (message, _${array_size_field}, offset, &tmp, &inner_error))\n'
                         '            goto out;\n'
                         '        offset += 4;\n')
-                elif field['format'] == 'ipv6':
-                    inner_template += (
-                        '        array_size = 1;\n'
-                        '        if (!_mbim_message_read_ipv6 (message, offset, FALSE, &tmp, &inner_error))\n'
-                        '            goto out;\n'
-                        '        offset += 16;\n')
                 elif field['format'] == 'ref-ipv6':
                     inner_template += (
                         '        array_size = 1;\n'
@@ -1652,13 +1592,11 @@ class Message:
                     '                    g_autofree gchar        *tmpstr = NULL;\n'
                     '\n')
 
-                if field['format'] == 'ipv4' or \
-                   field['format'] == 'ref-ipv4' or \
+                if field['format'] == 'ref-ipv4' or \
                    field['format'] == 'ipv4-array':
                     inner_template += (
                         '                    addr = g_inet_address_new_from_bytes ((guint8 *)&(tmp[i].addr), G_SOCKET_FAMILY_IPV4);\n')
-                elif field['format'] == 'ipv6' or \
-                     field['format'] == 'ref-ipv6' or \
+                elif field['format'] == 'ref-ipv6' or \
                      field['format'] == 'ipv6-array':
                     inner_template += (
                         '                    addr = g_inet_address_new_from_bytes ((guint8 *)&(tmp[i].addr), G_SOCKET_FAMILY_IPV6);\n')
