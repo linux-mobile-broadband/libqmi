@@ -282,7 +282,8 @@ gboolean _mbim_message_read_byte_array    (const MbimMessage  *self,
                                            gboolean            swapped_offset_length);
 gboolean _mbim_message_read_uuid          (const MbimMessage  *self,
                                            guint32             relative_offset,
-                                           const MbimUuid    **uuid,
+                                           const MbimUuid    **uuid_ptr, /* unsafe if unaligned */
+                                           MbimUuid           *uuid_value,
                                            GError            **error);
 gboolean _mbim_message_read_guint16      (const MbimMessage  *self,
                                            guint32             relative_offset,

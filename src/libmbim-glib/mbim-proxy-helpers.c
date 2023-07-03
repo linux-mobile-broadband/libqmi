@@ -154,15 +154,15 @@ _mbim_proxy_helper_service_subscribe_request_parse (MbimMessage  *message,
 
         offset += 4;
         for (i = 0; i < element_count; i++) {
-            const MbimUuid *uuid;
+            MbimUuid uuid;
 
             if (!_mbim_message_read_guint32 (message, offset, &array_offset, &inner_error))
                 break;
-            if (!_mbim_message_read_uuid (message, array_offset, &uuid, &inner_error))
+            if (!_mbim_message_read_uuid (message, array_offset, NULL, &uuid, &inner_error))
                 break;
 
             array[i] = g_new0 (MbimEventEntry, 1);
-            memcpy (&(array[i]->device_service_id), uuid, 16);
+            memcpy (&(array[i]->device_service_id), &uuid, 16);
             array_offset += 16;
 
             if (!_mbim_message_read_guint32 (message, array_offset, &(array[i])->cids_count, &inner_error))

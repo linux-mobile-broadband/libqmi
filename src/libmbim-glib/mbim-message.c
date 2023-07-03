@@ -809,13 +809,15 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
 gboolean
 _mbim_message_read_uuid (const MbimMessage  *self,
                          guint32             relative_offset,
-                         const MbimUuid    **uuid,
+                         const MbimUuid    **uuid_ptr, /* unsafe if unaligned */
+                         MbimUuid           *uuid_value,
                          GError            **error)
 {
     guint64 required_size;
     guint32 information_buffer_offset;
 
-    g_assert (uuid);
+    g_assert (uuid_ptr || uuid_value);
+    g_assert (!(uuid_ptr && uuid_value));
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
@@ -827,8 +829,23 @@ _mbim_message_read_uuid (const MbimMessage  *self,
         return FALSE;
     }
 
-    *uuid = (const MbimUuid *) G_STRUCT_MEMBER_P (self->data,
-                                                  (information_buffer_offset + relative_offset));
+    /* This explicit cast to a MbimUuid may fail if the contents are not correctly aligned,
+     * but so far in the currently supported MBIM messages where a MbimUuid is returned
+     * the 32bit alignment is ensured:
+     * - MBIM Basic Connect "Connect" response.
+     * - MBIM Basic Connect "Connect" notification.
+     * - MBIM MS Basic Connect v3 "Connect" response.
+     * - MBIM MS Basic Connect v3 "Connect" notification.
+     * - MBIM MS Firmware ID "Get" response.
+     *
+     * We keep this limitation instead of making it an alignment-safe read because otherwise
+     * it would require new API/ABI compat methods.
+     */
+    if (uuid_ptr)
+        *uuid_ptr = (const MbimUuid *) (self->data + information_buffer_offset + relative_offset);
+
+    if (uuid_value)
+        memcpy (uuid_value, self->data + information_buffer_offset + relative_offset, 16);
     return TRUE;
 }
 

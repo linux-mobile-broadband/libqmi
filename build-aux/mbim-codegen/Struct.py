@@ -559,14 +559,9 @@ class Struct:
             if field['format'] == 'uuid':
                 inner_template += (
                     '\n'
-                    '    {\n'
-                    '        const MbimUuid *tmp;\n'
-                    '\n'
-                    '        if (!_mbim_message_read_uuid (self, offset, &tmp, error))\n'
-                    '            goto out;\n'
-                    '        memcpy (&(out->${field_name_underscore}), tmp, 16);\n'
-                    '        offset += 16;\n'
-                    '    }\n')
+                    '    if (!_mbim_message_read_uuid (self, offset, NULL, &(out->${field_name_underscore}), error))\n'
+                    '        goto out;\n'
+                    '    offset += 16;\n')
             elif field['format'] in ['ref-byte-array', 'ref-byte-array-no-offset']:
                 # Unsupported because ms-struct-array requires the read bytes of the struct to contain the size read
                 # fro the variable buffer, which is currently not implemented for this type.

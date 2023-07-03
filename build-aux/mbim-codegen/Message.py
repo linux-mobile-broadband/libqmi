@@ -968,8 +968,9 @@ class Message:
                     '            *out_${field}_size = tmpsize;\n'
                     '        offset += 8;\n')
             elif field['format'] == 'uuid':
+                # NOTE: The output MbimUuid address would be broken if the contents of the message are misaligned.
                 inner_template += (
-                    '        if ((out_${field} != NULL) && !_mbim_message_read_uuid (message, offset, out_${field}, error))\n'
+                    '        if ((out_${field} != NULL) && !_mbim_message_read_uuid (message, offset, out_${field}, NULL, error))\n'
                     '            goto out;\n'
                     '        offset += 16;\n')
             elif field['format'] == 'guint16':
@@ -1382,13 +1383,13 @@ class Message:
 
             elif field['format'] == 'uuid':
                 inner_template += (
-                    '        const MbimUuid   *tmp;\n'
+                    '        MbimUuid          tmp;\n'
                     '        g_autofree gchar *tmpstr = NULL;\n'
                     '\n'
-                    '        if (!_mbim_message_read_uuid (message, offset, &tmp, &inner_error))\n'
+                    '        if (!_mbim_message_read_uuid (message, offset, NULL, &tmp, &inner_error))\n'
                     '            goto out;\n'
                     '        offset += 16;\n'
-                    '        tmpstr = mbim_uuid_get_printable (tmp);\n'
+                    '        tmpstr = mbim_uuid_get_printable (&tmp);\n'
                     '        ${if_show_field}{\n'
                     '            g_string_append_printf (str, "\'%s\'", tmpstr);\n'
                     '        }\n')
