@@ -569,24 +569,19 @@ _mbim_message_read_string (const MbimMessage   *self,
 
     if (encoding == MBIM_STRING_ENCODING_UTF16) {
         g_autofree gunichar2 *utf16d = NULL;
-        const gunichar2      *utf16 = NULL;
 
-        utf16 = (const gunichar2 *) (self->data + information_buffer_offset + struct_start_offset + offset);
+        /* Always duplicate to avoid memory alignment issues */
+        utf16d = g_memdup (self->data + information_buffer_offset + struct_start_offset + offset, size);
 
         /* For BE systems, convert from LE to BE */
         if (G_BYTE_ORDER == G_BIG_ENDIAN) {
             guint i;
 
-            utf16d = (gunichar2 *) g_malloc (size);
             for (i = 0; i < (size / 2); i++)
-                utf16d[i] = GUINT16_FROM_LE (utf16[i]);
+                utf16d[i] = GUINT16_FROM_LE (utf16d[i]);
         }
 
-        *str = g_utf16_to_utf8 (utf16d ? utf16d : utf16,
-                                size / 2,
-                                NULL,
-                                NULL,
-                                error);
+        *str = g_utf16_to_utf8 (utf16d, size / 2, NULL, NULL, error);
 
         if (!(*str)) {
             g_prefix_error (error, "Error converting string to UTF-8: ");
