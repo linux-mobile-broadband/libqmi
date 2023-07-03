@@ -18,6 +18,44 @@
 #include "mbim-helpers.h"
 #include "mbim-error-types.h"
 
+/******************************************************************************/
+
+guint16
+mbim_helpers_read_unaligned_guint16 (const guint8 *buffer)
+{
+    guint16 tmp;
+
+    memcpy (&tmp, buffer, 2);
+    return GUINT16_FROM_LE (tmp);
+}
+
+guint32
+mbim_helpers_read_unaligned_guint32 (const guint8 *buffer)
+{
+    guint32 tmp;
+
+    memcpy (&tmp, buffer, 4);
+    return GUINT32_FROM_LE (tmp);
+}
+
+guint32
+mbim_helpers_read_unaligned_gint32 (const guint8 *buffer)
+{
+    gint32 tmp;
+
+    memcpy (&tmp, buffer, 4);
+    return GINT32_FROM_LE (tmp);
+}
+
+guint64
+mbim_helpers_read_unaligned_guint64 (const guint8 *buffer)
+{
+    guint64 tmp;
+
+    memcpy (&tmp, buffer, 8);
+    return GUINT64_FROM_LE (tmp);
+}
+
 /*****************************************************************************/
 
 gboolean

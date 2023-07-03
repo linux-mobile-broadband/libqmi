@@ -18,6 +18,22 @@
 
 G_BEGIN_DECLS
 
+/******************************************************************************/
+/* Helpers to read variables from a bytearray without assuming alignment. The
+ * caller should ensure the buffer contains the required amount of bytes in each
+ * case. */
+
+G_GNUC_INTERNAL
+guint16 mbim_helpers_read_unaligned_guint16 (const guint8 *buffer);
+G_GNUC_INTERNAL
+guint32 mbim_helpers_read_unaligned_guint32 (const guint8 *buffer);
+G_GNUC_INTERNAL
+guint32 mbim_helpers_read_unaligned_gint32  (const guint8 *buffer);
+G_GNUC_INTERNAL
+guint64 mbim_helpers_read_unaligned_guint64 (const guint8 *buffer);
+
+/******************************************************************************/
+
 G_GNUC_INTERNAL
 gboolean mbim_helpers_check_user_allowed (uid_t    uid,
                                           GError **error);
