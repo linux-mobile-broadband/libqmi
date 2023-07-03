@@ -571,7 +571,7 @@ _mbim_message_read_string (const MbimMessage   *self,
         g_autofree gunichar2 *utf16d = NULL;
         const gunichar2      *utf16 = NULL;
 
-        utf16 = (const gunichar2 *) G_STRUCT_MEMBER_P (self->data, (information_buffer_offset + struct_start_offset + offset));
+        utf16 = (const gunichar2 *) (self->data + information_buffer_offset + struct_start_offset + offset);
 
         /* For BE systems, convert from LE to BE */
         if (G_BYTE_ORDER == G_BIG_ENDIAN) {
@@ -595,7 +595,7 @@ _mbim_message_read_string (const MbimMessage   *self,
     } else if (encoding == MBIM_STRING_ENCODING_UTF8) {
         const gchar *utf8;
 
-        utf8 = (const gchar *) G_STRUCT_MEMBER_P (self->data, (information_buffer_offset + struct_start_offset + offset));
+        utf8 = (const gchar *) (self->data + information_buffer_offset + struct_start_offset + offset);
 
         /* size may include the trailing NUL byte, skip it from the check */
         while (size > 0 && utf8[size - 1] == '\0')
@@ -709,8 +709,7 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
             return FALSE;
         }
 
-        *array = (const guint8 *) G_STRUCT_MEMBER_P (self->data,
-                                                     (information_buffer_offset + struct_start_offset + offset));
+        *array = self->data + information_buffer_offset + struct_start_offset + offset;
         return TRUE;
     }
 
@@ -741,8 +740,7 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
             return FALSE;
         }
 
-        *array = (const guint8 *) G_STRUCT_MEMBER_P (self->data,
-                                                     (information_buffer_offset + relative_offset + 4));
+        *array = self->data + information_buffer_offset + relative_offset + 4;
         return TRUE;
     }
 
@@ -773,8 +771,7 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
             return FALSE;
         }
 
-        *array = (const guint8 *) G_STRUCT_MEMBER_P (self->data,
-                                                     (information_buffer_offset + struct_start_offset + offset));
+        *array = self->data + information_buffer_offset + struct_start_offset + offset;
         return TRUE;
     }
 
@@ -802,8 +799,7 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
             }
         }
 
-        *array = (const guint8 *) G_STRUCT_MEMBER_P (self->data,
-                                                     (information_buffer_offset + relative_offset));
+        *array = self->data + information_buffer_offset + relative_offset;
         return TRUE;
     }
 
@@ -921,12 +917,8 @@ _mbim_message_read_ipv4_array (const MbimMessage  *self,
     }
 
     *array = g_new (MbimIPv4, array_size);
-    for (i = 0; i < array_size; i++, offset += 4) {
-        memcpy (&((*array)[i]),
-                G_STRUCT_MEMBER_P (self->data,
-                                   (information_buffer_offset + offset)),
-                4);
-    }
+    for (i = 0; i < array_size; i++, offset += 4)
+        memcpy (&((*array)[i]), self->data + information_buffer_offset + offset, 4);
 
     return TRUE;
 }
@@ -1016,12 +1008,8 @@ _mbim_message_read_ipv6_array (const MbimMessage  *self,
     }
 
     *array = g_new (MbimIPv6, array_size);
-    for (i = 0; i < array_size; i++, offset += 16) {
-        memcpy (&((*array)[i]),
-                G_STRUCT_MEMBER_P (self->data,
-                                   (information_buffer_offset + offset)),
-                16);
-    }
+    for (i = 0; i < array_size; i++, offset += 16)
+        memcpy (&((*array)[i]), self->data + information_buffer_offset + offset, 16);
 
     return TRUE;
 }
@@ -1041,7 +1029,7 @@ _mbim_message_read_tlv (const MbimMessage  *self,
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
     tlv_offset = (guint64)information_buffer_offset + (guint64)relative_offset;
-    tlv_raw = (const guint8 *) G_STRUCT_MEMBER_P (self->data, tlv_offset);
+    tlv_raw = self->data + tlv_offset;
     tlv_size = ((guint64)sizeof (struct tlv) +
                 (guint64)GUINT32_FROM_LE (((struct tlv *)tlv_raw)->data_length) +
                 (guint64)((struct tlv *)tlv_raw)->padding_length);
@@ -1137,7 +1125,7 @@ _mbim_message_read_tlv_list (const MbimMessage  *self,
     }
 
     tlv_list_raw_size = self->len - (guint32)tlv_list_offset;
-    tlv_list_raw = (const guint8 *) G_STRUCT_MEMBER_P (self->data, tlv_list_offset);
+    tlv_list_raw = self->data + tlv_list_offset;
 
     while ((tlv_list_raw_size > 0) && !inner_error) {
         MbimTlv *tlv;
