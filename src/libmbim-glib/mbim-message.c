@@ -532,10 +532,11 @@ _mbim_message_read_string (const MbimMessage   *self,
                            guint32             *bytes_read,
                            GError             **error)
 {
-    guint64               required_size;
-    guint32               offset;
-    guint32               size;
-    guint32               information_buffer_offset;
+    g_autofree gchar *tmp = NULL;
+    guint64           required_size;
+    guint32           offset;
+    guint32           size;
+    guint32           information_buffer_offset;
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
@@ -581,12 +582,12 @@ _mbim_message_read_string (const MbimMessage   *self,
                 utf16d[i] = GUINT16_FROM_LE (utf16d[i]);
         }
 
-        *str = g_utf16_to_utf8 (utf16d, size / 2, NULL, NULL, error);
-
-        if (!(*str)) {
+        tmp = g_utf16_to_utf8 (utf16d, size / 2, NULL, NULL, error);
+        if (!tmp) {
             g_prefix_error (error, "Error converting string to UTF-8: ");
             return FALSE;
         }
+        size = strlen (tmp);
     } else if (encoding == MBIM_STRING_ENCODING_UTF8) {
         const gchar *utf8;
 
@@ -596,15 +597,16 @@ _mbim_message_read_string (const MbimMessage   *self,
         while (size > 0 && utf8[size - 1] == '\0')
             size--;
 
-        if (!g_utf8_validate (utf8, size, NULL)) {
-            g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "Error validating UTF-8 string");
-            return FALSE;
-        }
-
-        *str = g_strndup (utf8, size);
+        tmp = g_strndup (utf8, size);
     } else
         g_assert_not_reached ();
 
+    if (!g_utf8_validate (tmp, size, NULL)) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "Error validating UTF-8 string");
+        return FALSE;
+    }
+
+    *str = g_steal_pointer (&tmp);
     return TRUE;
 }
 
