@@ -636,6 +636,13 @@ _mbim_message_read_string_array (const MbimMessage   *self,
         if (!_mbim_message_read_string (self, struct_start_offset, offset, encoding, &str, NULL, error))
             return FALSE;
 
+        /* When an empty string is given as part of the array, we don't want to
+         * add the NULL pointer, we should be adding the empty string explicitly.
+         * Otherwise, if more elements are added after that one, they will leak
+         * once the GPtrArray is freed and its contents converted into a GStrv. */
+        if (!str)
+            str = g_strdup ("");
+
         g_ptr_array_add (array, str);
     }
 
