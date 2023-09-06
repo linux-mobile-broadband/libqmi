@@ -141,6 +141,13 @@ _mbim_tlv_new_from_raw (const guint8  *raw,
     g_assert (raw_length >= sizeof (struct tlv));
     tlv_size = sizeof (struct tlv) + GUINT32_FROM_LE (((struct tlv *)raw)->data_length) + ((struct tlv *)raw)->padding_length;
 
+    if (tlv_size > raw_length) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "TLV size is larger than message length (%u > %u)",
+                     tlv_size, raw_length);
+        return NULL;
+    }
+
     *bytes_read = tlv_size;
     return (MbimTlv *) g_byte_array_append (g_byte_array_sized_new (tlv_size), raw, tlv_size);
 }
