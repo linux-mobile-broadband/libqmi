@@ -1082,12 +1082,23 @@ _mbim_message_read_tlv (const MbimMessage  *self,
 {
     guint32       information_buffer_offset;
     guint64       tlv_offset;
+    guint64       min_size;
     guint64       required_size;
     const guint8 *tlv_raw;
     guint64       tlv_size;
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
     tlv_offset = (guint64)information_buffer_offset + (guint64)relative_offset;
+    min_size = tlv_offset + sizeof (struct tlv);
+
+    if (min_size > (guint64)self->len) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "TLV has invalid offset %" G_GUINT64_FORMAT
+                     " and will exceed message bounds (%" G_GUINT64_FORMAT "+ > %u)",
+                     tlv_offset, min_size, self->len);
+        return FALSE;
+    }
+
     tlv_raw = self->data + tlv_offset;
     tlv_size = ((guint64)sizeof (struct tlv) +
                 (guint64)GUINT32_FROM_LE (((struct tlv *)tlv_raw)->data_length) +
