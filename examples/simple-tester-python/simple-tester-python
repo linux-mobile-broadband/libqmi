@@ -64,25 +64,25 @@ def get_ids_ready(qmiclient,result,qmidev):
         return
 
     try:
-        imei = output.get_imei()
+        found, imei = output.get_imei()
         print("imei:                  %s" % imei)
     except:
         pass
 
     try:
-        imei_software_version = output.get_imei_software_version()
+        found, imei_software_version = output.get_imei_software_version()
         print("imei software version: %s" % imei_software_version)
     except:
         pass
 
     try:
-        meid = output.get_meid()
+        found, meid = output.get_meid()
         print("meid:                  %s" % meid)
     except:
         pass
 
     try:
-        esn = output.get_esn()
+        found, esn = output.get_esn()
         print("esn:                   %s" % esn)
     except:
         pass
@@ -95,7 +95,7 @@ def get_capabilities_ready(qmiclient,result,qmidev):
         output = qmiclient.get_capabilities_finish(result)
         output.get_result()
 
-        maxtxrate, maxrxrate, dataservicecaps, simcaps, radioifaces = output.get_info()
+        found, maxtxrate, maxrxrate, dataservicecaps, simcaps, radioifaces = output.get_info()
         print("max tx channel rate:   %u" % maxtxrate)
         print("max rx channel rate:   %u" % maxrxrate)
         print("data service:          %s" % Qmi.DmsDataServiceCapability.get_string(dataservicecaps))
