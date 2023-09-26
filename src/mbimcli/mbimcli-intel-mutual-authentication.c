@@ -35,11 +35,11 @@ static gboolean query_fcc_lock_flag;
 static gchar    *set_fcc_lock_str;
 
 static GOptionEntry entries[] = {
-    { "query-fcc-lock", 0, 0, G_OPTION_ARG_NONE, &query_fcc_lock_flag,
+    { "intel-query-fcc-lock", 0, 0, G_OPTION_ARG_NONE, &query_fcc_lock_flag,
       "Query FCC lock information",
       NULL
     },
-    { "set-fcc-lock", 0, 0, G_OPTION_ARG_STRING, &set_fcc_lock_str,
+    { "intel-set-fcc-lock", 0, 0, G_OPTION_ARG_STRING, &set_fcc_lock_str,
       "Set FCC lock information",
       "[(ResponsePresent),(Response)]"
     },
