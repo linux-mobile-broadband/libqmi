@@ -1,4 +1,67 @@
 
+Overview of changes in libqmi 1.34.0
+----------------------------------------
+
+ * Build:
+   ** Flag types are now generated in their own 'qmi-flag-types.[c|h]' files.
+   ** A new 'enable_fuzzer' option is available to build LLVM LibFuzzer
+      based unit testers.
+
+ * New services:
+   ** New 'ATR' service to support AT commands over QMI, defined by Telit,
+      including "Send" request and "Received" indication.
+   ** New 'IMS' service, including "Get IMS Services Enabled Setting"
+      request/response.
+   ** New 'IMSA' (IMS Application) service, including "Get IMS Registration
+      Status" and "Get IMS Services Status" request/responses.
+   ** New 'IMSP' (IMS Presence) service, including "Get Enabler State"
+      request/response.
+
+ * New TLVs supported in existing messages:
+   ** nas: added the "WCDMA RSCP" TLV in "Get Signal Info" response and "Signal
+      Info" indication.
+   ** wds: added the "Report Profile Changes" TLV in "Indication Register".
+
+ * libqmi-glib:
+   ** Response and indication parser messages are now published in the API.
+   ** The library now allows connecting to a unix domain socket named
+      'qmux_socket' instead of a device file.
+   ** Extended the 'QmiWdsProfileType' enum type with EPC and ALL values.
+   ** Extended the 'QmiUimCardApplicationPersonalizationFeature' enum type with
+      additional GW-related values.
+   ** New 'QmiUimCardApplicationPersonalizationFeatureStatus' enum type.
+   ** New 'QmiImspEnablerState' enum type, used in the IMPS service.
+   ** New 'QmiImsaImsRegistrationStatus', 'QmiImsaServiceStatus' and
+     'QmiImsaRegistrationTechnology' enum types, used in the IMSA service.
+   ** Updated the QRTR endpoint to ensure error responses are returned early
+      when the builtin CTL operations fail.
+   ** Deprecated QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_UNKNOWN, and
+      provided compat symbols.
+   ** Updated the enum type of the "Personalization Feature" field in the
+      Element struct type used in the Applications array in the "UIM Card
+      Status" response and indication messages, and provided appropriate compat
+      symbols.
+   ** Flagged PIN/PUK value fields as personal info.
+   ** Fixed missing 'since' tags in struct and common types.
+
+ * qmicli:
+   ** New '--uim-remote-unlock' command.
+   ** New '--imsp-get-enabler-state' command.
+   ** New '--imsa-get-ims-registration-status' and
+      '--imsa-get-ims-services-status' commands.
+   ** New '--ims-get-ims-services-enabled-setting' command.
+   ** New '--atr-send', '--atr-send-only' and '--atr-monitor' commands.
+
+ * collections:
+   ** basic: added NAS cell location retrieval commands.
+   ** basic: added WDS profile event change commands.
+
+ * Several other minor improvements and fixes.
+
+ * All fixes and improvements that were backported to 1.32.x releases are also
+   present in libqmi 1.34.0.
+
+
 Overview of changes in libqmi 1.32.0
 ----------------------------------------
 
@@ -114,7 +177,6 @@ Overview of changes in libqmi 1.32.0
    ** basic: added Foxconn firmware version management operation.
    ** basic: added DSD system status and attach/detach related operations.
    ** basic: added voice DTMF support operations.
-
 
  * Several other minor improvements and fixes.
 
