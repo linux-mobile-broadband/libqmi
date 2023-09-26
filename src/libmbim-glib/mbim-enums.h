@@ -2028,7 +2028,7 @@ typedef enum { /*< since=1.28 >*/
  *
  * Since: 1.30
  */
-typedef enum { /*< since=1.28 >*/
+typedef enum { /*< since=1.30 >*/
     MBIM_TRACE_COMMAND_MODE           = 0,
     MBIM_TRACE_COMMAND_LEVEL          = 1,
     MBIM_TRACE_COMMAND_LOCATION       = 2,
