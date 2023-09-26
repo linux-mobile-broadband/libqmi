@@ -46,11 +46,11 @@ static char *set_trace_config_str;
 static char *query_trace_config_str;
 
 static GOptionEntry entries[] = {
-    { "set-trace-config", 0, 0, G_OPTION_ARG_STRING, &set_trace_config_str,
+    { "intel-set-trace-config", 0, 0, G_OPTION_ARG_STRING, &set_trace_config_str,
       "Set trace configuration",
       "[(TraceCmd)|(TraceValue)]"
     },
-    { "query-trace-config", 0, 0, G_OPTION_ARG_STRING, &query_trace_config_str,
+    { "intel-query-trace-config", 0, 0, G_OPTION_ARG_STRING, &query_trace_config_str,
       "Query trace configuration",
       "[(TraceCmd)]"
     },
