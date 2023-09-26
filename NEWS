@@ -1,4 +1,66 @@
 
+Overview of changes in libmbim 1.30
+----------------------------------------
+
+ * Build:
+   ** Flag types are now generated in their own 'mbim-flag-types.[c|h]' files.
+   ** A new 'enable_fuzzer' option is available to build LLVM LibFuzzer
+      based unit testers.
+
+ * New Intel Mutual Authentication service, including the following operations:
+   * MBIM_CID_INTEL_MUTUAL_AUTHENTICATION_FCC_LOCK
+
+ * New Intel Tools service, including the following operations:
+   * MBIM_CID_INTEL_TOOLS_TRACE_CONFIG
+
+ * New Google service, including the following operations:
+   * MBIM_CID_GOOGLE_CARRIER_LOCK
+
+ * Extended the Microsoft-defined Basic Connect Extensions service, including
+   the following operations:
+   * MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_DEVICE_RESET
+
+ * libmbim-glib:
+   ** mbim_message_validate() is updated to ensure that the given message is
+      complete and not a partial fragment.
+   ** mbim_device_command_finish() is updated to ensure that the returned
+      message is complete and not a partial fragment.
+   ** Updated string reading logic to perform a UTF-8 validity check explicitly
+      when converting from UTF-16.
+   ** The message and field parsing logic is updated to ensure unaligned values
+      can be read, given that the new MBIM extensions no longer ensure field
+      alignment.
+   ** Additional field validations have been added when parsing TLVs, fragment
+      headers and string/struct arrays.
+   ** Fixed reading 'ms-struct-array' items that may have struct elements with
+      variable size.
+   ** Added new 'NONE' values in MbimCellularClass, MbimSimClass, MbimDataClass,
+      MbimSmsCaps and MbimDataClassV3, so that all flag types have one to
+      indicate an empty bitmask.
+   ** New MbimTraceCommand enum, used in the Intel Tools service.
+   ** New MbimCarrierLockStatus, MbimCarrierLockModemState and
+      MbimCarrierLockCause enums, used in the Google service.
+   ** Extended the list of MbimStatusError values with new errors reported by
+      the operations in the Google service.
+   ** The MbimSmsStatusFlag type is now defined as flags, not as enum.
+
+ * mbimcli:
+   ** New '--ms-device-reset' action.
+   ** New '--google-set-carrier-lock' and '--google-query-carrier-lock' actions.
+   ** New '--intel-query-fcc-lock' and '--intel-set-fcc-lock' actions.
+   ** New '--intel-set-trace-config' and '--intel-query-trace-config' actions.
+   ** New generic '--printable' action to decode MBIM messages.
+
+ * mbim-proxy:
+   ** New '--verbose-full' option to request enabling logs that include personal
+      information.
+
+ * Several other improvements and fixes.
+
+ * All fixes and improvements that were backported to 1.28.x releases are also
+   present in libmbim 1.30.0.
+
+
 Overview of changes in libmbim 1.28
 ----------------------------------------
 
