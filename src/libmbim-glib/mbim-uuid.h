@@ -147,7 +147,7 @@ typedef enum { /*< since=1.0 >*/
     MBIM_SERVICE_MS_VOICE_EXTENSIONS         = 20,
     MBIM_SERVICE_INTEL_MUTUAL_AUTHENTICATION = 21,
     MBIM_SERVICE_INTEL_TOOLS                 = 22,
-    MBIM_SERVICE_GOOGLE        = 23,
+    MBIM_SERVICE_GOOGLE                      = 23,
 #if defined LIBMBIM_GLIB_COMPILATION
     MBIM_SERVICE_LAST /*< skip >*/
 #endif
