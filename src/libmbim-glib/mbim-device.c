@@ -978,21 +978,24 @@ process_message (MbimDevice        *self,
                                                (MBIM_MESSAGE_GET_MESSAGE_TYPE (message) - 0x80000000),
                                                mbim_message_get_transaction_id (message));
             if (!task) {
-                g_autofree gchar *printable = NULL;
-
                 g_debug ("[%s] no transaction matched in received message",
                          self->priv->path_display);
+
                 /* Attempt to print a user friendly dump of the packet anyway */
-                printable = mbim_message_get_printable_full (message,
-                                                             self->priv->ms_mbimex_version_major,
-                                                             self->priv->ms_mbimex_version_minor,
-                                                             ">>>>>> ",
-                                                             is_partial_fragment,
-                                                             NULL);
-                if (printable)
-                    g_debug ("[%s] received unexpected message (translated)...\n%s",
-                             self->priv->path_display,
-                             printable);
+                if (mbim_utils_get_traces_enabled ()) {
+                    g_autofree gchar *printable = NULL;
+
+                    printable = mbim_message_get_printable_full (message,
+                                                                 self->priv->ms_mbimex_version_major,
+                                                                 self->priv->ms_mbimex_version_minor,
+                                                                 ">>>>>> ",
+                                                                 is_partial_fragment,
+                                                                 NULL);
+                    if (printable)
+                        g_debug ("[%s] received unexpected message (translated)...\n%s",
+                                 self->priv->path_display,
+                                 printable);
+                }
 
                 /* If we're opening and we get a CLOSE_DONE message without any
                  * matched transaction, finalize the open request right away to
