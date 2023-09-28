@@ -441,17 +441,19 @@ message_check (QmiMessage  *self,
 
 QmiMessage *
 qmi_message_new (QmiService service,
-                 guint8 client_id,
-                 guint16 transaction_id,
-                 guint16 message_id)
+                 guint8     client_id,
+                 guint16    transaction_id,
+                 guint16    message_id)
 {
-    GByteArray *self;
+    GByteArray          *self;
     struct full_message *buffer;
-    gsize buffer_len;
+    gsize                buffer_len;
 
     /* Transaction ID in the control service is 8bit only */
-    g_return_val_if_fail ((service != QMI_SERVICE_CTL || transaction_id <= G_MAXUINT8),
-                          NULL);
+    g_return_val_if_fail ((service != QMI_SERVICE_CTL || transaction_id <= G_MAXUINT8), NULL);
+
+    /* Service must fit in 16 bits */
+    g_return_val_if_fail (service <= G_MAXUINT16, NULL);
 
     /* Create array with enough size for the QMUX marker, the QMUX header and
      * the QMI header. Use the qmux_header size for both QMUX and QRTR messages
@@ -478,11 +480,12 @@ qmi_message_new (QmiService service,
         buffer->header.qmux.flags = 0;
         buffer->header.qmux.service = (guint8) service;
         buffer->header.qmux.client = client_id;
-    } else {
+    } else if (service <= G_MAXUINT16) {
         buffer->marker = QMI_MESSAGE_QRTR_MARKER;
         buffer->header.qrtr.service = (guint16) service;
         buffer->header.qrtr.client = client_id;
-    }
+    } else
+        g_assert_not_reached ();
 
     if (service == QMI_SERVICE_CTL) {
         buffer->qmi.control.header.flags = 0;
