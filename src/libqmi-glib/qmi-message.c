@@ -159,11 +159,9 @@ set_message_length (QmiMessage *self,
 static inline guint8
 get_qmux_flags (QmiMessage *self)
 {
-    if (((struct full_message *)(self->data))->marker == QMI_MESSAGE_QMUX_MARKER)
-        return ((struct full_message *)(self->data))->header.qmux.flags;
-
     /* QMI_MESSAGE_QRTR_MARKER does not support flags */
-    return 0x00;
+    g_assert_cmpuint (((struct full_message *)(self->data))->marker, ==, QMI_MESSAGE_QMUX_MARKER);
+    return ((struct full_message *)(self->data))->header.qmux.flags;
 }
 
 static inline guint8
