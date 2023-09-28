@@ -138,7 +138,7 @@ message_is_control (QmiMessage *self)
 }
 
 static inline guint16
-get_qmux_length (QmiMessage *self)
+get_message_length (QmiMessage *self)
 {
     if (((struct full_message *)(self->data))->marker == QMI_MESSAGE_QMUX_MARKER)
     	return GUINT16_FROM_LE (((struct full_message *)(self->data))->header.qmux.length);
@@ -147,8 +147,8 @@ get_qmux_length (QmiMessage *self)
 }
 
 static inline void
-set_qmux_length (QmiMessage *self,
-                 guint16 length)
+set_message_length (QmiMessage *self,
+                    guint16 length)
 {
     if (((struct full_message *)(self->data))->marker == QMI_MESSAGE_QMUX_MARKER)
         ((struct full_message *)(self->data))->header.qmux.length = GUINT16_TO_LE (length);
@@ -352,7 +352,7 @@ message_check (QmiMessage  *self,
                GError     **error)
 {
     gsize       header_length;
-    gsize       qmux_length;
+    gsize       message_length;
     guint8     *end;
     struct tlv *tlv;
 
@@ -360,7 +360,7 @@ message_check (QmiMessage  *self,
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
-                     "QMUX length too short for QMUX header (%u < %" G_GSIZE_FORMAT ")",
+                     "Buffer length too short for QMUX header (%u < %" G_GSIZE_FORMAT ")",
                      self->len, 1 + sizeof (struct qmux_header));
         return FALSE;
     }
@@ -377,16 +377,16 @@ message_check (QmiMessage  *self,
     }
 
     /*
-     * qmux length is one byte shorter than buffer length because qmux
-     * length does not include the qmux frame marker.
+     * message length is one byte shorter than buffer length because it
+     * does not include the qmux frame marker.
      */
-    qmux_length = get_qmux_length (self);
-    if (qmux_length != self->len - 1) {
+    message_length = get_message_length (self);
+    if (message_length != self->len - 1) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
-                     "QMUX length and buffer length don't match (%u != %u)",
-                     get_qmux_length (self), self->len - 1);
+                     "Message length and buffer length don't match (%u != %u)",
+                     get_message_length (self), self->len - 1);
         return FALSE;
     }
 
@@ -394,21 +394,21 @@ message_check (QmiMessage  *self,
                                                    sizeof (struct control_header) :
                                                    sizeof (struct service_header));
 
-    if (qmux_length < header_length) {
+    if (message_length < header_length) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
-                     "QMUX length too short for QMI header (%u < %" G_GSIZE_FORMAT ")",
-                     get_qmux_length (self), header_length);
+                     "Message length too short for QMI header (%u < %" G_GSIZE_FORMAT ")",
+                     get_message_length (self), header_length);
         return FALSE;
     }
 
-    if (qmux_length - header_length != get_all_tlvs_length (self)) {
+    if (message_length - header_length != get_all_tlvs_length (self)) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
                      "QMUX length and QMI TLV lengths don't match (%u - %" G_GSIZE_FORMAT " != %u)",
-                     get_qmux_length (self), header_length, get_all_tlvs_length (self));
+                     get_message_length (self), header_length, get_all_tlvs_length (self));
         return FALSE;
     }
 
@@ -497,7 +497,7 @@ qmi_message_new (QmiService service,
     }
 
     /* Update length fields. */
-    set_qmux_length (self, buffer_len - 1); /* QMUX marker not included in length */
+    set_message_length (self, buffer_len - 1); /* marker not included in length */
     set_all_tlvs_length (self, 0);
 
     /* We shouldn't create invalid empty messages */
@@ -732,7 +732,7 @@ qmi_message_tlv_write_complete (QmiMessage  *self,
     /* Update length fields. */
     tlv = tlv_get_header (self, tlv_offset);
     tlv->length = GUINT16_TO_LE (tlv_length - sizeof (struct tlv));
-    set_qmux_length (self, (guint16)(get_qmux_length (self) + tlv_length));
+    set_message_length (self, (guint16)(get_message_length (self) + tlv_length));
     set_all_tlvs_length (self, (guint16)(get_all_tlvs_length (self) + tlv_length));
 
     /* Make sure we didn't break anything. */
@@ -1536,7 +1536,7 @@ qmi_message_add_raw_tlv (QmiMessage *self,
     tlv_len = sizeof (struct tlv) + length;
 
     /* Check for overflow of message size. */
-    if (get_qmux_length (self) + tlv_len > G_MAXUINT16) {
+    if (get_message_length (self) + tlv_len > G_MAXUINT16) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_TLV_TOO_LONG,
@@ -1554,7 +1554,7 @@ qmi_message_add_raw_tlv (QmiMessage *self,
     memcpy (tlv->value, raw, length);
 
     /* Update length fields. */
-    set_qmux_length (self, (guint16)(get_qmux_length (self) + tlv_len));
+    set_message_length (self, (guint16)(get_message_length (self) + tlv_len));
     set_all_tlvs_length (self, (guint16)(get_all_tlvs_length (self) + tlv_len));
 
     /* Make sure we didn't break anything. */
@@ -1682,7 +1682,7 @@ qmi_message_get_printable_full (QmiMessage        *self,
                                 "%s  service = \"%s\"\n"
                                 "%s  client  = %u\n",
                                 line_prefix,
-                                line_prefix, get_qmux_length (self),
+                                line_prefix, get_message_length (self),
                                 line_prefix, get_qmux_flags (self),
                                 line_prefix, qmi_service_get_string (qmi_message_get_service (self)),
                                 line_prefix, qmi_message_get_client_id (self));
@@ -1693,7 +1693,7 @@ qmi_message_get_printable_full (QmiMessage        *self,
                                 "%s  service = \"%s\"\n"
                                 "%s  client  = %u\n",
                                 line_prefix,
-                                line_prefix, get_qmux_length (self),
+                                line_prefix, get_message_length (self),
                                 line_prefix, qmi_service_get_string (qmi_message_get_service (self)),
                                 line_prefix, qmi_message_get_client_id (self));
     }
