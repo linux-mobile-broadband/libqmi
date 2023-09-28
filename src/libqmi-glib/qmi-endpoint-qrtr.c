@@ -142,7 +142,7 @@ client_message_cb (QrtrClient      *qrtr_client,
     service = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (qrtr_client), QRTR_CLIENT_DATA_SERVICE));
     cid     = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (qrtr_client), QRTR_CLIENT_DATA_CID));
 
-    /* Create a fake QMUX header and add this message to the buffer */
+    /* Create a fake QMUX/QRTR header and add this message to the buffer */
     message = qmi_message_new_from_data (service, cid, qrtr_message, &error);
     if (!message)
         g_warning ("[%s] Got malformed QMI message: %s",
@@ -260,7 +260,7 @@ release_client (QmiEndpointQrtr *self,
 
 static gboolean
 construct_alloc_tlv (QmiMessage *message,
-                     guint16     service,
+                     QmiService  service,
                      guint8      client)
 {
     gsize init_offset;
@@ -268,16 +268,38 @@ construct_alloc_tlv (QmiMessage *message,
     init_offset = qmi_message_tlv_write_init (message,
                                               QMI_MESSAGE_TLV_ALLOCATION_INFO,
                                               NULL);
-    if (service > G_MAXUINT8)
-        return init_offset &&
-            qmi_message_tlv_write_guint16 (message, QMI_ENDIAN_LITTLE, service, NULL) &&
-            qmi_message_tlv_write_guint8 (message, client, NULL) &&
-            qmi_message_tlv_write_complete (message, init_offset, NULL);
 
-    return init_offset &&
-        qmi_message_tlv_write_guint8 (message, (guint8) service, NULL) &&
-        qmi_message_tlv_write_guint8 (message, client, NULL) &&
-        qmi_message_tlv_write_complete (message, init_offset, NULL);
+    if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID ||
+        qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID) {
+        g_assert (service <= G_MAXUINT8);
+        return init_offset &&
+                qmi_message_tlv_write_guint8 (message, service, NULL) &&
+                qmi_message_tlv_write_guint8 (message, client, NULL) &&
+                qmi_message_tlv_write_complete (message, init_offset, NULL);
+    }
+
+    if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR ||
+        qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID_QRTR) {
+        g_assert (service <= G_MAXUINT16);
+        return init_offset &&
+                qmi_message_tlv_write_guint16 (message, QMI_ENDIAN_LITTLE, service, NULL) &&
+                qmi_message_tlv_write_guint8 (message, client, NULL) &&
+                qmi_message_tlv_write_complete (message, init_offset, NULL);
+    }
+
+    g_assert_not_reached ();
+}
+
+static void
+reply_protocol_error (QmiEndpointQrtr  *self,
+                      QmiMessage       *message,
+                      QmiProtocolError  error)
+{
+    QmiMessage *response = NULL;
+
+    response = qmi_message_response_new (message, error);
+    if (response)
+        add_qmi_message_to_buffer (self, response);
 }
 
 static void
@@ -286,43 +308,46 @@ handle_alloc_cid (QmiEndpointQrtr *self,
 {
     gsize                 offset = 0;
     gsize                 init_offset;
-    QmiService            service;
+    QmiService            service = QMI_SERVICE_UNKNOWN;
     guint                 cid;
     g_autoptr(QmiMessage) response = NULL;
     g_autoptr(GError)     error = NULL;
 
-    if (((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_TLV_ALLOCATION_INFO, NULL, &error)) == 0) ||
-        (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID && !qmi_message_tlv_read_guint8 (message, init_offset, &offset, (guint8 *) &service, &error)) ||
-        (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR && !qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, (guint16 *) &service, &error))) {
+    if ((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_TLV_ALLOCATION_INFO, NULL, &error)) == 0) {
         g_debug ("[%s] error allocating CID: could not parse message: %s",
                  qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
-        response = qmi_message_response_new (message, QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE);
-        if (!response)
-            return;
-
-        add_qmi_message_to_buffer (self, g_steal_pointer (&response));
+        reply_protocol_error (self, message, QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE);
         return;
     }
 
-    /* Cast service ID based on message ID */
-    if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID)
-        service = (guint8) service;
-    else if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR)
-        service = (guint16) service;
-    else
-        g_assert_not_reached ();
+    if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID) {
+        guint8 service_tmp;
 
-    g_debug("Extracted service: %d", service);
+        if (!qmi_message_tlv_read_guint8 (message, init_offset, &offset, &service_tmp, &error)) {
+            g_debug ("[%s] error allocating CID: failed to read service: %s",
+                     qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
+            reply_protocol_error (self, message, QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE);
+            return;
+        }
+        service = (QmiService)service_tmp;
+    } else if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR) {
+        guint16 service_tmp;
+
+        if (!qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, &service_tmp, &error)) {
+            g_debug ("[%s] error allocating CID (QRTR): failed to read service: %s",
+                     qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
+            reply_protocol_error (self, message, QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE);
+            return;
+        }
+        service = (QmiService)service_tmp;
+    } else
+        g_assert_not_reached ();
 
     cid = allocate_client (self, service, &error);
     if (!cid) {
         g_debug ("[%s] error allocating CID: %s",
                  qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
-        response = qmi_message_response_new (message, QMI_PROTOCOL_ERROR_INTERNAL);
-        if (!response)
-            return;
-
-        add_qmi_message_to_buffer (self, g_steal_pointer (&response));
+        reply_protocol_error (self, message, QMI_PROTOCOL_ERROR_INTERNAL);
         return;
     }
 
@@ -347,17 +372,40 @@ handle_release_cid (QmiEndpointQrtr *self,
     g_autoptr(QmiMessage) response = NULL;
     g_autoptr(GError)     error = NULL;
 
-    if (((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_TLV_ALLOCATION_INFO, NULL, &error)) == 0) ||
-        (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID && !qmi_message_tlv_read_guint8 (message, init_offset, &offset, (guint8 *) &service, &error)) ||
-        (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID_QRTR && !qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, (guint16 *) &service, &error)) ||
-        !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &cid, &error)) {
+    if ((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_TLV_ALLOCATION_INFO, NULL, &error)) == 0) {
         g_debug ("[%s] error releasing CID: could not parse message: %s",
                  qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
-        response = qmi_message_response_new (message, QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE);
-        if (!response)
-            return;
+        reply_protocol_error (self, message, QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE);
+        return;
+    }
 
-        add_qmi_message_to_buffer (self, g_steal_pointer (&response));
+    if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID) {
+        guint8 service_tmp;
+
+        if (!qmi_message_tlv_read_guint8 (message, init_offset, &offset, &service_tmp, &error)) {
+            g_debug ("[%s] error releasing CID: could not read service: %s",
+                     qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
+            reply_protocol_error (self, message, QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE);
+            return;
+        }
+        service = (QmiService)service_tmp;
+    } else if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID_QRTR) {
+        guint16 service_tmp;
+
+        if (!qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, &service_tmp, &error)) {
+            g_debug ("[%s] error releasing CID (QRTR): could not read service: %s",
+                     qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
+            reply_protocol_error (self, message, QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE);
+            return;
+        }
+        service = (QmiService)service_tmp;
+    } else
+        g_assert_not_reached ();
+
+    if (!qmi_message_tlv_read_guint8 (message, init_offset, &offset, &cid, &error)) {
+        g_debug ("[%s] error releasing CID: could not client id: %s",
+                 qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
+        reply_protocol_error (self, message, QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE);
         return;
     }
 
@@ -377,26 +425,14 @@ static void
 handle_sync (QmiEndpointQrtr *self,
              QmiMessage      *message)
 {
-    QmiMessage *response;
-
-    response = qmi_message_response_new (message, QMI_PROTOCOL_ERROR_NONE);
-    if (!response)
-        return;
-
-    add_qmi_message_to_buffer (self, response);
+    reply_protocol_error (self, message, QMI_PROTOCOL_ERROR_NONE);
 }
 
 static void
 unhandled_message (QmiEndpointQrtr *self,
                    QmiMessage      *message)
 {
-    QmiMessage *response;
-
-    response = qmi_message_response_new (message, QMI_PROTOCOL_ERROR_NOT_SUPPORTED);
-    if (!response)
-        return;
-
-    add_qmi_message_to_buffer (self, response);
+    reply_protocol_error (self, message, QMI_PROTOCOL_ERROR_NOT_SUPPORTED);
 }
 
 static void
@@ -508,7 +544,7 @@ endpoint_send (QmiEndpoint   *endpoint,
         return FALSE;
     }
 
-    /* Build raw QRTR message without QMUX header */
+    /* Build raw QRTR message without QMUX/QRTR header */
     raw_message = qmi_message_get_data (message, &raw_message_len, error);
     if (!raw_message) {
         g_prefix_error (error, "Invalid QMI message: ");
