@@ -1034,9 +1034,9 @@ unregister_client (QmiDevice *self,
 /* Allocate new client */
 
 typedef struct {
+    GType      client_type;
     QmiService service;
-    GType client_type;
-    guint8 cid;
+    guint8     cid;
 } AllocateClientContext;
 
 static void
@@ -1046,9 +1046,9 @@ allocate_client_context_free (AllocateClientContext *ctx)
 }
 
 QmiClient *
-qmi_device_allocate_client_finish (QmiDevice *self,
-                                   GAsyncResult *res,
-                                   GError **error)
+qmi_device_allocate_client_finish (QmiDevice     *self,
+                                   GAsyncResult  *res,
+                                   GError       **error)
 {
     return g_task_propagate_pointer (G_TASK (res), error);
 }
@@ -1056,12 +1056,12 @@ qmi_device_allocate_client_finish (QmiDevice *self,
 static void
 build_client_object (GTask *task)
 {
-    QmiDevice *self;
-    AllocateClientContext *ctx;
-    gchar *version_string = NULL;
-    QmiClient *client;
-    GError *error = NULL;
     const QmiMessageCtlGetVersionInfoOutputServiceListService *version_info;
+    g_autofree gchar      *version_string = NULL;
+    QmiDevice             *self;
+    AllocateClientContext *ctx;
+    QmiClient             *client;
+    GError                *error = NULL;
 
     self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
@@ -1121,8 +1121,6 @@ build_client_object (GTask *task)
              version_string ? version_string : "unknown",
              ctx->cid);
 
-    g_free (version_string);
-
     /* Client created and registered, complete successfully */
     g_task_return_pointer (task, client, g_object_unref);
     g_object_unref (task);
@@ -1131,12 +1129,12 @@ build_client_object (GTask *task)
 static void
 allocate_cid_ready (QmiClientCtl *client_ctl,
                     GAsyncResult *res,
-                    GTask *task)
+                    GTask        *task)
 {
-    QmiMessageCtlAllocateCidOutput *output;
-    QmiService service;
-    guint8 cid;
-    GError *error = NULL;
+    g_autoptr(QmiMessageCtlAllocateCidOutput) output = NULL;
+    QmiService             service;
+    guint8                 cid;
+    GError                *error = NULL;
     AllocateClientContext *ctx;
 
     /* Check result of the async operation */
@@ -1152,7 +1150,6 @@ allocate_cid_ready (QmiClientCtl *client_ctl,
     if (!qmi_message_ctl_allocate_cid_output_get_result (output, &error)) {
         g_task_return_error (task, error);
         g_object_unref (task);
-        qmi_message_ctl_allocate_cid_output_unref (output);
         return;
     }
 
@@ -1171,24 +1168,22 @@ allocate_cid_ready (QmiClientCtl *client_ctl,
             qmi_service_get_string (ctx->service),
             qmi_service_get_string (service));
         g_object_unref (task);
-        qmi_message_ctl_allocate_cid_output_unref (output);
         return;
     }
 
     ctx->cid = cid;
     build_client_object (task);
-    qmi_message_ctl_allocate_cid_output_unref (output);
 }
 
 static void
 allocate_cid_qrtr_ready (QmiClientCtl *client_ctl,
                          GAsyncResult *res,
-                         GTask *task)
+                         GTask        *task)
 {
-    QmiMessageCtlAllocateCidQrtrOutput *output;
-    QmiService service;
-    guint8 cid;
-    GError *error = NULL;
+    g_autoptr(QmiMessageCtlAllocateCidQrtrOutput) output = NULL;
+    QmiService             service;
+    guint8                 cid;
+    GError                *error = NULL;
     AllocateClientContext *ctx;
 
     /* Check result of the async operation */
@@ -1204,7 +1199,6 @@ allocate_cid_qrtr_ready (QmiClientCtl *client_ctl,
     if (!qmi_message_ctl_allocate_cid_qrtr_output_get_result (output, &error)) {
         g_task_return_error (task, error);
         g_object_unref (task);
-        qmi_message_ctl_allocate_cid_qrtr_output_unref (output);
         return;
     }
 
@@ -1223,26 +1217,24 @@ allocate_cid_qrtr_ready (QmiClientCtl *client_ctl,
             qmi_service_get_string (ctx->service),
             qmi_service_get_string (service));
         g_object_unref (task);
-        qmi_message_ctl_allocate_cid_qrtr_output_unref (output);
         return;
     }
 
     ctx->cid = cid;
     build_client_object (task);
-    qmi_message_ctl_allocate_cid_qrtr_output_unref (output);
 }
 
 void
-qmi_device_allocate_client (QmiDevice *self,
-                            QmiService service,
-                            guint8 cid,
-                            guint timeout,
-                            GCancellable *cancellable,
-                            GAsyncReadyCallback callback,
-                            gpointer user_data)
+qmi_device_allocate_client (QmiDevice           *self,
+                            QmiService           service,
+                            guint8               cid,
+                            guint                timeout,
+                            GCancellable        *cancellable,
+                            GAsyncReadyCallback  callback,
+                            gpointer             user_data)
 {
     AllocateClientContext *ctx;
-    GTask *task;
+    GTask                 *task;
 
     g_return_if_fail (QMI_IS_DEVICE (self));
     g_return_if_fail (service != QMI_SERVICE_UNKNOWN);
@@ -1438,48 +1430,42 @@ qmi_device_allocate_client (QmiDevice *self,
     }
 
     /* Allocate a new CID for the client to be created */
-    if (cid == QMI_CID_NONE && ctx->service <= G_MAXUINT8) {
-        QmiMessageCtlAllocateCidInput *input;
-
-        input = qmi_message_ctl_allocate_cid_input_new ();
-        qmi_message_ctl_allocate_cid_input_set_service (input, ctx->service, NULL);
-
-        g_debug ("[%s] allocating new client ID (QMUX)...",
+    if (cid == QMI_CID_NONE) {
+        g_debug ("[%s] allocating new client ID...",
                  qmi_file_get_path_display (self->priv->file));
-        qmi_client_ctl_allocate_cid (self->priv->client_ctl,
-                                     input,
-                                     timeout,
-                                     cancellable,
-                                     (GAsyncReadyCallback)allocate_cid_ready,
-                                     task);
 
-        qmi_message_ctl_allocate_cid_input_unref (input);
-        return;
-    }
+        /* 8-bit service */
+        if (ctx->service <= G_MAXUINT8) {
+            g_autoptr(QmiMessageCtlAllocateCidInput) input = NULL;
 
-    if (cid == QMI_CID_NONE && ctx->service > G_MAXUINT8) {
-        QmiMessageCtlAllocateCidQrtrInput *input;
+            input = qmi_message_ctl_allocate_cid_input_new ();
+            qmi_message_ctl_allocate_cid_input_set_service (input, ctx->service, NULL);
+            qmi_client_ctl_allocate_cid (self->priv->client_ctl,
+                                         input,
+                                         timeout,
+                                         cancellable,
+                                         (GAsyncReadyCallback)allocate_cid_ready,
+                                         task);
+        }
+        /* 16-bit service */
+        else if (ctx->service > G_MAXUINT8 && ctx->service <= G_MAXUINT16) {
+            g_autoptr(QmiMessageCtlAllocateCidQrtrInput) input = NULL;
 
-        input = qmi_message_ctl_allocate_cid_qrtr_input_new ();
-        qmi_message_ctl_allocate_cid_qrtr_input_set_service (input, ctx->service, NULL);
-
-        g_debug ("[%s] allocating new client ID (QRTR)...",
-                 qmi_file_get_path_display (self->priv->file));
-        qmi_client_ctl_allocate_cid_qrtr (self->priv->client_ctl,
-                                          input,
-                                          timeout,
-                                          cancellable,
-                                          (GAsyncReadyCallback)allocate_cid_qrtr_ready,
-                                          task);
-
-        qmi_message_ctl_allocate_cid_qrtr_input_unref (input);
+            input = qmi_message_ctl_allocate_cid_qrtr_input_new ();
+            qmi_message_ctl_allocate_cid_qrtr_input_set_service (input, ctx->service, NULL);
+            qmi_client_ctl_allocate_cid_qrtr (self->priv->client_ctl,
+                                              input,
+                                              timeout,
+                                              cancellable,
+                                              (GAsyncReadyCallback)allocate_cid_qrtr_ready,
+                                              task);
+        } else
+            g_assert_not_reached ();
         return;
     }
 
     /* Reuse the given CID */
-    g_debug ("[%s] reusing client CID '%u'...",
-             qmi_file_get_path_display (self->priv->file),
-             cid);
+    g_debug ("[%s] reusing client CID '%u'...", qmi_file_get_path_display (self->priv->file), cid);
     ctx->cid = cid;
     build_client_object (task);
 }
@@ -1488,9 +1474,9 @@ qmi_device_allocate_client (QmiDevice *self,
 /* Release client */
 
 gboolean
-qmi_device_release_client_finish (QmiDevice *self,
-                                  GAsyncResult *res,
-                                  GError **error)
+qmi_device_release_client_finish (QmiDevice     *self,
+                                  GAsyncResult  *res,
+                                  GError       **error)
 {
     return g_task_propagate_boolean (G_TASK (res), error);
 }
@@ -1498,10 +1484,10 @@ qmi_device_release_client_finish (QmiDevice *self,
 static void
 client_ctl_release_cid_ready (QmiClientCtl *client_ctl,
                               GAsyncResult *res,
-                              GTask *task)
+                              GTask        *task)
 {
+    g_autoptr(QmiMessageCtlReleaseCidOutput) output = NULL;
     GError *error = NULL;
-    QmiMessageCtlReleaseCidOutput *output;
 
     /* Note: even if we return an error, the client is to be considered
      * released! (so shouldn't be used) */
@@ -1518,22 +1504,20 @@ client_ctl_release_cid_ready (QmiClientCtl *client_ctl,
     if (!qmi_message_ctl_release_cid_output_get_result (output, &error)) {
         g_task_return_error (task, error);
         g_object_unref (task);
-        qmi_message_ctl_release_cid_output_unref (output);
         return;
     }
 
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
-    qmi_message_ctl_release_cid_output_unref (output);
 }
 
 static void
 client_ctl_release_cid_qrtr_ready (QmiClientCtl *client_ctl,
                                    GAsyncResult *res,
-                                   GTask *task)
+                                   GTask        *task)
 {
+    g_autoptr(QmiMessageCtlReleaseCidQrtrOutput) output = NULL;
     GError *error = NULL;
-    QmiMessageCtlReleaseCidQrtrOutput *output;
 
     /* Note: even if we return an error, the client is to be considered
      * released! (so shouldn't be used) */
@@ -1550,34 +1534,32 @@ client_ctl_release_cid_qrtr_ready (QmiClientCtl *client_ctl,
     if (!qmi_message_ctl_release_cid_qrtr_output_get_result (output, &error)) {
         g_task_return_error (task, error);
         g_object_unref (task);
-        qmi_message_ctl_release_cid_qrtr_output_unref (output);
         return;
     }
 
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
-    qmi_message_ctl_release_cid_qrtr_output_unref (output);
 }
 
 void
-qmi_device_release_client (QmiDevice *self,
-                           QmiClient *client,
-                           QmiDeviceReleaseClientFlags flags,
-                           guint timeout,
-                           GCancellable *cancellable,
-                           GAsyncReadyCallback callback,
-                           gpointer user_data)
+qmi_device_release_client (QmiDevice                   *self,
+                           QmiClient                   *client,
+                           QmiDeviceReleaseClientFlags  flags,
+                           guint                        timeout,
+                           GCancellable                *cancellable,
+                           GAsyncReadyCallback          callback,
+                           gpointer                     user_data)
 {
-    GTask *task;
-    QmiService service;
-    guint8 cid;
-    gchar *flags_str;
+    g_autofree gchar *flags_str = NULL;
+    GTask            *task;
+    QmiService        service;
+    guint8            cid;
 
     g_return_if_fail (QMI_IS_DEVICE (self));
     g_return_if_fail (QMI_IS_CLIENT (client));
 
     cid = qmi_client_get_cid (client);
-    service = (guint8)qmi_client_get_service (client);
+    service = qmi_client_get_service (client);
 
     /* The CTL client should not have been created out of the QmiDevice */
     g_return_if_fail (service != QMI_SERVICE_CTL);
@@ -1587,7 +1569,6 @@ qmi_device_release_client (QmiDevice *self,
              qmi_file_get_path_display (self->priv->file),
              qmi_service_get_string (service),
              flags_str);
-    g_free (flags_str);
 
     task = g_task_new (self, cancellable, callback, user_data);
 
@@ -1603,59 +1584,54 @@ qmi_device_release_client (QmiDevice *self,
 
     /* Keep the client object valid until after we reset its contents below */
     g_object_ref (client);
+    {
+        /* Unregister from device */
+        unregister_client (self, client);
 
-    /* Unregister from device */
-    unregister_client (self, client);
+        g_debug ("[%s] unregistered '%s' client with ID '%u'",
+                 qmi_file_get_path_display (self->priv->file),
+                 qmi_service_get_string (service),
+                 cid);
 
-    g_debug ("[%s] unregistered '%s' client with ID '%u'",
-             qmi_file_get_path_display (self->priv->file),
-             qmi_service_get_string (service),
-             cid);
-
-    /* Reset the contents of the client object, making it invalid */
-    g_object_set (client,
-                  QMI_CLIENT_CID,     QMI_CID_NONE,
-                  QMI_CLIENT_SERVICE, QMI_SERVICE_UNKNOWN,
-                  QMI_CLIENT_DEVICE,  NULL,
-                  NULL);
-
+        /* Reset the contents of the client object, making it invalid */
+        g_object_set (client,
+                      QMI_CLIENT_CID,     QMI_CID_NONE,
+                      QMI_CLIENT_SERVICE, QMI_SERVICE_UNKNOWN,
+                      QMI_CLIENT_DEVICE,  NULL,
+                      NULL);
+    }
     g_object_unref (client);
 
+    /* And now, really try to release the CID */
     if (flags & QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID) {
+        /* 8-bit service */
         if (service <= G_MAXUINT8) {
-            QmiMessageCtlReleaseCidInput *input;
+            g_autoptr(QmiMessageCtlReleaseCidInput)input = NULL;
 
-            /* And now, really try to release the CID */
             input = qmi_message_ctl_release_cid_input_new ();
             qmi_message_ctl_release_cid_input_set_release_info (input, service, cid, NULL);
-
             qmi_client_ctl_release_cid (self->priv->client_ctl,
                                         input,
                                         timeout,
                                         cancellable,
                                         (GAsyncReadyCallback)client_ctl_release_cid_ready,
                                         task);
+        }
+        /* 16-bit service */
+        else if (service > G_MAXUINT8 && service <= G_MAXUINT16) {
+            g_autoptr(QmiMessageCtlReleaseCidQrtrInput) input = NULL;
 
-            qmi_message_ctl_release_cid_input_unref (input);
-            return;
-        } else {
-            QmiMessageCtlReleaseCidQrtrInput *input;
-
-            /* And now, really try to release the CID */
             input = qmi_message_ctl_release_cid_qrtr_input_new ();
             qmi_message_ctl_release_cid_qrtr_input_set_release_info (input, service, cid, NULL);
-
             qmi_client_ctl_release_cid_qrtr (self->priv->client_ctl,
                                              input,
                                              timeout,
                                              cancellable,
                                              (GAsyncReadyCallback)client_ctl_release_cid_qrtr_ready,
                                              task);
-
-            qmi_message_ctl_release_cid_qrtr_input_unref (input);
-            return;
-
-        }
+        } else
+            g_assert_not_reached ();
+        return;
     }
 
     /* No need to release the CID, so just done */
