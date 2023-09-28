@@ -336,8 +336,8 @@ endpoint_send (QmiEndpoint   *self,
 
     /* Disallow private CTL operations */
     if ((qmi_message_get_service (message) == QMI_SERVICE_CTL) &&
-        (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR ||
-         qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID_QRTR)) {
+        (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_INTERNAL_ALLOCATE_CID_QRTR ||
+         qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_INTERNAL_RELEASE_CID_QRTR)) {
         g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
                      "MBIM endpoint expects only 8bit QMI services");
         return FALSE;

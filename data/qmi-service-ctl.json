@@ -172,7 +172,7 @@
 
   // *********************************************************************************
   // Internal
-  {  "name"    : "Allocate CID QRTR",
+  {  "name"    : "Internal Allocate CID QRTR",
      "type"    : "Message",
      "service" : "CTL",
      "id"      : "0xFF22",
@@ -198,7 +198,7 @@
 
   // *********************************************************************************
   // Internal
-  {  "name"    : "Release CID QRTR",
+  {  "name"    : "Internal Release CID QRTR",
      "type"    : "Message",
      "service" : "CTL",
      "id"      : "0xFF23",

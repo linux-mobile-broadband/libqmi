@@ -278,8 +278,8 @@ construct_alloc_tlv (QmiMessage *message,
                 qmi_message_tlv_write_complete (message, init_offset, NULL);
     }
 
-    if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR ||
-        qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID_QRTR) {
+    if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_INTERNAL_ALLOCATE_CID_QRTR ||
+        qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_INTERNAL_RELEASE_CID_QRTR) {
         g_assert (service <= G_MAXUINT16);
         return init_offset &&
                 qmi_message_tlv_write_guint16 (message, QMI_ENDIAN_LITTLE, service, NULL) &&
@@ -330,7 +330,7 @@ handle_alloc_cid (QmiEndpointQrtr *self,
             return;
         }
         service = (QmiService)service_tmp;
-    } else if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR) {
+    } else if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_INTERNAL_ALLOCATE_CID_QRTR) {
         guint16 service_tmp;
 
         if (!qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, &service_tmp, &error)) {
@@ -389,7 +389,7 @@ handle_release_cid (QmiEndpointQrtr *self,
             return;
         }
         service = (QmiService)service_tmp;
-    } else if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID_QRTR) {
+    } else if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_INTERNAL_RELEASE_CID_QRTR) {
         guint16 service_tmp;
 
         if (!qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, &service_tmp, &error)) {
@@ -441,11 +441,11 @@ handle_ctl_message (QmiEndpointQrtr *self,
 {
     switch (qmi_message_get_message_id (message)) {
         case QMI_MESSAGE_CTL_ALLOCATE_CID:
-        case QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR:
+        case QMI_MESSAGE_CTL_INTERNAL_ALLOCATE_CID_QRTR:
             handle_alloc_cid (self, message);
             break;
         case QMI_MESSAGE_CTL_RELEASE_CID:
-        case QMI_MESSAGE_CTL_RELEASE_CID_QRTR:
+        case QMI_MESSAGE_CTL_INTERNAL_RELEASE_CID_QRTR:
             handle_release_cid (self, message);
             break;
         case QMI_MESSAGE_CTL_SYNC:

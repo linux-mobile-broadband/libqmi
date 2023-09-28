@@ -32,10 +32,10 @@
 #include "qmi-message.h"
 
 /* Constants for allocating/releasing clients */
-#define QMI_MESSAGE_CTL_ALLOCATE_CID      0x0022
-#define QMI_MESSAGE_CTL_RELEASE_CID       0x0023
-#define QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR 0xFF22
-#define QMI_MESSAGE_CTL_RELEASE_CID_QRTR  0xFF23
+#define QMI_MESSAGE_CTL_ALLOCATE_CID               0x0022
+#define QMI_MESSAGE_CTL_RELEASE_CID                0x0023
+#define QMI_MESSAGE_CTL_INTERNAL_ALLOCATE_CID_QRTR 0xFF22
+#define QMI_MESSAGE_CTL_INTERNAL_RELEASE_CID_QRTR  0xFF23
 
 typedef void (*QmiMessageHandler) (QmiMessage *message,
                                    gpointer user_data);

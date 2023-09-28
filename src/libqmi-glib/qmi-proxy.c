@@ -50,11 +50,11 @@
 #define QMI_MESSAGE_OUTPUT_TLV_RESULT 0x02
 #define QMI_MESSAGE_OUTPUT_TLV_ALLOCATION_INFO 0x01
 #define QMI_MESSAGE_CTL_ALLOCATE_CID 0x0022
-#define QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR 0xFF22
+#define QMI_MESSAGE_CTL_INTERNAL_ALLOCATE_CID_QRTR 0xFF22
 
 #define QMI_MESSAGE_INPUT_TLV_RELEASE_INFO 0x01
 #define QMI_MESSAGE_CTL_RELEASE_CID 0x0023
-#define QMI_MESSAGE_CTL_RELEASE_CID_QRTR 0xFF23
+#define QMI_MESSAGE_CTL_INTERNAL_RELEASE_CID_QRTR 0xFF23
 
 #define QMI_MESSAGE_CTL_INTERNAL_PROXY_OPEN 0xFF00
 #define QMI_MESSAGE_CTL_INTERNAL_PROXY_OPEN_INPUT_TLV_DEVICE_PATH 0x01
@@ -629,7 +629,7 @@ track_cid (Client     *client,
             return;
         }
         info.service = (QmiService)service_tmp;
-    } else if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR) {
+    } else if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_INTERNAL_ALLOCATE_CID_QRTR) {
         guint16 service_tmp;
 
         if (!qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, &service_tmp, &error)) {
@@ -682,7 +682,7 @@ untrack_cid (QmiProxy   *self,
             return;
         }
         info.service = (QmiService)service_tmp;
-    } else if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID_QRTR) {
+    } else if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_INTERNAL_RELEASE_CID_QRTR) {
         guint16 service_tmp;
 
         if (!qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, &service_tmp, &error)) {
@@ -872,7 +872,7 @@ device_command_ready (QmiDevice    *device,
     if (qmi_message_get_service (response) == QMI_SERVICE_CTL) {
         qmi_message_set_transaction_id (response, request->in_trid);
         if (qmi_message_get_message_id (response) == QMI_MESSAGE_CTL_ALLOCATE_CID ||
-            qmi_message_get_message_id (response) == QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR)
+            qmi_message_get_message_id (response) == QMI_MESSAGE_CTL_INTERNAL_ALLOCATE_CID_QRTR)
             track_cid (request->client, response);
     }
 
@@ -922,7 +922,7 @@ process_message (QmiProxy   *self,
         /* Try to untrack QMI client as soon as we detect the associated
          * release message, no need to wait for the response. */
         if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID ||
-            qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID_QRTR)
+            qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_INTERNAL_RELEASE_CID_QRTR)
             untrack_cid (self, client, message);
     } else
         track_implicit_cid (self, client, message);

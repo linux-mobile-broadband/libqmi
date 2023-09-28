@@ -1180,14 +1180,14 @@ allocate_cid_qrtr_ready (QmiClientCtl *client_ctl,
                          GAsyncResult *res,
                          GTask        *task)
 {
-    g_autoptr(QmiMessageCtlAllocateCidQrtrOutput) output = NULL;
+    g_autoptr(QmiMessageCtlInternalAllocateCidQrtrOutput) output = NULL;
     QmiService             service;
     guint8                 cid;
     GError                *error = NULL;
     AllocateClientContext *ctx;
 
     /* Check result of the async operation */
-    output = qmi_client_ctl_allocate_cid_qrtr_finish (client_ctl, res, &error);
+    output = qmi_client_ctl_internal_allocate_cid_qrtr_finish (client_ctl, res, &error);
     if (!output) {
         g_prefix_error (&error, "CID allocation failed in the CTL client (QRTR): ");
         g_task_return_error (task, error);
@@ -1196,14 +1196,14 @@ allocate_cid_qrtr_ready (QmiClientCtl *client_ctl,
     }
 
     /* Check result of the QMI operation */
-    if (!qmi_message_ctl_allocate_cid_qrtr_output_get_result (output, &error)) {
+    if (!qmi_message_ctl_internal_allocate_cid_qrtr_output_get_result (output, &error)) {
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
     }
 
     /* Allocation info is mandatory when result is success */
-    g_assert (qmi_message_ctl_allocate_cid_qrtr_output_get_allocation_info (output, &service, &cid, NULL));
+    g_assert (qmi_message_ctl_internal_allocate_cid_qrtr_output_get_allocation_info (output, &service, &cid, NULL));
 
     ctx = g_task_get_task_data (task);
 
@@ -1449,16 +1449,16 @@ qmi_device_allocate_client (QmiDevice           *self,
         }
         /* 16-bit service */
         else if (ctx->service > G_MAXUINT8 && ctx->service <= G_MAXUINT16) {
-            g_autoptr(QmiMessageCtlAllocateCidQrtrInput) input = NULL;
+            g_autoptr(QmiMessageCtlInternalAllocateCidQrtrInput) input = NULL;
 
-            input = qmi_message_ctl_allocate_cid_qrtr_input_new ();
-            qmi_message_ctl_allocate_cid_qrtr_input_set_service (input, ctx->service, NULL);
-            qmi_client_ctl_allocate_cid_qrtr (self->priv->client_ctl,
-                                              input,
-                                              timeout,
-                                              cancellable,
-                                              (GAsyncReadyCallback)allocate_cid_qrtr_ready,
-                                              task);
+            input = qmi_message_ctl_internal_allocate_cid_qrtr_input_new ();
+            qmi_message_ctl_internal_allocate_cid_qrtr_input_set_service (input, ctx->service, NULL);
+            qmi_client_ctl_internal_allocate_cid_qrtr (self->priv->client_ctl,
+                                                       input,
+                                                       timeout,
+                                                       cancellable,
+                                                       (GAsyncReadyCallback)allocate_cid_qrtr_ready,
+                                                       task);
         } else
             g_assert_not_reached ();
         return;
@@ -1516,14 +1516,14 @@ client_ctl_release_cid_qrtr_ready (QmiClientCtl *client_ctl,
                                    GAsyncResult *res,
                                    GTask        *task)
 {
-    g_autoptr(QmiMessageCtlReleaseCidQrtrOutput) output = NULL;
+    g_autoptr(QmiMessageCtlInternalReleaseCidQrtrOutput) output = NULL;
     GError *error = NULL;
 
     /* Note: even if we return an error, the client is to be considered
      * released! (so shouldn't be used) */
 
     /* Check result of the async operation */
-    output = qmi_client_ctl_release_cid_qrtr_finish (client_ctl, res, &error);
+    output = qmi_client_ctl_internal_release_cid_qrtr_finish (client_ctl, res, &error);
     if (!output) {
         g_task_return_error (task, error);
         g_object_unref (task);
@@ -1531,7 +1531,7 @@ client_ctl_release_cid_qrtr_ready (QmiClientCtl *client_ctl,
     }
 
     /* Check result of the QMI operation */
-    if (!qmi_message_ctl_release_cid_qrtr_output_get_result (output, &error)) {
+    if (!qmi_message_ctl_internal_release_cid_qrtr_output_get_result (output, &error)) {
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -1619,16 +1619,16 @@ qmi_device_release_client (QmiDevice                   *self,
         }
         /* 16-bit service */
         else if (service > G_MAXUINT8 && service <= G_MAXUINT16) {
-            g_autoptr(QmiMessageCtlReleaseCidQrtrInput) input = NULL;
+            g_autoptr(QmiMessageCtlInternalReleaseCidQrtrInput) input = NULL;
 
-            input = qmi_message_ctl_release_cid_qrtr_input_new ();
-            qmi_message_ctl_release_cid_qrtr_input_set_release_info (input, service, cid, NULL);
-            qmi_client_ctl_release_cid_qrtr (self->priv->client_ctl,
-                                             input,
-                                             timeout,
-                                             cancellable,
-                                             (GAsyncReadyCallback)client_ctl_release_cid_qrtr_ready,
-                                             task);
+            input = qmi_message_ctl_internal_release_cid_qrtr_input_new ();
+            qmi_message_ctl_internal_release_cid_qrtr_input_set_release_info (input, service, cid, NULL);
+            qmi_client_ctl_internal_release_cid_qrtr (self->priv->client_ctl,
+                                                      input,
+                                                      timeout,
+                                                      cancellable,
+                                                      (GAsyncReadyCallback)client_ctl_release_cid_qrtr_ready,
+                                                      task);
         } else
             g_assert_not_reached ();
         return;
