@@ -322,10 +322,17 @@ endpoint_send (QmiEndpoint   *self,
                GCancellable  *cancellable,
                GError       **error)
 {
-    MbimMessage *mbim_message;
-    gconstpointer raw_message;
-    gsize raw_message_len;
-    GError *inner_error = NULL;
+    g_autoptr(MbimMessage)  mbim_message = NULL;
+    gconstpointer           raw_message;
+    gsize                   raw_message_len;
+    GError                 *inner_error = NULL;
+
+    /* MBIM endpoint allows only QMUX messages */
+    if (qmi_message_get_marker (message) != QMI_MESSAGE_QMUX_MARKER) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                     "MBIM endpoint expects only QMUX messages");
+        return FALSE;
+    }
 
     /* Get raw message */
     raw_message = qmi_message_get_raw (message, &raw_message_len, &inner_error);
@@ -353,8 +360,6 @@ endpoint_send (QmiEndpoint   *self,
                          cancellable,
                          (GAsyncReadyCallback) mbim_device_command_ready,
                          g_object_ref (self));
-
-    mbim_message_unref (mbim_message);
     return TRUE;
 }
 
