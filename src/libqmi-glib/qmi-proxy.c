@@ -594,14 +594,13 @@ static void
 track_cid (Client     *client,
            QmiMessage *message)
 {
-    gsize          offset = 0;
-    gsize          init_offset;
-    guint16        error_status;
-    guint16        error_code;
-    GError        *error = NULL;
-    QmiService     service_tmp;
-    QmiClientInfo  info;
-    gint           i;
+    g_autoptr(GError) error = NULL;
+    gsize             offset = 0;
+    gsize             init_offset;
+    guint16           error_status;
+    guint16           error_code;
+    QmiClientInfo     info;
+    gint              i;
 
     g_assert_cmpuint (qmi_message_get_service (message), ==, QMI_SERVICE_CTL);
     g_assert (qmi_message_is_response (message));
@@ -610,7 +609,6 @@ track_cid (Client     *client,
         !qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, &error_status, &error) ||
         !qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, &error_code, &error)) {
         g_warning ("invalid 'CTL allocate CID' response: missing or invalid result TLV: %s", error->message);
-        g_error_free (error);
         return;
     }
     g_warn_if_fail (qmi_message_tlv_read_remaining_size (message, init_offset, offset) == 0);
@@ -618,15 +616,33 @@ track_cid (Client     *client,
         return;
 
     offset = 0;
-    if (((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_OUTPUT_TLV_ALLOCATION_INFO, NULL, &error)) == 0) ||
-	(qmi_message_get_marker (message) == QMI_MESSAGE_QMUX_MARKER && !qmi_message_tlv_read_guint8 (message, init_offset, &offset, (guint8 *) &service_tmp, &error)) ||
-	(qmi_message_get_marker (message) == QMI_MESSAGE_QRTR_MARKER && !qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, (guint16 *) &service_tmp, &error)) ||
-        !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &(info.cid), &error)) {
-        g_warning ("invalid 'CTL allocate CID' response: missing or invalid allocation info TLV: %s", error->message);
-        g_error_free (error);
+    if ((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_OUTPUT_TLV_ALLOCATION_INFO, NULL, &error)) == 0) {
+        g_warning ("invalid 'CTL allocate CID' response: missing allocation info TLV: %s", error->message);
         return;
     }
-    info.service = service_tmp;
+
+    if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID) {
+        guint8 service_tmp;
+
+        if (!qmi_message_tlv_read_guint8 (message, init_offset, &offset, &service_tmp, &error)) {
+            g_warning ("invalid 'CTL allocate CID' request: failed to read service: %s", error->message);
+            return;
+        }
+        info.service = (QmiService)service_tmp;
+    } else if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR) {
+        guint16 service_tmp;
+
+        if (!qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, &service_tmp, &error)) {
+            g_warning ("invalid 'CTL allocate CID QRTR' request: failed to read service: %s", error->message);
+            return;
+        }
+        info.service = (QmiService)service_tmp;
+    }
+
+    if (!qmi_message_tlv_read_guint8 (message, init_offset, &offset, &(info.cid), &error)) {
+        g_warning ("invalid 'CTL allocate CID' request: failed to read client id: %s", error->message);
+        return;
+    }
 
     /* Check if it already exists */
     i = qmi_client_info_array_lookup_cid (client->qmi_client_info_array, info.service, info.cid);
@@ -644,25 +660,43 @@ untrack_cid (QmiProxy   *self,
              Client     *client,
              QmiMessage *message)
 {
-    gsize          offset = 0;
-    gsize          init_offset;
-    GError        *error = NULL;
-    QmiService     service_tmp;
-    QmiClientInfo  info;
-    gint           i;
+    g_autoptr(GError) error = NULL;
+    gsize             offset = 0;
+    gsize             init_offset;
+    QmiClientInfo     info;
+    gint              i;
 
     g_assert_cmpuint (qmi_message_get_service (message), ==, QMI_SERVICE_CTL);
     g_assert (qmi_message_is_request (message));
 
-    if (((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_INPUT_TLV_RELEASE_INFO, NULL, &error)) == 0) ||
-	(qmi_message_get_marker (message) == QMI_MESSAGE_QMUX_MARKER && !qmi_message_tlv_read_guint8 (message, init_offset, &offset, (guint8 *) &service_tmp, &error)) ||
-	(qmi_message_get_marker (message) == QMI_MESSAGE_QRTR_MARKER && !qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, (guint16 *) &service_tmp, &error)) ||
-        !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &(info.cid), &error)) {
-        g_warning ("invalid 'CTL release CID' request: missing or invalid release info TLV: %s", error->message);
-        g_error_free (error);
+    if ((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_INPUT_TLV_RELEASE_INFO, NULL, &error)) == 0) {
+        g_warning ("invalid 'CTL release CID' request: missing release info TLV: %s", error->message);
         return;
     }
-    info.service = service_tmp;
+
+    if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID) {
+        guint8 service_tmp;
+
+        if (!qmi_message_tlv_read_guint8 (message, init_offset, &offset, &service_tmp, &error)) {
+            g_warning ("invalid 'CTL release CID' request: failed to read service: %s", error->message);
+            return;
+        }
+        info.service = (QmiService)service_tmp;
+    } else if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID_QRTR) {
+        guint16 service_tmp;
+
+        if (!qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, &service_tmp, &error)) {
+            g_warning ("invalid 'CTL release CID QRTR' request: failed to read service: %s", error->message);
+            return;
+        }
+        info.service = (QmiService)service_tmp;
+    } else
+        g_assert_not_reached ();
+
+    if (!qmi_message_tlv_read_guint8 (message, init_offset, &offset, &(info.cid), &error)) {
+        g_warning ("invalid 'CTL release CID' request: failed to read client id: %s", error->message);
+        return;
+    }
 
     /* Check if it already exists in the client */
     i = qmi_client_info_array_lookup_cid (client->qmi_client_info_array, info.service, info.cid);
@@ -837,7 +871,8 @@ device_command_ready (QmiDevice    *device,
 
     if (qmi_message_get_service (response) == QMI_SERVICE_CTL) {
         qmi_message_set_transaction_id (response, request->in_trid);
-        if (qmi_message_get_message_id (response) == QMI_MESSAGE_CTL_ALLOCATE_CID || qmi_message_get_message_id (response) == QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR)
+        if (qmi_message_get_message_id (response) == QMI_MESSAGE_CTL_ALLOCATE_CID ||
+            qmi_message_get_message_id (response) == QMI_MESSAGE_CTL_ALLOCATE_CID_QRTR)
             track_cid (request->client, response);
     }
 
@@ -886,7 +921,8 @@ process_message (QmiProxy   *self,
         qmi_message_set_transaction_id (message, 0);
         /* Try to untrack QMI client as soon as we detect the associated
          * release message, no need to wait for the response. */
-        if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID || qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID_QRTR)
+        if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID ||
+            qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID_QRTR)
             untrack_cid (self, client, message);
     } else
         track_implicit_cid (self, client, message);
