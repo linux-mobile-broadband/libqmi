@@ -74,6 +74,9 @@ struct qmux_header {
   guint8 client;
 } PACKED;
 
+/* This is not a real header in QRTR messages, it is exclusively used within
+ * libqmi to flag messages that have 16-bit service id and would otherwise not
+ * fit in a standard QMUX message. */
 struct qrtr_header {
   guint16 length;
   guint16 service;
