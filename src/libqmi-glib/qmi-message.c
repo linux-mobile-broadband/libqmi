@@ -467,12 +467,6 @@ qmi_message_new (QmiService service,
                   sizeof (struct qmux_header) +
                   (service == QMI_SERVICE_CTL ? sizeof (struct control_header) : sizeof (struct service_header)));
 
-    /* NOTE:
-     * Don't use g_byte_array_new_take() along with g_byte_array_set_size()!
-     * Not yet, at least, see:
-     * https://bugzilla.gnome.org/show_bug.cgi?id=738170
-     */
-
     /* Create the GByteArray with buffer_len bytes preallocated */
     self = g_byte_array_sized_new (buffer_len);
     /* Actually flag as all the buffer_len bytes being used. */
