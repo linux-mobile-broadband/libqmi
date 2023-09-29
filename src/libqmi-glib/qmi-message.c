@@ -64,6 +64,7 @@
 #include "qmi-dpm.h"
 #include "qmi-fox.h"
 #include "qmi-atr.h"
+#include "qmi-ssc.h"
 
 #define PACKED __attribute__((packed))
 
