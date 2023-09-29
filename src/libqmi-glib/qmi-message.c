@@ -512,10 +512,13 @@ qmi_message_new_from_data (QmiService   service,
                            GByteArray  *qmi_data,
                            GError     **error)
 {
-    GByteArray *self;
-    struct full_message *buffer;
-    gsize buffer_len;
-    gsize message_len;
+    g_autoptr(GByteArray)  self = NULL;
+    struct full_message   *buffer;
+    gsize                  buffer_len;
+    gsize                  message_len;
+
+    /* Service must fit in 16 bits */
+    g_return_val_if_fail (service <= G_MAXUINT16, NULL);
 
     /* Create array with enough size for the QMUX marker and QMUX header, and
      * with enough room to copy the rest of the message into */
@@ -542,25 +545,23 @@ qmi_message_new_from_data (QmiService   service,
         buffer->header.qmux.flags = 0;
         buffer->header.qmux.service = (guint8) service;
         buffer->header.qmux.client = client_id;
-    } else {
+    } else if (service <= G_MAXUINT16) {
         buffer->marker = QMI_MESSAGE_QRTR_MARKER;
         buffer->header.qrtr.length = GUINT16_TO_LE (buffer_len - 1);
         buffer->header.qrtr.service = (guint16) service;
         buffer->header.qrtr.client = client_id;
-    }
+    } else
+        g_assert_not_reached ();
 
     /* Move bytes from the qmi_data array to the newly created message */
     memcpy (&buffer->qmi, qmi_data->data, message_len);
     g_byte_array_remove_range (qmi_data, 0, message_len);
 
     /* Check input message validity as soon as we create the QmiMessage */
-    if (!message_check (self, error)) {
-        /* Yes, we lose the whole message here */
-        qmi_message_unref (self);
+    if (!message_check (self, error))
         return NULL;
-    }
 
-    return (QmiMessage *)self;
+    return (QmiMessage *) g_steal_pointer (&self);
 }
 
 QmiMessage *
