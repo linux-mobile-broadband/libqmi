@@ -1437,65 +1437,39 @@ qmi_device_release_client_finish (QmiDevice     *self,
     return g_task_propagate_boolean (G_TASK (res), error);
 }
 
-static void
-client_ctl_release_cid_ready (QmiClientCtl *client_ctl,
-                              GAsyncResult *res,
-                              GTask        *task)
-{
-    g_autoptr(QmiMessageCtlReleaseCidOutput) output = NULL;
-    GError *error = NULL;
-
-    /* Note: even if we return an error, the client is to be considered
-     * released! (so shouldn't be used) */
-
-    /* Check result of the async operation */
-    output = qmi_client_ctl_release_cid_finish (client_ctl, res, &error);
-    if (!output) {
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
-
-    /* Check result of the QMI operation */
-    if (!qmi_message_ctl_release_cid_output_get_result (output, &error)) {
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
-
-    g_task_return_boolean (task, TRUE);
-    g_object_unref (task);
+#define RELEASE_CID_READY(MessageName, message_name)                            \
+static void                                                                     \
+message_name##_ready (QmiClientCtl *client_ctl,                                 \
+                      GAsyncResult *res,                                        \
+                      GTask        *task)                                       \
+{                                                                               \
+    g_autoptr(QmiMessageCtl##MessageName##Output) output = NULL;                \
+    GError *error = NULL;                                                       \
+                                                                                \
+    /* Note: even if we return an error, the client is to be considered         \
+     * released! (so shouldn't be used) */                                      \
+                                                                                \
+    /* Check result of the async operation */                                   \
+    output = qmi_client_ctl_##message_name##_finish (client_ctl, res, &error);  \
+    if (!output) {                                                              \
+        g_task_return_error (task, error);                                      \
+        g_object_unref (task);                                                  \
+        return;                                                                 \
+    }                                                                           \
+                                                                                \
+    /* Check result of the QMI operation */                                     \
+    if (!qmi_message_ctl_##message_name##_output_get_result (output, &error)) { \
+        g_task_return_error (task, error);                                      \
+        g_object_unref (task);                                                  \
+        return;                                                                 \
+    }                                                                           \
+                                                                                \
+    g_task_return_boolean (task, TRUE);                                         \
+    g_object_unref (task);                                                      \
 }
 
-static void
-client_ctl_release_cid_qrtr_ready (QmiClientCtl *client_ctl,
-                                   GAsyncResult *res,
-                                   GTask        *task)
-{
-    g_autoptr(QmiMessageCtlInternalReleaseCidQrtrOutput) output = NULL;
-    GError *error = NULL;
-
-    /* Note: even if we return an error, the client is to be considered
-     * released! (so shouldn't be used) */
-
-    /* Check result of the async operation */
-    output = qmi_client_ctl_internal_release_cid_qrtr_finish (client_ctl, res, &error);
-    if (!output) {
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
-
-    /* Check result of the QMI operation */
-    if (!qmi_message_ctl_internal_release_cid_qrtr_output_get_result (output, &error)) {
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
-
-    g_task_return_boolean (task, TRUE);
-    g_object_unref (task);
-}
+RELEASE_CID_READY (ReleaseCid, release_cid)
+RELEASE_CID_READY (InternalReleaseCidQrtr, internal_release_cid_qrtr)
 
 void
 qmi_device_release_client (QmiDevice                   *self,
@@ -1570,7 +1544,7 @@ qmi_device_release_client (QmiDevice                   *self,
                                         input,
                                         timeout,
                                         cancellable,
-                                        (GAsyncReadyCallback)client_ctl_release_cid_ready,
+                                        (GAsyncReadyCallback)release_cid_ready,
                                         task);
         }
         /* 16-bit service */
@@ -1583,7 +1557,7 @@ qmi_device_release_client (QmiDevice                   *self,
                                                       input,
                                                       timeout,
                                                       cancellable,
-                                                      (GAsyncReadyCallback)client_ctl_release_cid_qrtr_ready,
+                                                      (GAsyncReadyCallback)internal_release_cid_qrtr_ready,
                                                       task);
         } else
             g_assert_not_reached ();
