@@ -1617,6 +1617,75 @@ test_message_set_transaction_id_services (void)
 
 /*****************************************************************************/
 
+static void
+test_message_16bit_service_indication (void)
+{
+    g_autoptr(GByteArray) buffer = NULL;
+    g_autoptr(QmiMessage) message = NULL;
+    g_autoptr(GError)     error = NULL;
+
+    const guint8 ssc_message[] = {
+        0x02,       /* marker is the QRTR one because we have a 16bit service! */
+        0x21, 0x00, /* message length: 33 bytes*/
+        0x90, 0x01, /* service: SSC */
+        0x03,       /* client */
+        0x04,       /* service flags: Indication */
+        0x01, 0x00, /* transaction */
+        0x21, 0x00, /* message: Report Small */
+        0x15, 0x00, /* all tlvs length: 21 bytes */
+        /* TLV */
+        0x01,                   /* type: client id */
+        0x08, 0x00,             /* length: 8 bytes */
+        0x01, 0x00, 0x00, 0x00, /* 64bit uint value */
+        0x00, 0x00, 0x00, 0x00,
+        /* TLV */
+        0x02,                         /* type: data */
+        0x07, 0x00,                   /* length: 7 bytes */
+        0x05, 0x00,                   /* array size */
+        0x00, 0x01, 0x02, 0x03, 0x04, /* 5 bytes in data array */
+    };
+
+    test_message_printable_common (ssc_message, sizeof (ssc_message), QMI_MESSAGE_VENDOR_GENERIC, "");
+
+    /* DMS message */
+    buffer = g_byte_array_append (g_byte_array_sized_new (sizeof (ssc_message)), ssc_message, sizeof (ssc_message));
+    message = qmi_message_new_from_raw (buffer, &error);
+    g_assert_no_error (error);
+    g_assert (message);
+
+    g_assert (qmi_message_is_indication (message));
+    g_assert_cmpuint (qmi_message_get_service (message), ==, QMI_SERVICE_SSC);
+    g_assert_cmpuint (qmi_message_get_message_id (message), ==, 0x0021);
+
+#if defined HAVE_QMI_INDICATION_SSC_REPORT_SMALL
+    {
+        g_autoptr(QmiIndicationSscReportSmallOutput) output = NULL;
+        gboolean      tlv_exists;
+        GArray       *value_data;
+        guint64       client_id;
+        const guint8  expected_value_data[] = {
+            0x00, 0x01, 0x02, 0x03, 0x04
+        };
+
+        output = qmi_indication_ssc_report_small_indication_parse (message, &error);
+        g_assert_no_error (error);
+        g_assert (output);
+
+        tlv_exists = qmi_indication_ssc_report_small_output_get_client_id (output, &client_id, &error);
+        g_assert_no_error (error);
+        g_assert (tlv_exists);
+        g_assert_cmpuint (client_id, ==, (guint64)0x01);
+
+        tlv_exists = qmi_indication_ssc_report_small_output_get_data (output, &value_data, &error);
+        g_assert_no_error (error);
+        g_assert (tlv_exists);
+        _g_assert_cmpmem (value_data->data, value_data->len, expected_value_data, G_N_ELEMENTS (expected_value_data));
+    }
+#endif
+}
+
+/*****************************************************************************/
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -1664,6 +1733,8 @@ int main (int argc, char **argv)
 
     g_test_add_func ("/libqmi-glib/message/set-transaction-id/ctl",      test_message_set_transaction_id_ctl);
     g_test_add_func ("/libqmi-glib/message/set-transaction-id/services", test_message_set_transaction_id_services);
+
+    g_test_add_func ("/libqmi-glib/message/16bit-service/indication", test_message_16bit_service_indication);
 
     return g_test_run ();
 }
