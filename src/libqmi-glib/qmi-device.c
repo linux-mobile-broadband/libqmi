@@ -1126,103 +1126,59 @@ build_client_object (GTask *task)
     g_object_unref (task);
 }
 
-static void
-allocate_cid_ready (QmiClientCtl *client_ctl,
-                    GAsyncResult *res,
-                    GTask        *task)
-{
-    g_autoptr(QmiMessageCtlAllocateCidOutput) output = NULL;
-    QmiService             service;
-    guint8                 cid;
-    GError                *error = NULL;
-    AllocateClientContext *ctx;
-
-    /* Check result of the async operation */
-    output = qmi_client_ctl_allocate_cid_finish (client_ctl, res, &error);
-    if (!output) {
-        g_prefix_error (&error, "CID allocation failed in the CTL client (QMUX): ");
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
-
-    /* Check result of the QMI operation */
-    if (!qmi_message_ctl_allocate_cid_output_get_result (output, &error)) {
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
-
-    /* Allocation info is mandatory when result is success */
-    g_assert (qmi_message_ctl_allocate_cid_output_get_allocation_info (output, &service, &cid, NULL));
-
-    ctx = g_task_get_task_data (task);
-
-    if (service != ctx->service) {
-        g_task_return_new_error (
-            task,
-            QMI_CORE_ERROR,
-            QMI_CORE_ERROR_FAILED,
-            "CID allocation failed in the CTL client (QMUX): "
-            "Service mismatch (requested '%s', got '%s')",
-            qmi_service_get_string (ctx->service),
-            qmi_service_get_string (service));
-        g_object_unref (task);
-        return;
-    }
-
-    ctx->cid = cid;
-    build_client_object (task);
+#define ALLOCATE_CID_READY(MessageName, message_name)                           \
+static void                                                                     \
+message_name##_ready (QmiClientCtl *client_ctl,                                 \
+                      GAsyncResult *res,                                        \
+                      GTask        *task)                                       \
+{                                                                               \
+    g_autoptr(QmiMessageCtl##MessageName##Output) output = NULL;                \
+    QmiService             service;                                             \
+    guint8                 cid;                                                 \
+    GError                *error = NULL;                                        \
+    AllocateClientContext *ctx;                                                 \
+                                                                                \
+    /* Check result of the async operation */                                   \
+    output = qmi_client_ctl_##message_name##_finish (client_ctl, res, &error);  \
+    if (!output) {                                                              \
+        g_prefix_error (&error, "CID allocation failed in the CTL client: ");   \
+        g_task_return_error (task, error);                                      \
+        g_object_unref (task);                                                  \
+        return;                                                                 \
+    }                                                                           \
+                                                                                \
+    /* Check result of the QMI operation */                                     \
+    if (!qmi_message_ctl_##message_name##_output_get_result (output, &error)) { \
+        g_task_return_error (task, error);                                      \
+        g_object_unref (task);                                                  \
+        return;                                                                 \
+    }                                                                           \
+                                                                                \
+    /* Allocation info is mandatory when result is success */                   \
+    g_assert (qmi_message_ctl_##message_name##_output_get_allocation_info (     \
+        output, &service, &cid, NULL));                                         \
+                                                                                \
+    ctx = g_task_get_task_data (task);                                          \
+                                                                                \
+    if (service != ctx->service) {                                              \
+        g_task_return_new_error (                                               \
+            task,                                                               \
+            QMI_CORE_ERROR,                                                     \
+            QMI_CORE_ERROR_FAILED,                                              \
+            "CID allocation failed in the CTL client: "                         \
+            "Service mismatch (requested '%s', got '%s')",                      \
+            qmi_service_get_string (ctx->service),                              \
+            qmi_service_get_string (service));                                  \
+        g_object_unref (task);                                                  \
+        return;                                                                 \
+    }                                                                           \
+                                                                                \
+    ctx->cid = cid;                                                             \
+    build_client_object (task);                                                 \
 }
 
-static void
-allocate_cid_qrtr_ready (QmiClientCtl *client_ctl,
-                         GAsyncResult *res,
-                         GTask        *task)
-{
-    g_autoptr(QmiMessageCtlInternalAllocateCidQrtrOutput) output = NULL;
-    QmiService             service;
-    guint8                 cid;
-    GError                *error = NULL;
-    AllocateClientContext *ctx;
-
-    /* Check result of the async operation */
-    output = qmi_client_ctl_internal_allocate_cid_qrtr_finish (client_ctl, res, &error);
-    if (!output) {
-        g_prefix_error (&error, "CID allocation failed in the CTL client (QRTR): ");
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
-
-    /* Check result of the QMI operation */
-    if (!qmi_message_ctl_internal_allocate_cid_qrtr_output_get_result (output, &error)) {
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
-
-    /* Allocation info is mandatory when result is success */
-    g_assert (qmi_message_ctl_internal_allocate_cid_qrtr_output_get_allocation_info (output, &service, &cid, NULL));
-
-    ctx = g_task_get_task_data (task);
-
-    if (service != ctx->service) {
-        g_task_return_new_error (
-            task,
-            QMI_CORE_ERROR,
-            QMI_CORE_ERROR_FAILED,
-            "CID allocation failed in the CTL client (QRTR): "
-            "Service mismatch (requested '%s', got '%s')",
-            qmi_service_get_string (ctx->service),
-            qmi_service_get_string (service));
-        g_object_unref (task);
-        return;
-    }
-
-    ctx->cid = cid;
-    build_client_object (task);
-}
+ALLOCATE_CID_READY (AllocateCid,             allocate_cid)
+ALLOCATE_CID_READY (InternalAllocateCidQrtr, internal_allocate_cid_qrtr)
 
 void
 qmi_device_allocate_client (QmiDevice           *self,
@@ -1457,7 +1413,7 @@ qmi_device_allocate_client (QmiDevice           *self,
                                                        input,
                                                        timeout,
                                                        cancellable,
-                                                       (GAsyncReadyCallback)allocate_cid_qrtr_ready,
+                                                       (GAsyncReadyCallback)internal_allocate_cid_qrtr_ready,
                                                        task);
         } else
             g_assert_not_reached ();
