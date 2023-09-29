@@ -177,12 +177,16 @@ get_qmi_flags (QmiMessage *self)
 gboolean
 qmi_message_is_request (QmiMessage *self)
 {
+    g_return_val_if_fail (self != NULL, FALSE);
+
     return (!qmi_message_is_response (self) && !qmi_message_is_indication (self));
 }
 
 gboolean
 qmi_message_is_response (QmiMessage *self)
 {
+    g_return_val_if_fail (self != NULL, FALSE);
+
     if (message_is_control (self)) {
         if (((struct full_message *)(self->data))->qmi.control.header.flags & QMI_CTL_FLAG_RESPONSE)
             return TRUE;
@@ -197,6 +201,8 @@ qmi_message_is_response (QmiMessage *self)
 gboolean
 qmi_message_is_indication (QmiMessage *self)
 {
+    g_return_val_if_fail (self != NULL, FALSE);
+
     if (message_is_control (self)) {
         if (((struct full_message *)(self->data))->qmi.control.header.flags & QMI_CTL_FLAG_INDICATION)
             return TRUE;
