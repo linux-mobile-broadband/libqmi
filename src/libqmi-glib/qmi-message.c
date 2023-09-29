@@ -125,7 +125,10 @@ struct full_message {
     } qmi;
 } PACKED;
 
-/* qmux_header and qrtr_header must always be of the same size */
+/* qmux_header and qrtr_header are of the same size, so that the overall
+ * QMI header struct is also always of the same size. This is convenient
+ * when building new QMI messages or ensuring the full header is available,
+ * but it is not a strict requirement. */
 G_STATIC_ASSERT (sizeof (struct qmux_header) == sizeof (struct qrtr_header));
 
 #define MESSAGE_IS_QMUX(self) (((struct full_message *)(self->data))->marker == QMI_MESSAGE_QMUX_MARKER)
