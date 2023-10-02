@@ -16,6 +16,9 @@ Overview of changes in libqmi 1.34.0
       Status" and "Get IMS Services Status" request/responses.
    ** New 'IMSP' (IMS Presence) service, including "Get Enabler State"
       request/response.
+   ** New 'SSC' service (Qualcomm Snapdragon Sensor Core), including the
+      "Control" request/response, and "Report Small"/"Report Large"
+      indications.
 
  * New TLVs supported in existing messages:
    ** nas: added the "WCDMA RSCP" TLV in "Get Signal Info" response and "Signal
@@ -23,6 +26,7 @@ Overview of changes in libqmi 1.34.0
    ** wds: added the "Report Profile Changes" TLV in "Indication Register".
 
  * libqmi-glib:
+   ** Support for 16-bit service ids added, used in the QRTR backend.
    ** Response and indication parser messages are now published in the API.
    ** The library now allows connecting to a unix domain socket named
       'qmux_socket' instead of a device file.
