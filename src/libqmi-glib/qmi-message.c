@@ -226,7 +226,7 @@ qmi_message_get_service (QmiMessage *self)
     if (MESSAGE_IS_QMUX (self))
         return (QmiService)((struct full_message *)(self->data))->header.qmux.service;
 
-    return (QmiService)((struct full_message *)(self->data))->header.qrtr.service;
+    return (QmiService)GUINT16_FROM_LE (((struct full_message *)(self->data))->header.qrtr.service);
 }
 
 guint8
