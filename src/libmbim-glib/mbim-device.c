@@ -2173,6 +2173,8 @@ mbim_device_close_force (MbimDevice *self,
 {
     g_return_val_if_fail (MBIM_IS_DEVICE (self), FALSE);
 
+    self->priv->open_status = OPEN_STATUS_CLOSED;
+
     return destroy_iochannel (self, error);
 }
 
