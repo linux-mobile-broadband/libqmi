@@ -600,7 +600,7 @@ class Struct:
                 inner_template += (
                     '        out->${field_name_underscore} = g_malloc (out->${field_name_underscore}_size);\n'
                     '        memcpy (out->${field_name_underscore}, tmp, out->${field_name_underscore}_size);\n'
-                    '        /* no offset update expected, this should be the last field in the struct */\n'
+                    '        offset += out->${field_name_underscore}_size;\n'
                     '    }\n')
             elif field['format'] == 'byte-array':
                 translations['array_size'] = field['array-size']
@@ -701,21 +701,26 @@ class Struct:
             '    success = TRUE;\n'
             '\n'
             ' out:\n'
-            '    if (success) {\n')
+            '    if (success) {\n'
+            '        guint32 total_bytes_read = (offset - relative_offset);\n'
+            '\n')
+
         if self.ms_struct_array_member == True:
             template += (
-                '        if (bytes_read)\n'
-                '            *bytes_read = (offset - relative_offset) + extra_bytes_read;\n'
-                '        return out;\n'
-                '    }\n'
-                '\n')
-        else:
-            template += (
-                '        if (bytes_read)\n'
-                '            *bytes_read = (offset - relative_offset);\n'
-                '        return out;\n'
-                '    }\n'
-                '\n')
+                '        total_bytes_read += extra_bytes_read;\n')
+
+        # Until now we have validated that all fields read did fit in the contents of the message,
+        # but we have not validated that the fields fit in the given explicit struct size, if given.
+        template += (
+            '        if (!explicit_struct_size || total_bytes_read <= explicit_struct_size) {\n'
+            '            if (bytes_read)\n'
+            '                *bytes_read = total_bytes_read;\n'
+            '            return out;\n'
+            '        }\n'
+            '        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,\n'
+            '                     \"Read %u bytes from struct with size %u\", total_bytes_read, explicit_struct_size);\n'
+            '    }\n'
+            '\n')
 
         for field in self.contents:
             translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
