@@ -579,17 +579,28 @@ class Struct:
                 # fro the variable buffer, which is currently not implemented for this type.
                 if self.ms_struct_array_member == True:
                     raise ValueError('type unsupported in \'ms-struct-array\'')
-
                 inner_template += (
                     '\n'
                     '    {\n'
                     '        const guint8 *tmp;\n'
-                    '\n'
-                    '        if (!_mbim_message_read_byte_array (self, relative_offset, offset, FALSE, FALSE, 0, &tmp, &(out->${field_name_underscore}_size), error, FALSE))\n'
-                    '            goto out;\n'
+                    '\n')
+                if self.ref_struct_array_member == True:
+                    # When the unsized-byte-array is given inside a struct, its length may already be known, e.g. if the
+                    # array is a ref-struct-array of OL pairs (the 'L' length of the array item implicitly defines the
+                    # length of the byte array. In this case, we must provide an explicit_array_size and avoid trying
+                    # to read until the end of the message.
+                    inner_template += (
+                        '        out->${field_name_underscore}_size = explicit_struct_size - (offset - relative_offset);\n'
+                        '        if (!_mbim_message_read_byte_array (self, relative_offset, offset, FALSE, FALSE, out->${field_name_underscore}_size, &tmp, NULL, error, FALSE))\n'
+                        '                goto out;\n')
+                else:
+                    inner_template += (
+                        '        if (!_mbim_message_read_byte_array (self, relative_offset, offset, FALSE, FALSE, 0, &tmp, &(out->${field_name_underscore}_size), error, FALSE))\n'
+                        '                goto out;\n')
+                inner_template += (
                     '        out->${field_name_underscore} = g_malloc (out->${field_name_underscore}_size);\n'
                     '        memcpy (out->${field_name_underscore}, tmp, out->${field_name_underscore}_size);\n'
-                    '        /* no offset update expected, this should be the last field */\n'
+                    '        /* no offset update expected, this should be the last field in the struct */\n'
                     '    }\n')
             elif field['format'] == 'byte-array':
                 translations['array_size'] = field['array-size']
