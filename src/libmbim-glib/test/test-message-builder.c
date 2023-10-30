@@ -20,6 +20,7 @@
 #include "mbim-dss.h"
 #include "mbim-ms-host-shutdown.h"
 #include "mbim-ms-basic-connect-extensions.h"
+#include "mbim-ms-uicc-low-level-access.h"
 #include "mbim-google.h"
 
 static void
@@ -1774,6 +1775,87 @@ test_ms_basic_connect_v3_connect_set (void)
 }
 
 static void
+test_ms_uicc_low_level_access_terminal_capability (void)
+{
+    GError *error = NULL;
+    MbimMessage *message;
+    const guint8 expected_message [] = {
+        /* header */
+        0x03, 0x00, 0x00, 0x00, /* type */
+        0x50, 0x00, 0x00, 0x00, /* length */
+        0x01, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_message */
+        0xC2, 0xF6, 0x58, 0x8E, /* service id */
+        0xF0, 0x37, 0x4B, 0xC9,
+        0x86, 0x65, 0xF4, 0xD4,
+        0x4B, 0xD0, 0x93, 0x67,
+        0x05, 0x00, 0x00, 0x00, /* command id */
+        0x01, 0x00, 0x00, 0x00, /* command_type */
+        0x20, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x02, 0x00, 0x00, 0x00, /* terminal capability count */
+        0x14, 0x00, 0x00, 0x00, /* terminal capability 1 offset */
+        0x05, 0x00, 0x00, 0x00, /* terminal capability 1 length */
+        0x1C, 0x00, 0x00, 0x00, /* terminal capability 2 offset */
+        0x03, 0x00, 0x00, 0x00, /* terminal capability 2 length */
+        0x0A, 0x0B, 0x0C, 0x0D, /* terminal capability data 1 */
+        0x0A,
+              0x00, 0x00, 0x00, /* struct padding */
+        0xA0, 0xB0, 0xC0,       /* terminal capability data 2 */
+                          0x00  /* struct padding */
+    };
+
+    const guint8 terminal_capability_data_1[] = {
+        0x0A, 0x0B, 0x0C, 0x0D, 0x0A,
+    };
+    const guint8 terminal_capability_data_2[] = {
+        0xA0, 0xB0, 0xC0
+    };
+
+    MbimTerminalCapabilityInfo *terminal_capability_infos[2];
+
+    terminal_capability_infos[0] = g_new0 (MbimTerminalCapabilityInfo, 1);
+    terminal_capability_infos[0]->terminal_capability_data_size = sizeof (terminal_capability_data_1);
+    terminal_capability_infos[0]->terminal_capability_data = g_memdup (terminal_capability_data_1, sizeof (terminal_capability_data_1));
+
+    terminal_capability_infos[1] = g_new0 (MbimTerminalCapabilityInfo, 1);
+    terminal_capability_infos[1]->terminal_capability_data_size = sizeof (terminal_capability_data_2);
+    terminal_capability_infos[1]->terminal_capability_data = g_memdup (terminal_capability_data_2, sizeof (terminal_capability_data_2));
+
+    message = mbim_message_ms_uicc_low_level_access_terminal_capability_set_new (
+        G_N_ELEMENTS (terminal_capability_infos), (const MbimTerminalCapabilityInfo *const *)terminal_capability_infos, &error);
+    g_assert_no_error (error);
+    g_assert (message != NULL);
+    g_assert (mbim_message_validate (message, &error));
+
+    mbim_message_set_transaction_id (message, 1);
+
+    test_message_trace ((const guint8 *)((GByteArray *)message)->data,
+                        ((GByteArray *)message)->len,
+                        expected_message,
+                        sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_get_transaction_id (message), ==, 1);
+    g_assert_cmpuint (mbim_message_get_message_type   (message), ==, MBIM_MESSAGE_TYPE_COMMAND);
+    g_assert_cmpuint (mbim_message_get_message_length (message), ==, sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_command_get_service      (message), ==, MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS);
+    g_assert_cmpuint (mbim_message_command_get_cid          (message), ==, MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_TERMINAL_CAPABILITY);
+    g_assert_cmpuint (mbim_message_command_get_command_type (message), ==, MBIM_MESSAGE_COMMAND_TYPE_SET);
+
+    g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
+    g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    g_free (terminal_capability_infos[0]->terminal_capability_data);
+    g_free (terminal_capability_infos[0]);
+    g_free (terminal_capability_infos[1]->terminal_capability_data);
+    g_free (terminal_capability_infos[1]);
+}
+
+static void
 test_google_carrier_lock_set (void)
 {
     g_autoptr(GError)      error = NULL;
@@ -1864,6 +1946,7 @@ int main (int argc, char **argv)
     g_test_add_func (PREFIX "/ms-basic-connect-extensions/registration-parameters/set/1-unnamed-tlv", test_ms_basic_connect_extensions_registration_parameters_set_1_unnamed_tlv);
     g_test_add_func (PREFIX "/ms-basic-connect-extensions/registration-parameters/set/3-unnamed-tlvs", test_ms_basic_connect_extensions_registration_parameters_set_3_unnamed_tlvs);
     g_test_add_func (PREFIX "/ms-basic-connect-v3/connect/set", test_ms_basic_connect_v3_connect_set);
+    g_test_add_func (PREFIX "/ms-uicc-low-level-access/terminal-capability", test_ms_uicc_low_level_access_terminal_capability);
     g_test_add_func (PREFIX "/google/carrier-lock/set", test_google_carrier_lock_set);
 
 #undef PREFIX

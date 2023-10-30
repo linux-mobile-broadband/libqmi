@@ -63,8 +63,9 @@
   { "name"     : "MbimTerminalCapabilityInfo",
     "type"     : "Struct",
     "since"    : "1.26",
-    "contents" : [ { "name"   : "TerminalCapabilityData",
-                     "format" : "unsized-byte-array" } ] },
+    "contents" : [ { "name"      : "TerminalCapabilityData",
+                     "format"    : "unsized-byte-array",
+                     "pad-array" : "FALSE" } ] },
 
   { "name"     : "Terminal Capability",
     "type"     : "Command",
