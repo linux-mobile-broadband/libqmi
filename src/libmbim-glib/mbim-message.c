@@ -1524,6 +1524,7 @@ _mbim_struct_builder_append_string_tlv (MbimStructBuilder *builder,
     /* Convert the string from UTF-8 to UTF-16HE */
     if (value && value[0]) {
         glong items_written = 0;
+
         utf16 = g_utf8_to_utf16 (value,
                                  -1,
                                  NULL, /* bytes */
@@ -1537,10 +1538,9 @@ _mbim_struct_builder_append_string_tlv (MbimStructBuilder *builder,
         }
         utf16_bytes = items_written * 2;
 
-        /* Add the padding value */
+        /* Add the padding length value */
         padding = utf16_bytes % 4;
         g_byte_array_append (builder->fixed_buffer, (guint8 *)&padding, sizeof (padding));
-        g_debug ("padding:%d", padding);
     }
 
     /* Add the length value */
