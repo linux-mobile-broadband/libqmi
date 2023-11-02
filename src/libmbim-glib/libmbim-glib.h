@@ -50,6 +50,7 @@
 #include "mbim-intel-mutual-authentication.h"
 #include "mbim-intel-tools.h"
 #include "mbim-google.h"
+#include "mbim-fibocom.h"
 
 /* backwards compatibility */
 #include "mbim-compat.h"

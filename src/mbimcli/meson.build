@@ -19,6 +19,7 @@ mbimcli_sources = files(
   'mbimcli-quectel.c',
   'mbimcli-intel-mutual-authentication.c',
   'mbimcli-intel-tools.c',
+  'mbimcli-fibocom.c',
 )
 
 sources = mbimcli_sources + files(

@@ -36,6 +36,7 @@ MBIM_UUID_MS_VOICE_EXTENSIONS
 MBIM_UUID_INTEL_MUTUAL_AUTHENTICATION
 MBIM_UUID_INTEL_TOOLS
 MBIM_UUID_GOOGLE
+MBIM_UUID_FIBOCOM
 <SUBSECTION Methods>
 mbim_service_get_string
 mbim_service_lookup_name
@@ -81,6 +82,7 @@ MbimCidMsVoiceExtensions
 MbimCidIntelMutualAuthentication
 MbimCidIntelTools
 MbimCidGoogle
+MbimCidFibocom
 <SUBSECTION Methods>
 mbim_cid_can_set
 mbim_cid_can_query
@@ -109,6 +111,7 @@ mbim_cid_ms_voice_extensions_get_string
 mbim_cid_intel_mutual_authentication_get_string
 mbim_cid_intel_tools_get_string
 mbim_cid_google_get_string
+mbim_cid_fibocom_get_string
 <SUBSECTION Private>
 mbim_cid_atds_build_string_from_mask
 mbim_cid_basic_connect_build_string_from_mask
@@ -133,6 +136,7 @@ mbim_cid_ms_voice_extensions_build_string_from_mask
 mbim_cid_intel_mutual_authentication_build_string_from_mask
 mbim_cid_intel_tools_build_string_from_mask
 mbim_cid_google_build_string_from_mask
+mbim_cid_fibocom_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_CID_ATDS
 MBIM_TYPE_CID_AUTH
@@ -157,6 +161,7 @@ MBIM_TYPE_CID_MS_VOICE_EXTENSIONS
 MBIM_TYPE_CID_INTEL_MUTUAL_AUTHENTICATION
 MBIM_TYPE_CID_INTEL_TOOLS
 MBIM_TYPE_CID_GOOGLE
+MBIM_TYPE_CID_FIBOCOM
 mbim_cid_atds_get_type
 mbim_cid_auth_get_type
 mbim_cid_basic_connect_get_type
@@ -180,6 +185,7 @@ mbim_cid_ms_voice_extensions_get_type
 mbim_cid_intel_mutual_authentication_get_type
 mbim_cid_intel_tools_get_type
 mbim_cid_google_get_type
+mbim_cid_fibocom_get_type
 </SECTION>
 
 <SECTION>

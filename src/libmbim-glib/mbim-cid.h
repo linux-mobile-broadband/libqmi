@@ -486,6 +486,20 @@ typedef enum { /*< since=1.30 >*/
 } MbimCidGoogle;
 
 /**
+ * MbimCidFibocom:
+ * @MBIM_CID_FIBOCOM_UNKNOWN: Unknown command.
+ * @MBIM_CID_FIBOCOM_AT_COMMAND: AT over MBIM message.
+ *
+ * MBIM commands in the %MBIM_SERVICE_FIBOCOM service.
+ *
+ * Since: 1.32
+ */
+typedef enum { /*< since=1.32 >*/
+    MBIM_CID_FIBOCOM_UNKNOWN      = 0,
+    MBIM_CID_FIBOCOM_AT_COMMAND   = 1,
+} MbimCidFibocom;
+
+/**
  * mbim_cid_can_set:
  * @service: a #MbimService.
  * @cid: a command ID.

@@ -147,6 +147,7 @@ services_data = [
   ['intel-mutual-authentication'],
   ['intel-tools'],
   ['google'],
+  ['fibocom'],
 ]
 
 foreach service_data: services_data

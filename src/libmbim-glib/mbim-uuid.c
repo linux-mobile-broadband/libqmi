@@ -281,6 +281,14 @@ static const MbimUuid uuid_google = {
     .e = { 0xa8, 0x6a, 0xd9, 0xe1, 0x22, 0x45 }
 };
 
+static const MbimUuid uuid_fibocom = {
+    .a = { 0xff, 0xff, 0xff, 0xff },
+    .b = { 0xab, 0xca },
+    .c = { 0x4b, 0x11 },
+    .d = { 0xa4, 0xe2 },
+    .e = { 0xf2, 0xfc, 0x87, 0xf9, 0x44, 0x88 }
+};
+
 static GList *mbim_custom_service_list = NULL;
 
 typedef struct {
@@ -422,6 +430,8 @@ mbim_uuid_from_service (MbimService service)
         return &uuid_intel_tools;
     case MBIM_SERVICE_GOOGLE:
         return &uuid_google;
+    case MBIM_SERVICE_FIBOCOM:
+        return &uuid_fibocom;
     case MBIM_SERVICE_LAST:
         g_assert_not_reached ();
     default:
@@ -506,6 +516,9 @@ mbim_uuid_to_service (const MbimUuid *uuid)
 
     if (mbim_uuid_cmp (uuid, &uuid_google))
         return MBIM_SERVICE_GOOGLE;
+
+    if (mbim_uuid_cmp (uuid, &uuid_fibocom))
+        return MBIM_SERVICE_FIBOCOM;
 
     for (l = mbim_custom_service_list; l != NULL; l = l->next) {
         if (mbim_uuid_cmp (&((MbimCustomService *)l->data)->uuid, uuid))

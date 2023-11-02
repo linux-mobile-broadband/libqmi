@@ -1,0 +1,16 @@
+[
+  // *********************************************************************************
+  { "type" : "Service",
+    "name" : "Fibocom" },
+
+  // *********************************************************************************
+
+  { "name"         : "AT Command",
+    "type"         : "Command",
+    "since"        : "1.32",
+    "set"          : [ { "name"          : "CommandReq",
+                         "format"        : "unsized-byte-array",
+                         "pad-array"     : "FALSE"} ],
+    "response"     : [ { "name"          : "CommandResp",
+                         "format"        : "unsized-byte-array"} ] }
+]
