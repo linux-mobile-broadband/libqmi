@@ -1082,37 +1082,24 @@ _mbim_message_read_tlv (const MbimMessage  *self,
 {
     guint32       information_buffer_offset;
     guint64       tlv_offset;
-    guint64       min_size;
-    guint64       required_size;
     const guint8 *tlv_raw;
-    guint64       tlv_size;
+    guint32       tlv_raw_size;
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
     tlv_offset = (guint64)information_buffer_offset + (guint64)relative_offset;
-    min_size = tlv_offset + sizeof (struct tlv);
 
-    if (min_size > (guint64)self->len) {
+    if ((guint64)self->len < tlv_offset) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
                      "TLV has invalid offset %" G_GUINT64_FORMAT
-                     " and will exceed message bounds (%" G_GUINT64_FORMAT "+ > %u)",
-                     tlv_offset, min_size, self->len);
+                     " and will exceed message bounds (%u)",
+                     tlv_offset, self->len);
         return FALSE;
     }
 
+    tlv_raw_size = self->len - (guint32)tlv_offset;
     tlv_raw = self->data + tlv_offset;
-    tlv_size = ((guint64)sizeof (struct tlv) +
-                (guint64)GUINT32_FROM_LE (((struct tlv *)tlv_raw)->data_length) +
-                (guint64)((struct tlv *)tlv_raw)->padding_length);
 
-    required_size = tlv_offset + tlv_size;
-    if ((guint64)self->len < required_size) {
-        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                     "cannot read TLV (%" G_GUINT64_FORMAT " bytes) (%u < %" G_GUINT64_FORMAT ")",
-                     tlv_size, self->len, required_size);
-        return FALSE;
-    }
-
-    *tlv = _mbim_tlv_new_from_raw (tlv_raw, (guint32)tlv_size, bytes_read, error);
+    *tlv = _mbim_tlv_new_from_raw (tlv_raw, tlv_raw_size, bytes_read, error);
     return (*tlv) ? TRUE : FALSE;
 }
 
@@ -1189,8 +1176,9 @@ _mbim_message_read_tlv_list (const MbimMessage  *self,
     /* TLV list always at the end of the message */
     if ((guint64)self->len < tlv_list_offset) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                     "cannot read TLV at offset (%u < %" G_GUINT64_FORMAT ")",
-                     self->len, tlv_list_offset);
+                     "TLV list item has invalid offset %" G_GUINT64_FORMAT
+                     " and will exceed message bounds (%u)",
+                     tlv_list_offset, self->len);
         return FALSE;
     }
 
@@ -1199,23 +1187,23 @@ _mbim_message_read_tlv_list (const MbimMessage  *self,
 
     while ((tlv_list_raw_size > 0) && !inner_error) {
         MbimTlv *tlv;
-        guint32  tlv_size;
+        guint32  tlv_bytes_read;
 
         if (tlv_list_raw_size < sizeof (struct tlv)) {
-            g_warning ("Left %u bytes unused after the TLV list", tlv_list_raw_size);
+            g_debug ("Ignored %u bytes unused after the TLV list", tlv_list_raw_size);
             break;
         }
 
-        tlv = _mbim_tlv_new_from_raw (tlv_list_raw, tlv_list_raw_size, &tlv_size, &inner_error);
+        tlv = _mbim_tlv_new_from_raw (tlv_list_raw, tlv_list_raw_size, &tlv_bytes_read, &inner_error);
         if (!tlv)
             break;
 
         list = g_list_append (list, tlv);
-        total_bytes_read += tlv_size;
+        total_bytes_read += tlv_bytes_read;
 
-        g_assert (tlv_list_raw_size >= tlv_size);
-        tlv_list_raw += tlv_size;
-        tlv_list_raw_size -= tlv_size;
+        g_assert (tlv_list_raw_size >= tlv_bytes_read);
+        tlv_list_raw += tlv_bytes_read;
+        tlv_list_raw_size -= tlv_bytes_read;
     }
 
     if (inner_error) {
