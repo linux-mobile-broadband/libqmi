@@ -137,6 +137,7 @@ _mbim_tlv_new_from_raw (const guint8  *raw,
                         GError       **error)
 {
     guint64 tlv_size;
+    struct tlv tlv_header;
 
     if (raw_length < sizeof (struct tlv)) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
@@ -145,9 +146,11 @@ _mbim_tlv_new_from_raw (const guint8  *raw,
         return NULL;
     }
 
+    /* intermediate variable to ensure the data_length value is properly aligned */
+    memcpy (&tlv_header, raw, sizeof (struct tlv));
     tlv_size = ((guint64)sizeof (struct tlv) +
-                (guint64)GUINT32_FROM_LE (((struct tlv *)raw)->data_length) +
-                (guint64)((struct tlv *)raw)->padding_length);
+                (guint64)GUINT32_FROM_LE (tlv_header.data_length) +
+                (guint64)tlv_header.padding_length);
 
     if ((guint64)raw_length < tlv_size) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
