@@ -139,4 +139,14 @@ if enable_gir and get_option('default_library') != 'static'
   )
 endif
 
+if enable_mbim_username
+  configure_file(
+    input: '76-mbim-device-ownership.rules.in',
+    output: '@BASENAME@',
+    configuration: {'MBIM_USERNAME': mbim_username},
+    install_dir: udev_udevdir / 'rules.d',
+  )
+endif
+
+
 subdir('test')

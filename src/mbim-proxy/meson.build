@@ -11,12 +11,3 @@ executable(
   install: true,
   install_dir: mbim_libexecdir,
 )
-
-if enable_mbim_username
-  configure_file(
-    input: '76-mbim-proxy-device-ownership.rules.in',
-    output: '@BASENAME@',
-    configuration: {'MBIM_USERNAME': mbim_username},
-    install_dir: udev_udevdir / 'rules.d',
-  )
-endif
