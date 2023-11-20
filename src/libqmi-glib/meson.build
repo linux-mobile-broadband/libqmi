@@ -180,4 +180,13 @@ if enable_gir and get_option('default_library') != 'static'
   )
 endif
 
+if enable_qmi_username
+  configure_file(
+    input: '76-qmi-device-ownership.rules.in',
+    output: '@BASENAME@',
+    configuration: {'QMI_USERNAME': qmi_username},
+    install_dir: udev_udevdir / 'rules.d',
+  )
+endif
+
 subdir('test')
