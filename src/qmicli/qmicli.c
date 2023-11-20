@@ -63,9 +63,11 @@ static gboolean device_open_version_info_flag;
 static gboolean device_open_sync_flag;
 static gchar *device_open_net_str;
 static gboolean device_open_proxy_flag;
+#if QMI_MBIM_QMUX_SUPPORTED
 static gboolean device_open_qmi_flag;
 static gboolean device_open_mbim_flag;
 static gboolean device_open_auto_flag;
+#endif
 static gchar *client_cid_str;
 static gboolean client_no_release_cid_flag;
 static gboolean verbose_flag;
@@ -103,6 +105,7 @@ static GOptionEntry main_entries[] = {
       "Request to use the 'qmi-proxy' proxy",
       NULL
     },
+#if QMI_MBIM_QMUX_SUPPORTED
     { "device-open-qmi", 0, 0, G_OPTION_ARG_NONE, &device_open_qmi_flag,
       "Open a cdc-wdm device explicitly in QMI mode",
       NULL
@@ -115,6 +118,7 @@ static GOptionEntry main_entries[] = {
       "Open a cdc-wdm device in either QMI or MBIM mode (default)",
       NULL
     },
+#endif
     { "device-open-net", 0, 0, G_OPTION_ARG_STRING, &device_open_net_str,
       "Open device with specific link protocol and QoS flags",
       "[net-802-3|net-raw-ip|net-qos-header|net-no-qos-header]"
@@ -715,10 +719,12 @@ device_new_ready (GObject *unused,
         exit (EXIT_FAILURE);
     }
 
+#if QMI_MBIM_QMUX_SUPPORTED
     if (device_open_mbim_flag + device_open_qmi_flag + device_open_auto_flag > 1) {
         g_printerr ("error: cannot specify multiple mode flags to open device\n");
         exit (EXIT_FAILURE);
     }
+#endif
 
     /* Setup device open flags */
     if (device_open_version_info_flag)
@@ -727,10 +733,12 @@ device_new_ready (GObject *unused,
         open_flags |= QMI_DEVICE_OPEN_FLAGS_SYNC;
     if (device_open_proxy_flag)
         open_flags |= QMI_DEVICE_OPEN_FLAGS_PROXY;
+#if QMI_MBIM_QMUX_SUPPORTED
     if (device_open_mbim_flag)
         open_flags |= QMI_DEVICE_OPEN_FLAGS_MBIM;
     if (device_open_auto_flag || (!device_open_qmi_flag && !device_open_mbim_flag))
         open_flags |= QMI_DEVICE_OPEN_FLAGS_AUTO;
+#endif
     if (expect_indications)
         open_flags |= QMI_DEVICE_OPEN_FLAGS_EXPECT_INDICATIONS;
     if (device_open_net_str) {
