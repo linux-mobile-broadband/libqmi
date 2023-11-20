@@ -4,7 +4,7 @@
 
 ACTION!="add|change|move", GOTO="mbim_device_ownership_end"
 
-KERNEL=="cdc-wdm[0-9]", DRIVERS=="cdc_mbim", SUBSYSTEM=="usbmisc", GOTO="mbim_device_ownership_change"
+KERNEL=="cdc-wdm*", DRIVERS=="cdc_mbim", SUBSYSTEM=="usbmisc", GOTO="mbim_device_ownership_change"
 GOTO="mbim_device_ownership_end"
 
 LABEL="mbim_device_ownership_change"
