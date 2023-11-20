@@ -2,10 +2,6 @@
 
 ACTION!="add|change|move", GOTO="qmi_device_ownership_end"
 
-KERNEL=="cdc-wdm*", DRIVERS=="qmi_wwan", SUBSYSTEM=="usbmisc", GOTO="qmi_device_ownership_change"
-GOTO="qmi_device_ownership_end"
-
-LABEL="qmi_device_ownership_change"
-OWNER="@QMI_USERNAME@"
+KERNEL=="cdc-wdm*", DRIVERS=="qmi_wwan", SUBSYSTEM=="usbmisc", OWNER="@QMI_USERNAME@"
 
 LABEL="qmi_device_ownership_end"
