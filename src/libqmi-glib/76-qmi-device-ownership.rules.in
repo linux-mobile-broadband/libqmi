@@ -4,4 +4,9 @@ ACTION!="add|change|move", GOTO="qmi_device_ownership_end"
 
 KERNEL=="cdc-wdm*", DRIVERS=="qmi_wwan", SUBSYSTEM=="usbmisc", OWNER="@QMI_USERNAME@"
 
+SUBSYSTEM=="net", DRIVERS=="qmi_wwan", TEST=="qmi/raw_ip",       RUN+="/bin/chown @QMI_USERNAME@ \"$sys/$devpath/qmi/raw_ip\""
+SUBSYSTEM=="net", DRIVERS=="qmi_wwan", TEST=="qmi/pass_through", RUN+="/bin/chown @QMI_USERNAME@ \"$sys/$devpath/qmi/pass_through\""
+SUBSYSTEM=="net", DRIVERS=="qmi_wwan", TEST=="qmi/del_mux",      RUN+="/bin/chown @QMI_USERNAME@ \"$sys/$devpath/qmi/del_mux\""
+SUBSYSTEM=="net", DRIVERS=="qmi_wwan", TEST=="qmi/add_mux",      RUN+="/bin/chown @QMI_USERNAME@ \"$sys/$devpath/qmi/add_mux\""
+
 LABEL="qmi_device_ownership_end"
