@@ -176,6 +176,8 @@ client_unref (Client *client)
     }
 }
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (Client, client_unref)
+
 static Client *
 client_ref (Client *client)
 {
@@ -1211,16 +1213,18 @@ parse_request (MbimProxy *self,
 }
 
 static gboolean
-connection_readable_cb (GSocket *socket,
-                        GIOCondition condition,
-                        Client *client)
+connection_readable_cb (GSocket      *socket,
+                        GIOCondition  condition,
+                        Client       *_client)
 {
+    g_autoptr(Client)  client = NULL;
     MbimProxy         *self;
     guint8             buffer[BUFFER_SIZE];
     g_autoptr(GError)  error = NULL;
     gssize             r;
 
     /* Recover proxy pointer soon */
+    client = client_ref (_client);
     self = client->self;
 
     if (condition & G_IO_HUP || condition & G_IO_ERR) {
