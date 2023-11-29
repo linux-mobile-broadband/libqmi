@@ -720,19 +720,8 @@ class Struct:
             '        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,\n'
             '                     \"Read %u bytes from struct with size %u\", total_bytes_read, explicit_struct_size);\n'
             '    }\n'
-            '\n')
-
-        for field in self.contents:
-            translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
-            inner_template = ''
-            if field['format'] in ['ref-byte-array', 'ref-byte-array-no-offset', 'unsized-byte-array', 'byte-array', 'string']:
-                inner_template = ('    g_free (out->${field_name_underscore});\n')
-            elif field['format'] == 'string-array':
-                inner_template = ('    g_strfreev (out->${field_name_underscore});\n')
-            template += string.Template(inner_template).substitute(translations)
-
-        template += (
-            '    g_free (out);\n'
+            '\n'
+            '    _${name_underscore}_free (out);\n'
             '    return NULL;\n'
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
