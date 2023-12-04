@@ -97,10 +97,11 @@ struct _MbimDevicePrivate {
 
     /* I/O channel, set when the file is open */
     GIOChannel *iochannel;
-    GSource *iochannel_source;
+    GSource    *iochannel_source;
     GByteArray *response;
-    OpenStatus open_status;
-    guint32 open_transaction_id;
+    OpenStatus  open_status;
+    guint32     open_transaction_id;
+    GError     *pending_error_indication;
 
     /* Support for mbim-proxy */
     GSocketClient *socket_client;
@@ -1079,8 +1080,10 @@ process_message (MbimDevice        *self,
         }
 
         /* Build indication error before task completion, to ensure the message
-         * is valid */
-        error_indication = mbim_message_error_get_error (message);
+         * is valid by the time it is sent. This error will be cleared if the device
+         * gets closed while the transaction response is processed. */
+        g_assert (!self->priv->pending_error_indication);
+        self->priv->pending_error_indication = mbim_message_error_get_error (message);
 
         /* Try to match this transaction just per transaction ID */
         task = device_release_transaction (self,
@@ -1103,11 +1106,12 @@ process_message (MbimDevice        *self,
             transaction_task_complete_and_free (task, NULL);
         }
 
-        /* Signals are emitted regardless of whether the transaction matched or not;
-         * and emitted after the task completion, because the listeners of this
-         * signal may decide to force-close the device, which in turn clears the
-         * internal buffer and the MbimMessage. */
-        g_signal_emit (self, signals[SIGNAL_ERROR], 0, error_indication);
+        /* Signals are emitted regardless of whether the transaction matched or not,
+         * and emitted after the task completion. If the device is forced closed during
+         * the transaction response processing, no error signal will be emitted. */
+        error_indication = g_steal_pointer (&self->priv->pending_error_indication);
+        if (error_indication)
+            g_signal_emit (self, signals[SIGNAL_ERROR], 0, error_indication);
         return;
     }
 
@@ -2147,6 +2151,10 @@ destroy_iochannel (MbimDevice  *self,
     /* Failures when closing still make the device to get closed */
     g_clear_object (&self->priv->socket_connection);
     g_clear_object (&self->priv->socket_client);
+
+    /* Pending error indications are always cleared if the channel is
+     * closed */
+    g_clear_error (&self->priv->pending_error_indication);
 
     if (self->priv->iochannel_source) {
         g_source_destroy (self->priv->iochannel_source);
