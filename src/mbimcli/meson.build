@@ -2,24 +2,24 @@
 # Copyright (C) 2021 Iñigo Martinez <inigomartinez@gmail.com>
 
 mbimcli_sources = files(
+  'mbimcli.c',
   'mbimcli-atds.c',
   'mbimcli-basic-connect.c',
-  'mbimcli.c',
   'mbimcli-dss.c',
+  'mbimcli-fibocom.c',
+  'mbimcli-google.c',
   'mbimcli-intel-firmware-update.c',
+  'mbimcli-intel-mutual-authentication.c',
   'mbimcli-intel-thermal-rf.c',
+  'mbimcli-intel-tools.c',
   'mbimcli-ms-basic-connect-extensions.c',
   'mbimcli-ms-firmware-id.c',
-  'mbimcli-google.c',
   'mbimcli-ms-host-shutdown.c',
   'mbimcli-ms-sar.c',
   'mbimcli-ms-uicc-low-level-access.c',
   'mbimcli-ms-voice-extensions.c',
   'mbimcli-phonebook.c',
   'mbimcli-quectel.c',
-  'mbimcli-intel-mutual-authentication.c',
-  'mbimcli-intel-tools.c',
-  'mbimcli-fibocom.c',
   'mbimcli-sms.c',
 )
 
