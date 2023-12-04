@@ -503,10 +503,6 @@ internal_open (GTask *task)
                       g_object_ref (self));
 }
 
-static void proxy_device_error_cb (MbimDevice *device,
-                                   GError     *error,
-                                   MbimProxy  *self);
-
 static void
 internal_device_open_caps_query_ready (MbimDevice   *device,
                                        GAsyncResult *res,
@@ -517,9 +513,6 @@ internal_device_open_caps_query_ready (MbimDevice   *device,
     g_autoptr(GError)       error = NULL;
 
     self = g_task_get_source_object (task);
-
-    /* Always unblock error signals */
-    g_signal_handlers_unblock_by_func (device, proxy_device_error_cb, self);
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -566,11 +559,6 @@ internal_device_open (MbimProxy           *self,
      * (loading caps in this case). */
     if (mbim_device_is_open (device)) {
         MbimMessage *message;
-
-        /* Avoid getting notified of errors in this internal check, as we're
-         * already going to check for the NotOpened error ourselves in the
-         * ready callback, and we'll reopen silently if we find this. */
-        g_signal_handlers_block_by_func (device, proxy_device_error_cb, self);
 
         g_debug ("[%s] checking device caps during client device open...",
                  mbim_device_get_path (device));
