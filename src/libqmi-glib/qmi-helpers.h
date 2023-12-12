@@ -35,10 +35,6 @@
 G_BEGIN_DECLS
 
 G_GNUC_INTERNAL
-gchar *qmi_helpers_str_hex (gconstpointer mem,
-                            gsize         size,
-                            gchar         delimiter);
-G_GNUC_INTERNAL
 gboolean qmi_helpers_check_user_allowed  (uid_t    uid,
                                           GError **error);
 

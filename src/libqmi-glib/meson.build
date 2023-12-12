@@ -99,6 +99,7 @@ sources = files(
 deps = [
   generated_dep,
   gio_unix_dep,
+  libqmi_common_dep,
 ]
 
 if enable_mbim_qmux

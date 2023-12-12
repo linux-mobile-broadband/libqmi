@@ -114,6 +114,7 @@ def add_source_start(f, output_name):
         "#include <string.h>\n"
         "\n"
         "#include \"${name}.h\"\n"
+        "#include \"qmi-common.h\"\n"
         "#include \"qmi-enum-types.h\"\n"
         "#include \"qmi-flag-types.h\"\n"
         "#include \"qmi-enum-types-private.h\"\n"

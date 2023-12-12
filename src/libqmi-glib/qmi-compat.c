@@ -21,6 +21,7 @@
 
 #include <string.h>
 
+#include "qmi-common.h"
 #include "qmi-compat.h"
 #include "qmi-helpers.h"
 #include "qmi-enum-types.h"
@@ -40,8 +41,8 @@ print_read_bytes_trace (const gchar *type,
     gchar *str1;
     gchar *str2;
 
-    str1 = qmi_helpers_str_hex (buffer, n_bytes, ':');
-    str2 = qmi_helpers_str_hex (out, n_bytes, ':');
+    str1 = qmi_common_str_hex (buffer, n_bytes, ':');
+    str2 = qmi_common_str_hex (out, n_bytes, ':');
 
     g_debug ("Read %s (%s) --> (%s)", type, str1, str2);
     g_warn_if_fail (g_str_equal (str1, str2));

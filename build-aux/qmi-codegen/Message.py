@@ -381,7 +381,7 @@ class Message:
                 '        g_autofree gchar *value_hex = NULL;\n'
                 '\n'
                 '        if (qmi_utils_get_show_personal_info () || !value_has_personal_info)\n'
-                '            value_hex = qmi_helpers_str_hex (value, length, \':\');\n'
+                '            value_hex = qmi_common_str_hex (value, length, \':\');\n'
                 '        else\n'
                 '            value_hex = g_strdup ("###...");\n'
                 '\n'

@@ -305,7 +305,10 @@ c_flags = [
   '-Wno-unused-function',
 ]
 
-deps = [glib_deps]
+deps = [
+  glib_deps,
+  libqmi_common_dep,
+]
 
 if enable_qrtr
   deps += qrtr_glib_dep
