@@ -205,5 +205,29 @@
                                           "format" : "string" },
                                         { "name"   : "PRI revision",
                                           "format" : "string" } ],
-                     "prerequisites": [ { "common-ref" : "Success" } ] } ] }
+                     "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "DMS Get Ethernet PDU MAC Address",
+     "type"    : "Message",
+     "service" : "GAS",
+     "id"      : "0x022D",
+     "since"   : "1.36",
+     "output"  : [ { "common-ref" : "Operation Result" },
+                   { "name"       : "MAC Address 0",
+                     "id"         : "0x03",
+                     "type"       : "TLV",
+                     "since"      : "1.36",
+                     "format"     : "array",
+                     "size-prefix-format" : "guint8",
+                     "array-element"      : { "format" : "guint8" },
+                     "prerequisites"      : [ { "common-ref" : "Success" } ] },
+                   { "name"       : "MAC Address 1",
+                     "id"         : "0x10",
+                     "type"       : "TLV",
+                     "since"      : "1.36",
+                     "format"     : "array",
+                     "size-prefix-format" : "guint8",
+                     "array-element"      : { "format" : "guint8" },
+                     "prerequisites"      : [ { "common-ref" : "Success" } ] } ] }
 ]

@@ -29,9 +29,9 @@
 #include <gio/gio.h>
 
 #include <libqmi-glib.h>
+#include <qmi-common.h>
 
 #include "qmicli.h"
-#include "qmicli-helpers.h"
 
 #if defined HAVE_QMI_SERVICE_GAS
 
@@ -49,6 +49,7 @@ static gboolean get_active_firmware_flag;
 static gint     set_active_firmware_int = -1;
 static gint     set_usb_composition_int = -1;
 static gboolean get_usb_composition_flag;
+static gboolean get_ethernet_mac_address_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -78,6 +79,12 @@ static GOptionEntry entries[] = {
     { "gas-dms-set-active-firmware", 0, 0, G_OPTION_ARG_INT, &set_active_firmware_int,
       "Sets the active firmware index",
       "[index]"
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_ETHERNET_PDU_MAC_ADDRESS
+    { "gas-dms-get-ethernet-mac-address", 0, 0, G_OPTION_ARG_NONE, &get_ethernet_mac_address_flag,
+      "Gets the Ethernet PDU MAC address available in the modem",
+      NULL
     },
 #endif
     { "gas-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
@@ -116,6 +123,7 @@ qmicli_gas_options_enabled (void)
                  get_firmware_list_flag +
                  get_active_firmware_flag +
                  (set_active_firmware_int >= 0) +
+                 get_ethernet_mac_address_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -319,6 +327,57 @@ set_active_firmware_ready (QmiClientGas *client,
 
 #endif /* HAVE_QMI_MESSAGE_GAS_DMS_SET_ACTIVE_FIRMWARE */
 
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_ETHERNET_PDU_MAC_ADDRESS
+
+static void
+print_mac_address (GArray *address)
+{
+    g_autofree gchar *str = NULL;
+
+    str = qmi_common_str_hex (address->data, address->len, ':');
+    g_print ("%s\n", str);
+}
+
+static void
+get_ethernet_pdu_mac_address_ready (QmiClientGas *client,
+                                    GAsyncResult *res)
+{
+    g_autoptr(QmiMessageGasDmsGetEthernetPduMacAddressOutput) output;
+    g_autoptr(GError) error = NULL;
+    GArray *address;
+
+    output = qmi_client_gas_dms_get_ethernet_pdu_mac_address_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_gas_dms_get_ethernet_pdu_mac_address_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get Ethernet PDU MAC address: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (qmi_message_gas_dms_get_ethernet_pdu_mac_address_output_get_mac_address_0 (output, &address, &error)) {
+        g_print ("Ethernet MAC address 0: ");
+        print_mac_address (address);
+    } else {
+        g_printerr ("error: couldn't get Ethernet PDU MAC address 0: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (qmi_message_gas_dms_get_ethernet_pdu_mac_address_output_get_mac_address_1 (output, &address, NULL)) {
+        g_print ("Ethernet MAC address 1: ");
+        print_mac_address (address);
+    }
+
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_GAS_DMS_GET_ETHERNET_PDU_MAC_ADDRESS */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -411,6 +470,19 @@ qmicli_gas_run (QmiDevice *device,
                                                 (GAsyncReadyCallback)set_active_firmware_ready,
                                                 NULL);
         qmi_message_gas_dms_set_active_firmware_input_unref (input);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_ETHERNET_PDU_MAC_ADDRESS
+    if (get_ethernet_mac_address_flag) {
+        g_debug ("Asynchronously getting ethernet mac adress...");
+        qmi_client_gas_dms_get_ethernet_pdu_mac_address (ctx->client,
+                                                         NULL,
+                                                         10,
+                                                         ctx->cancellable,
+                                                         (GAsyncReadyCallback)get_ethernet_pdu_mac_address_ready,
+                                                         NULL);
         return;
     }
 #endif

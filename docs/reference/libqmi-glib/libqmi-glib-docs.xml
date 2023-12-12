@@ -513,6 +513,7 @@
       <xi:include href="xml/qmi-message-gas-dms-get-usb-composition.xml"/>
       <xi:include href="xml/qmi-message-gas-dms-get-firmware-list.xml"/>
       <xi:include href="xml/qmi-message-gas-dms-set-active-firmware.xml"/>
+      <xi:include href="xml/qmi-message-gas-dms-get-ethernet-pdu-mac-address.xml"/>
     </section>
   </chapter>
 
