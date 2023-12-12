@@ -31,6 +31,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include "qmi-common.h"
 #include "qmi-device.h"
 #include "qmi-message.h"
 #include "qmi-file.h"
@@ -1744,13 +1745,13 @@ trace_message (QmiDevice         *self,
     }
 
     if (qmi_utils_get_show_personal_info () || (((GByteArray *)message)->len < MAX_PRINTED_BYTES)) {
-        printable = qmi_helpers_str_hex (((GByteArray *)message)->data,
+        printable = qmi_common_str_hex (((GByteArray *)message)->data,
                                          ((GByteArray *)message)->len,
                                          ':');
     } else {
         g_autofree gchar *tmp = NULL;
 
-        tmp = qmi_helpers_str_hex (((GByteArray *)message)->data, MAX_PRINTED_BYTES, ':');
+        tmp = qmi_common_str_hex (((GByteArray *)message)->data, MAX_PRINTED_BYTES, ':');
         printable = g_strdup_printf ("%s...", tmp);
     }
 

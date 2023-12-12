@@ -34,6 +34,7 @@
 #include <string.h>
 #include <endian.h>
 
+#include "qmi-common.h"
 #include "qmi-message.h"
 #include "qmi-helpers.h"
 #include "qmi-enums-private.h"
@@ -1623,7 +1624,7 @@ qmi_message_get_tlv_printable (QmiMessage *self,
     g_return_val_if_fail (line_prefix != NULL, NULL);
     g_return_val_if_fail (raw != NULL, NULL);
 
-    value_hex = qmi_helpers_str_hex (raw, raw_length, ':');
+    value_hex = qmi_common_str_hex (raw, raw_length, ':');
     printable = g_strdup_printf ("%sTLV:\n"
                                  "%s  type   = 0x%02x\n"
                                  "%s  length = %" G_GSIZE_FORMAT "\n"
