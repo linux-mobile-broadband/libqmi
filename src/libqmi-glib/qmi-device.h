@@ -251,9 +251,9 @@ gboolean qmi_device_is_open (QmiDevice *self);
  * @QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP: Set network port to "raw IP" mode; mutally exclusive with @QMI_DEVICE_OPEN_FLAGS_NET_802_3
  * @QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER: Set network port to transmit/receive QoS headers; mutually exclusive with @QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER
  * @QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER: Set network port to not transmit/receive QoS headers; mutually exclusive with @QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER
- * @QMI_DEVICE_OPEN_FLAGS_PROXY: Try to open the port through the 'qmi-proxy'. Since: 1.8.
- * @QMI_DEVICE_OPEN_FLAGS_MBIM: Open an MBIM port with QMUX tunneling service. Since: 1.16.
- * @QMI_DEVICE_OPEN_FLAGS_AUTO: Open a port either in QMI or MBIM mode, depending on device driver. Since: 1.18.
+ * @QMI_DEVICE_OPEN_FLAGS_PROXY: Try to open the port through the 'qmi-proxy'. Since 1.8.
+ * @QMI_DEVICE_OPEN_FLAGS_MBIM: Open an MBIM port with QMUX tunneling service. Since 1.16.
+ * @QMI_DEVICE_OPEN_FLAGS_AUTO: Open a port either in QMI or MBIM mode, depending on device driver. Since 1.18.
  * @QMI_DEVICE_OPEN_FLAGS_EXPECT_INDICATIONS: Explicitly state that indications are wanted (implicit in QMI mode, optional when in MBIM mode).
  *
  * Flags to specify which actions to be performed when the device is open.
