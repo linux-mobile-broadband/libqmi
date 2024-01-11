@@ -72,9 +72,9 @@
  * @QMI_CORE_ERROR_TLV_NOT_FOUND: TLV not found.
  * @QMI_CORE_ERROR_TLV_TOO_LONG: TLV is too long.
  * @QMI_CORE_ERROR_UNSUPPORTED: Not supported.
- * @QMI_CORE_ERROR_TLV_EMPTY: TLV has no value. Empty TLVs are not a real error, so this error type is never generated. Since: 1.12. Deprecated: 1.22.
- * @QMI_CORE_ERROR_UNEXPECTED_MESSAGE: QMI message is unexpected. Since: 1.16.
- * @QMI_CORE_ERROR_INVALID_DATA: Invalid data found in the message. Since: 1.24.6.
+ * @QMI_CORE_ERROR_TLV_EMPTY: TLV has no value. Empty TLVs are not a real error, so this error type is never generated. Since 1.12. Deprecated 1.22.
+ * @QMI_CORE_ERROR_UNEXPECTED_MESSAGE: QMI message is unexpected. Since 1.16.
+ * @QMI_CORE_ERROR_INVALID_DATA: Invalid data found in the message. Since 1.24.6.
  *
  * Common errors that may be reported by libqmi-glib.
  *
@@ -135,10 +135,10 @@ typedef enum { /*< since=1.0 >*/
   * @QMI_PROTOCOL_ERROR_INCORRECT_FLOW_FILTER: Incorrect flow filter.
   * @QMI_PROTOCOL_ERROR_NETWORK_QOS_UNAWARE: Network QoS unaware.
   * @QMI_PROTOCOL_ERROR_INVALID_QOS_ID: Invalid QoS ID.
-  * @QMI_PROTOCOL_ERROR_REQUESTED_NUMBER_UNSUPPORTED: Requested number unsupported. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_INTERFACE_NOT_FOUND: Interface not found. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_REQUESTED_NUMBER_UNSUPPORTED: Requested number unsupported. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_INTERFACE_NOT_FOUND: Interface not found. Since 1.22.
   * @QMI_PROTOCOL_ERROR_FLOW_SUSPENDED: Flow suspended.
-  * @QMI_PROTOCOL_ERROR_INVALID_DATA_FORMAT: Invalid data format. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_INVALID_DATA_FORMAT: Invalid data format. Since 1.22.
   * @QMI_PROTOCOL_ERROR_GENERAL_ERROR: General error.
   * @QMI_PROTOCOL_ERROR_UNKNOWN_ERROR: Unknown error.
   * @QMI_PROTOCOL_ERROR_INVALID_ARGUMENT: Invalid argument.
@@ -154,10 +154,10 @@ typedef enum { /*< since=1.0 >*/
   * @QMI_PROTOCOL_ERROR_WMS_ENCODING: WMS encoding.
   * @QMI_PROTOCOL_ERROR_AUTHENTICATION_LOCK: Authentication lock.
   * @QMI_PROTOCOL_ERROR_INVALID_TRANSITION: Invalid transition.
-  * @QMI_PROTOCOL_ERROR_NOT_MCAST_INTERFACE: Not a multicast interface. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_MAXIMUM_MCAST_REQUESTS_IN_USE: Maximum multicast requests in use. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_INVALID_MCAST_HANDLE: Invalid mulitcast handle. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_INVALID_IP_FAMILY_PREFERENCE: Invalid IP family preference. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_NOT_MCAST_INTERFACE: Not a multicast interface. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_MAXIMUM_MCAST_REQUESTS_IN_USE: Maximum multicast requests in use. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_INVALID_MCAST_HANDLE: Invalid mulitcast handle. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_INVALID_IP_FAMILY_PREFERENCE: Invalid IP family preference. Since 1.22.
   * @QMI_PROTOCOL_ERROR_SESSION_INACTIVE: Session inactive.
   * @QMI_PROTOCOL_ERROR_SESSION_INVALID: Session invalid.
   * @QMI_PROTOCOL_ERROR_SESSION_OWNERSHIP: Session ownership.
@@ -171,51 +171,51 @@ typedef enum { /*< since=1.0 >*/
   * @QMI_PROTOCOL_ERROR_SEGMENT_TOO_LONG: Segment too long.
   * @QMI_PROTOCOL_ERROR_SEGMENT_ORDER: Segment order.
   * @QMI_PROTOCOL_ERROR_BUNDLING_NOT_SUPPORTED: Bundling not supported.
-  * @QMI_PROTOCOL_ERROR_OPERATION_PARTIAL_FAILURE: Operation partial failure. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_POLICY_MISMATCH: Policy mismatch. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_OPERATION_PARTIAL_FAILURE: Operation partial failure. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_POLICY_MISMATCH: Policy mismatch. Since 1.6.
   * @QMI_PROTOCOL_ERROR_SIM_FILE_NOT_FOUND: SIM file not found.
-  * @QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL: Extended internal error. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL: Extended internal error. Since 1.6.
   * @QMI_PROTOCOL_ERROR_ACCESS_DENIED: Access denied.
   * @QMI_PROTOCOL_ERROR_HARDWARE_RESTRICTED: Hardware restricted.
-  * @QMI_PROTOCOL_ERROR_ACK_NOT_SENT: ACK not sent. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_INJECT_TIMEOUT: Inject timeout. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_INCOMPATIBLE_STATE: Incompatible state. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_FDN_RESTRICT: FDN restrict. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_SUPS_FAILURE_CASE: SUPS failure case. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_NO_RADIO: No radio. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_NOT_SUPPORTED: Not supported. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_NO_SUBSCRIPTION: No subscription. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_CARD_CALL_CONTROL_FAILED: Card call control failed. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_NETWORK_ABORTED: Network aborted. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_MSG_BLOCKED: Message blocked. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_INVALID_SESSION_TYPE: Invalid session type. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_INVALID_PB_TYPE: Invalid PB type. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_NO_SIM: No SIM. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_PB_NOT_READY: PB not ready. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_PIN_RESTRICTION: PIN restriction. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_PIN2_RESTRICTION: PIN2 restriction. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_PUK_RESTRICTION: PUK restriction. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_PUK2_RESTRICTION: PUK2 restriction. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_PB_ACCESS_RESTRICTED: PB access restricted. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_PB_DELETE_IN_PROGRESS: PB delete in progress. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_PB_TEXT_TOO_LONG: PB text too long. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_PB_NUMBER_TOO_LONG: PB number too long. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_PB_HIDDEN_KEY_RESTRICTION: PB hidden key restriction. Since: 1.6.
-  * @QMI_PROTOCOL_ERROR_PB_NOT_AVAILABLE: PB not available. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_DEVICE_MEMORY_ERROR: Device memory error. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_NO_PERMISSION: No permission. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_TOO_SOON: Too soon. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_TIME_NOT_ACQUIRED: Time not acquired. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_OPERATION_IN_PROGRESS: Operation in progress. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_FW_WRITE_FAILED: Firmware write failed. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_FW_INFO_READ_FAILED: Firmware info read failed. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_FW_FILE_NOT_FOUND: Firmware file not found. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_FW_DIR_NOT_FOUND: Firmware dir not found. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_FW_ALREADY_ACTIVATED: Firmware already activated. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_FW_CANNOT_GENERIC_IMAGE: Firmware cannot generic image. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_FW_FILE_OPEN_FAILED: Firmware file open failed. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_FW_UPDATE_DISCONTINUOUS_FRAME: Firmware update discontinuous frame. Since: 1.22.
-  * @QMI_PROTOCOL_ERROR_FW_UPDATE_FAILED: Firmware update failed. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_ACK_NOT_SENT: ACK not sent. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_INJECT_TIMEOUT: Inject timeout. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_INCOMPATIBLE_STATE: Incompatible state. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_FDN_RESTRICT: FDN restrict. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_SUPS_FAILURE_CASE: SUPS failure case. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_NO_RADIO: No radio. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_NOT_SUPPORTED: Not supported. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_NO_SUBSCRIPTION: No subscription. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_CARD_CALL_CONTROL_FAILED: Card call control failed. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_NETWORK_ABORTED: Network aborted. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_MSG_BLOCKED: Message blocked. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_INVALID_SESSION_TYPE: Invalid session type. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_INVALID_PB_TYPE: Invalid PB type. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_NO_SIM: No SIM. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_PB_NOT_READY: PB not ready. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_PIN_RESTRICTION: PIN restriction. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_PIN2_RESTRICTION: PIN2 restriction. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_PUK_RESTRICTION: PUK restriction. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_PUK2_RESTRICTION: PUK2 restriction. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_PB_ACCESS_RESTRICTED: PB access restricted. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_PB_DELETE_IN_PROGRESS: PB delete in progress. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_PB_TEXT_TOO_LONG: PB text too long. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_PB_NUMBER_TOO_LONG: PB number too long. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_PB_HIDDEN_KEY_RESTRICTION: PB hidden key restriction. Since 1.6.
+  * @QMI_PROTOCOL_ERROR_PB_NOT_AVAILABLE: PB not available. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_DEVICE_MEMORY_ERROR: Device memory error. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_NO_PERMISSION: No permission. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_TOO_SOON: Too soon. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_TIME_NOT_ACQUIRED: Time not acquired. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_OPERATION_IN_PROGRESS: Operation in progress. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_WRITE_FAILED: Firmware write failed. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_INFO_READ_FAILED: Firmware info read failed. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_FILE_NOT_FOUND: Firmware file not found. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_DIR_NOT_FOUND: Firmware dir not found. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_ALREADY_ACTIVATED: Firmware already activated. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_CANNOT_GENERIC_IMAGE: Firmware cannot generic image. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_FILE_OPEN_FAILED: Firmware file open failed. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_UPDATE_DISCONTINUOUS_FRAME: Firmware update discontinuous frame. Since 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_UPDATE_FAILED: Firmware update failed. Since 1.22.
   * @QMI_PROTOCOL_ERROR_CAT_EVENT_REGISTRATION_FAILED: Event registration failed.
   * @QMI_PROTOCOL_ERROR_CAT_INVALID_TERMINAL_RESPONSE: Invalid terminal response.
   * @QMI_PROTOCOL_ERROR_CAT_INVALID_ENVELOPE_COMMAND: Invalid envelope command.
