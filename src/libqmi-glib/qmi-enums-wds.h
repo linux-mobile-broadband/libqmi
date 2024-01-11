@@ -1115,6 +1115,7 @@ typedef enum { /*< underscore_name=qmi_wds_rat_3gpp2,since=1.0 >*/
  * @QMI_WDS_RAT_3GPP_DCHSDPAPLUS: DC-HSDPA+.
  * @QMI_WDS_RAT_3GPP_64QAM: 64QAM. Since: 1.18.
  * @QMI_WDS_RAT_3GPP_TDSCDMA: TD-SCDMA. Since: 1.18.
+ * @QMI_WDS_RAT_3GPP_5GNR: 5GNR. Since 1.34.2.
  * @QMI_WDS_RAT_3GPP_NULL_BEARER: No bearer.
  *
  * Flags specifying the 3GPP-specific Radio Access Technology, when the data
@@ -1134,6 +1135,7 @@ typedef enum { /*< underscore_name=qmi_wds_rat_3gpp,since=1.0 >*/
     QMI_WDS_RAT_3GPP_DCHSDPAPLUS = 1 << 7,
     QMI_WDS_RAT_3GPP_64QAM       = 1 << 8,
     QMI_WDS_RAT_3GPP_TDSCDMA     = 1 << 9,
+    QMI_WDS_RAT_3GPP_5GNR        = 1 << 10,
     QMI_WDS_RAT_3GPP_NULL_BEARER = 1 << 15
 } QmiWdsRat3gpp;
 
