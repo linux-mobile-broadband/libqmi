@@ -615,6 +615,7 @@
     <section>
       <title>IMS Requests</title>
       <xi:include href="xml/qmi-message-ims-get-ims-services-enabled-setting.xml"/>
+      <xi:include href="xml/qmi-message-ims-bind.xml"/>
     </section>
   </chapter>
 
