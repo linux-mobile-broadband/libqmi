@@ -371,6 +371,7 @@
       <xi:include href="xml/qmi-message-uim-refresh-register-all.xml"/>
       <xi:include href="xml/qmi-message-uim-refresh-complete.xml"/>
       <xi:include href="xml/qmi-message-uim-remote-unlock.xml"/>
+      <xi:include href="xml/qmi-message-uim-open-logical-channel.xml"/>
     </section>
   </chapter>
 
