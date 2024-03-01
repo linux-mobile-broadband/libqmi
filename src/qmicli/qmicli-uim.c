@@ -67,6 +67,7 @@ static gchar *switch_slot_str;
 static gchar *depersonalization_str;
 static gchar *remote_unlock_str;
 static gchar *open_logical_channel_str;
+static gchar *close_logical_channel_str;
 static gchar *send_apdu_str;
 static gchar **monitor_refresh_file_array;
 static gboolean get_card_status_flag;
@@ -214,6 +215,12 @@ static GOptionEntry entries[] = {
       "[(slot number),(aid)]"
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_UIM_LOGICAL_CHANNEL
+    { "uim-close-logical-channel", 0, 0, G_OPTION_ARG_STRING, &close_logical_channel_str,
+      "Close logical channel",
+      "[(slot number),(channel ID)]"
+    },
+#endif
 #if defined HAVE_QMI_MESSAGE_UIM_SEND_APDU
     { "uim-send-apdu", 0, 0, G_OPTION_ARG_STRING, &send_apdu_str,
       "Send APDU",
@@ -266,6 +273,7 @@ qmicli_uim_options_enabled (void)
                  !!depersonalization_str +
                  !!remote_unlock_str +
                  !!open_logical_channel_str +
+                 !!close_logical_channel_str +
                  !!send_apdu_str +
                  get_card_status_flag +
                  get_supported_messages_flag +
@@ -2830,6 +2838,65 @@ open_logical_channel_ready (QmiClientUim *client,
 
 #endif /* HAVE_QMI_MESSAGE_UIM_OPEN_LOGICAL_CHANNEL */
 
+#if defined HAVE_QMI_MESSAGE_UIM_LOGICAL_CHANNEL
+
+static QmiMessageUimLogicalChannelInput *
+close_logical_channel_input_create (const gchar *str)
+{
+    QmiMessageUimLogicalChannelInput *input;
+    g_auto(GStrv)                     split = NULL;
+    guint                             slot;
+    guint                             channel_id;
+
+    /* Prepare inputs.
+     * Format of the string is:
+     *    "[(slot number),(channel ID)]"
+     */
+    split = g_strsplit (str, ",", -1);
+
+    if (!split[0] || !qmicli_read_uint_from_string (split[0], &slot) || (slot > G_MAXUINT8)) {
+        g_printerr ("error: invalid slot number\n");
+        return NULL;
+    }
+
+    if (!split[1] || !qmicli_read_uint_from_string (split[1], &channel_id) || (channel_id > G_MAXUINT8)) {
+        g_printerr ("error: invalid channel ID\n");
+        return NULL;
+    }
+
+    input = qmi_message_uim_logical_channel_input_new ();
+    qmi_message_uim_logical_channel_input_set_slot (input, slot, NULL);
+    qmi_message_uim_logical_channel_input_set_channel_id (input, channel_id, NULL);
+
+    return input;
+}
+
+static void
+close_logical_channel_ready (QmiClientUim *client,
+                             GAsyncResult *res)
+{
+    g_autoptr(QmiMessageUimLogicalChannelOutput) output = NULL;
+    g_autoptr(GError)                            error = NULL;
+
+    output = qmi_client_uim_logical_channel_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_uim_logical_channel_output_get_result (output, &error)) {
+        g_printerr ("error: close logical channel operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Close Logical Channel operation successfully completed\n");
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_UIM_LOGICAL_CHANNEL */
+
 #if defined HAVE_QMI_MESSAGE_UIM_SEND_APDU
 
 static QmiMessageUimSendApduInput *
@@ -3325,6 +3392,28 @@ qmicli_uim_run (QmiDevice *device,
                                              ctx->cancellable,
                                              (GAsyncReadyCallback)open_logical_channel_ready,
                                              NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_UIM_LOGICAL_CHANNEL
+    /* Request to close logical channel? */
+    if (close_logical_channel_str) {
+        g_autoptr(QmiMessageUimLogicalChannelInput) input = NULL;
+
+        g_debug ("Asynchronously closing logical channel...");
+        input = close_logical_channel_input_create (close_logical_channel_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        qmi_client_uim_logical_channel (ctx->client,
+                                        input,
+                                        10,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback)close_logical_channel_ready,
+                                        NULL);
         return;
     }
 #endif

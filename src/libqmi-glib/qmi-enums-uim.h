@@ -558,4 +558,24 @@ typedef enum { /*< since=1.30 >*/
     QMI_UIM_DEPERSONALIZATION_OPERATION_UNBLOCK    = 1,
 } QmiUimDepersonalizationOperation;
 
+/**
+ * QmiUimFileControlInformation:
+ * @QMI_UIM_FILE_CONTROL_INFORMATION_NO_DATA: No data.
+ * @QMI_UIM_FILE_CONTROL_INFORMATION_FCP: File control parameters
+ * @QMI_UIM_FILE_CONTROL_INFORMATION_FCI: File control information
+ * @QMI_UIM_FILE_CONTROL_INFORMATION_FCI_WITH_INTERFACES: FCI with interfaces
+ * @QMI_UIM_FILE_CONTROL_INFORMATION_FMD: File management data
+ *
+ * File Control Information.
+ *
+ * Since: 1.36
+ */
+typedef enum { /*< since=1.36 >*/
+    QMI_UIM_FILE_CONTROL_INFORMATION_NO_DATA             = 0,
+    QMI_UIM_FILE_CONTROL_INFORMATION_FCP                 = 1,
+    QMI_UIM_FILE_CONTROL_INFORMATION_FCI                 = 2,
+    QMI_UIM_FILE_CONTROL_INFORMATION_FCI_WITH_INTERFACES = 3,
+    QMI_UIM_FILE_CONTROL_INFORMATION_FMD                 = 4,
+} QmiUimFileControlInformation;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_UIM_H_ */

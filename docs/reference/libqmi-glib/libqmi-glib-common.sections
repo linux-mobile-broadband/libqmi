@@ -961,6 +961,7 @@ QmiUimRefreshMode
 QmiUimRefreshStage
 QmiUimConfiguration
 QmiUimDepersonalizationOperation
+QmiUimFileControlInformation
 <SUBSECTION Methods>
 qmi_uim_event_registration_flag_build_string_from_mask
 qmi_uim_session_type_get_string
@@ -983,6 +984,7 @@ qmi_uim_refresh_mode_get_string
 qmi_uim_refresh_stage_get_string
 qmi_uim_configuration_build_string_from_mask
 qmi_uim_depersonalization_operation_get_string
+qmi_uim_file_control_information_get_string
 <SUBSECTION Standard>
 QMI_TYPE_UIM_EVENT_REGISTRATION_FLAG
 QMI_TYPE_UIM_SESSION_TYPE
@@ -1005,6 +1007,7 @@ QMI_TYPE_UIM_REFRESH_MODE
 QMI_TYPE_UIM_REFRESH_STAGE
 QMI_TYPE_UIM_CONFIGURATION
 QMI_TYPE_UIM_DEPERSONALIZATION_OPERATION
+QMI_TYPE_UIM_FILE_CONTROL_INFORMATION
 qmi_uim_event_registration_flag_get_type
 qmi_uim_session_type_get_type
 qmi_uim_file_type_get_type
@@ -1026,6 +1029,7 @@ qmi_uim_refresh_mode_get_type
 qmi_uim_refresh_stage_get_type
 qmi_uim_configuration_get_type
 qmi_uim_depersonalization_operation_get_type
+qmi_uim_file_control_information_get_type
 </SECTION>
 
 <SECTION>

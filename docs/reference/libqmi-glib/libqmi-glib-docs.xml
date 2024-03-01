@@ -373,6 +373,7 @@
       <xi:include href="xml/qmi-message-uim-remote-unlock.xml"/>
       <xi:include href="xml/qmi-message-uim-open-logical-channel.xml"/>
       <xi:include href="xml/qmi-message-uim-send-apdu.xml"/>
+      <xi:include href="xml/qmi-message-uim-logical-channel.xml"/>
     </section>
   </chapter>
 
