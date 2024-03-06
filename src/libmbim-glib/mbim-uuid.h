@@ -118,6 +118,7 @@ gboolean mbim_uuid_from_printable (const gchar *str,
  * @MBIM_SERVICE_INTEL_TOOLS: Intel tools service. Since 1.30.
  * @MBIM_SERVICE_GOOGLE: Google specific service. Since 1.30
  * @MBIM_SERVICE_FIBOCOM: Fibocom specific service. Since 1.32.
+ * @MBIM_SERVICE_COMPAL: Compal specific service. Since 1.32.
  * @MBIM_SERVICE_LAST: Internal value.
  *
  * Enumeration of the generic MBIM services.
@@ -150,6 +151,7 @@ typedef enum { /*< since=1.0 >*/
     MBIM_SERVICE_INTEL_TOOLS                 = 22,
     MBIM_SERVICE_GOOGLE                      = 23,
     MBIM_SERVICE_FIBOCOM                     = 24,
+    MBIM_SERVICE_COMPAL                      = 25,
 #if defined LIBMBIM_GLIB_COMPILATION
     MBIM_SERVICE_LAST /*< skip >*/
 #endif
@@ -429,6 +431,18 @@ typedef enum { /*< since=1.0 >*/
  * Since: 1.32
  */
 #define MBIM_UUID_FIBOCOM mbim_uuid_from_service (MBIM_SERVICE_FIBOCOM)
+
+
+/**
+ * MBIM_UUID_COMPAL:
+ *
+ * Get the UUID of the %MBIM_SERVICE_COMPAL service.
+ *
+ * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.32
+ */
+#define MBIM_UUID_COMPAL mbim_uuid_from_service (MBIM_SERVICE_COMPAL)
 
 /**
  * mbim_service_lookup_name:

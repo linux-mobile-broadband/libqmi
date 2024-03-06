@@ -1,0 +1,18 @@
+[
+  // *********************************************************************************
+  { "type" : "Service",
+    "name" : "Compal" },
+
+  // *********************************************************************************
+  { "name"         : "AT Command",
+    "service"      : "Compal",
+    "type"         : "Command",
+    "since"        : "1.32",
+    "query"        : [ { "name"          : "CommandReq",
+                         "format"        : "unsized-byte-array",
+                         "pad-array"     : "FALSE",
+                         "personal-info" : "true" } ],
+    "response"     : [ { "name"          : "CommandResp",
+                         "format"        : "unsized-byte-array",
+                         "personal-info" : "true" } ] }
+]

@@ -125,6 +125,11 @@
   </chapter>
 
   <chapter>
+    <title>Compal-defined expansion Services</title>
+    <xi:include href="xml/mbim-compal.xml"/>
+  </chapter>
+
+  <chapter>
     <title>libmbim-defined Services</title>
     <xi:include href="xml/mbim-proxy-control.xml"/>
   </chapter>

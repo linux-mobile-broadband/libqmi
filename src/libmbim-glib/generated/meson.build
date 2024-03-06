@@ -148,6 +148,7 @@ services_data = [
   ['intel-tools'],
   ['google'],
   ['fibocom'],
+  ['compal'],
 ]
 
 foreach service_data: services_data

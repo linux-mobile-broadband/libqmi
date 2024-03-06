@@ -372,6 +372,9 @@ device_open_ready (MbimDevice   *dev,
     case MBIM_SERVICE_FIBOCOM:
         mbimcli_fibocom_run (dev, cancellable);
         return;
+    case MBIM_SERVICE_COMPAL:
+        mbimcli_compal_run (dev, cancellable);
+        return;
 
         /* unsupported actions in the CLI */
     case MBIM_SERVICE_INVALID:
@@ -527,6 +530,11 @@ parse_actions (void)
         actions_enabled++;
     }
 
+    if (mbimcli_compal_options_enabled ()) {
+        service = MBIM_SERVICE_COMPAL;
+        actions_enabled++;
+    }
+
     /* Noop */
     if (noop_flag)
         actions_enabled++;
@@ -580,6 +588,7 @@ int main (int argc, char **argv)
     g_option_context_add_group (context, mbimcli_google_get_option_group());
     g_option_context_add_group (context, mbimcli_fibocom_get_option_group());
     g_option_context_add_group (context, mbimcli_sms_get_option_group ());
+    g_option_context_add_group (context, mbimcli_compal_get_option_group ());
 
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {

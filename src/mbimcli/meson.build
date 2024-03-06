@@ -5,6 +5,7 @@ mbimcli_sources = files(
   'mbimcli.c',
   'mbimcli-atds.c',
   'mbimcli-basic-connect.c',
+  'mbimcli-compal.c',
   'mbimcli-dss.c',
   'mbimcli-fibocom.c',
   'mbimcli-google.c',
