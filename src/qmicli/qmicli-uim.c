@@ -81,26 +81,26 @@ static gboolean get_configuration_flag;
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_UIM_SET_PIN_PROTECTION
     { "uim-set-pin-protection", 0, 0, G_OPTION_ARG_STRING, &set_pin_protection_str,
-      "Set PIN protection",
-      "[(PIN1|PIN2|UPIN),(disable|enable),(current PIN)]"
+      "Set PIN protection (allowed keys: session-type ((primary|secondary|tertiary|quarternary|quinary)-gw-provisioning|card-slot-[1-5]))",
+      "[(PIN1|PIN2|UPIN),(disable|enable),(current PIN)[,\"key=value,...\"]]"
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_UIM_VERIFY_PIN
     { "uim-verify-pin", 0, 0, G_OPTION_ARG_STRING, &verify_pin_str,
-      "Verify PIN",
-      "[(PIN1|PIN2|UPIN),(current PIN)]",
+      "Verify PIN (allowed keys: session-type ((primary|secondary|tertiary|quarternary|quinary)-gw-provisioning|card-slot-[1-5]))",
+      "[(PIN1|PIN2|UPIN),(current PIN)[,\"key=value,...\"]]",
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_UIM_UNBLOCK_PIN
     { "uim-unblock-pin", 0, 0, G_OPTION_ARG_STRING, &unblock_pin_str,
-      "Unblock PIN",
-      "[(PIN1|PIN2|UPIN),(PUK),(new PIN)]",
+      "Unblock PIN (allowed keys: session-type ((primary|secondary|tertiary|quarternary|quinary)-gw-provisioning|card-slot-[1-5]))",
+      "[(PIN1|PIN2|UPIN),(PUK),(new PIN)[,\"key=value,...\"]]",
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_UIM_CHANGE_PIN
     { "uim-change-pin", 0, 0, G_OPTION_ARG_STRING, &change_pin_str,
-      "Change PIN",
-      "[(PIN1|PIN2|UPIN),(old PIN),(new PIN)]",
+      "Change PIN (allowed keys: session-type ((primary|secondary|tertiary|quarternary|quinary)-gw-provisioning|card-slot-[1-5]))",
+      "[(PIN1|PIN2|UPIN),(old PIN),(new PIN)[,\"key=value,...\"]]",
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT
@@ -147,7 +147,7 @@ static GOptionEntry entries[] = {
 #endif
 #if defined HAVE_QMI_MESSAGE_UIM_CHANGE_PROVISIONING_SESSION
     { "uim-change-provisioning-session", 0, 0, G_OPTION_ARG_STRING, &change_provisioning_session_str,
-      "Change provisioning session (allowed keys: session-type, activate, slot, aid)",
+      "Change provisioning session (allowed keys: session-type ((primary|secondary|tertiary|quarternary|quinary)-gw-provisioning), activate (yes|no), slot, aid)",
       "[\"key=value,...\"]"
     },
 #endif
@@ -299,26 +299,73 @@ operation_shutdown (gboolean operation_status)
     qmicli_async_operation_done (operation_status, FALSE);
 }
 
+#if defined HAVE_QMI_MESSAGE_UIM_SET_PIN_PROTECTION || \
+    defined HAVE_QMI_MESSAGE_UIM_VERIFY_PIN || \
+    defined HAVE_QMI_MESSAGE_UIM_UNBLOCK_PIN ||\
+    defined HAVE_QMI_MESSAGE_UIM_CHANGE_PIN
+
+static gboolean
+provisioning_session_type_handle (const gchar *key,
+                                  const gchar *value,
+                                  GError     **error,
+                                  gpointer     user_data)
+{
+    QmiUimSessionType *session_type = (QmiUimSessionType *) user_data;
+
+    if (!value || !value[0]) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                     "key '%s' requires a value", key);
+        return FALSE;
+    }
+
+    if (g_ascii_strcasecmp (key, "session-type") == 0) {
+        if (!qmicli_read_uim_session_type_from_string (value, session_type)) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "invalid session type value: %s (not a valid enum)", value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                 "Unrecognized option '%s'", key);
+    return FALSE;
+}
+
+#endif
+
 #if defined HAVE_QMI_MESSAGE_UIM_SET_PIN_PROTECTION
 
 static QmiMessageUimSetPinProtectionInput *
 set_pin_protection_input_create (const gchar *str)
 {
     QmiMessageUimSetPinProtectionInput *input = NULL;
+    QmiUimSessionType session_type = QMI_UIM_SESSION_TYPE_CARD_SLOT_1;
     gchar **split;
+    guint len_split;
+    GError *error = NULL;
     QmiUimPinId pin_id;
     gboolean enable_disable;
     gchar *current_pin;
 
     /* Prepare inputs.
      * Format of the string is:
-     *    "[(PIN1|PIN2|UPIN),(disable|enable),(current PIN)]"
+     *    "[(PIN1|PIN2|UPIN),(disable|enable),(current PIN)[,'key=value,...']]" with valid key = (session-type)
      */
-    split = g_strsplit (str, ",", -1);
-    if (qmicli_read_uim_pin_id_from_string (split[0], &pin_id) &&
+    split = g_strsplit (str, ",", 4);
+    len_split = g_strv_length (split);
+
+    /* Parse optional kv-pairs */
+    if (len_split >= 4) {
+        if (!qmicli_parse_key_value_string (split[3], &error, provisioning_session_type_handle, &session_type)) {
+            g_printerr ("error: could not parse input string '%s': %s\n", str, error->message);
+        }
+    }
+
+    if (error == NULL &&
+        qmicli_read_uim_pin_id_from_string (split[0], &pin_id) &&
         qmicli_read_enable_disable_from_string (split[1], &enable_disable) &&
         qmicli_read_non_empty_string (split[2], "current PIN", &current_pin)) {
-        GError *error = NULL;
         GArray *placeholder_aid;
 
         placeholder_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
@@ -332,18 +379,18 @@ set_pin_protection_input_create (const gchar *str)
                 &error) ||
             !qmi_message_uim_set_pin_protection_input_set_session (
                 input,
-                QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
+                session_type,
                 placeholder_aid, /* ignored */
                 &error)) {
             g_printerr ("error: couldn't create input data bundle: '%s'\n",
                         error->message);
-            g_error_free (error);
             qmi_message_uim_set_pin_protection_input_unref (input);
             input = NULL;
         }
         g_array_unref (placeholder_aid);
     }
     g_strfreev (split);
+    g_clear_error (&error);
 
     return input;
 }
@@ -403,18 +450,30 @@ static QmiMessageUimVerifyPinInput *
 verify_pin_input_create (const gchar *str)
 {
     QmiMessageUimVerifyPinInput *input = NULL;
+    QmiUimSessionType session_type = QMI_UIM_SESSION_TYPE_CARD_SLOT_1;
     gchar **split;
+    guint len_split;
+    GError *error = NULL;
     QmiUimPinId pin_id;
     gchar *current_pin;
 
     /* Prepare inputs.
      * Format of the string is:
-     *    "[(PIN1|PIN2),(current PIN)]"
+     *    "[(PIN1|PIN2),(current PIN)[,'key=value,...']]" with valid key = (session-type)
      */
-    split = g_strsplit (str, ",", -1);
-    if (qmicli_read_uim_pin_id_from_string (split[0], &pin_id) &&
+    split = g_strsplit (str, ",", 3);
+    len_split = g_strv_length (split);
+
+    /* Parse optional kv-pairs */
+    if (len_split >= 3) {
+        if (!qmicli_parse_key_value_string (split[2], &error, provisioning_session_type_handle, &session_type)) {
+            g_printerr ("error: could not parse input string '%s': %s\n", str, error->message);
+        }
+    }
+
+    if (error == NULL &&
+        qmicli_read_uim_pin_id_from_string (split[0], &pin_id) &&
         qmicli_read_non_empty_string (split[1], "current PIN", &current_pin)) {
-        GError *error = NULL;
         GArray *placeholder_aid;
 
         placeholder_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
@@ -427,18 +486,18 @@ verify_pin_input_create (const gchar *str)
                 &error) ||
             !qmi_message_uim_verify_pin_input_set_session (
                 input,
-                QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
+                session_type,
                 placeholder_aid, /* ignored */
                 &error)) {
             g_printerr ("error: couldn't create input data bundle: '%s'\n",
                         error->message);
-            g_error_free (error);
             qmi_message_uim_verify_pin_input_unref (input);
             input = NULL;
         }
         g_array_unref (placeholder_aid);
     }
     g_strfreev (split);
+    g_clear_error (&error);
 
     return input;
 }
@@ -498,20 +557,32 @@ static QmiMessageUimUnblockPinInput *
 unblock_pin_input_create (const gchar *str)
 {
     QmiMessageUimUnblockPinInput *input = NULL;
+    QmiUimSessionType session_type = QMI_UIM_SESSION_TYPE_CARD_SLOT_1;
     gchar **split;
+    guint len_split;
+    GError *error = NULL;
     QmiUimPinId pin_id;
     gchar *puk;
     gchar *new_pin;
 
     /* Prepare inputs.
      * Format of the string is:
-     *    "[(PIN|PIN2),(PUK),(new PIN)]"
+     *    "[(PIN|PIN2),(PUK),(new PIN)[,'key=value,...']]" with valid key = (session-type)
      */
-    split = g_strsplit (str, ",", -1);
-    if (qmicli_read_uim_pin_id_from_string (split[0], &pin_id) &&
+    split = g_strsplit (str, ",", 4);
+    len_split = g_strv_length (split);
+
+    /* Parse optional kv-pairs */
+    if (len_split >= 4) {
+        if (!qmicli_parse_key_value_string (split[3], &error, provisioning_session_type_handle, &session_type)) {
+            g_printerr ("error: could not parse input string '%s': %s\n", str, error->message);
+        }
+    }
+
+    if (error == NULL &&
+        qmicli_read_uim_pin_id_from_string (split[0], &pin_id) &&
         qmicli_read_non_empty_string (split[1], "PUK", &puk) &&
         qmicli_read_non_empty_string (split[2], "new PIN", &new_pin)) {
-        GError *error = NULL;
         GArray *placeholder_aid;
 
         placeholder_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
@@ -525,7 +596,7 @@ unblock_pin_input_create (const gchar *str)
                 &error) ||
             !qmi_message_uim_unblock_pin_input_set_session (
                 input,
-                QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
+                session_type,
                 placeholder_aid, /* ignored */
                 &error)) {
             g_printerr ("error: couldn't create input data bundle: '%s'\n",
@@ -537,6 +608,7 @@ unblock_pin_input_create (const gchar *str)
         g_array_unref (placeholder_aid);
     }
     g_strfreev (split);
+    g_clear_error (&error);
 
     return input;
 }
@@ -596,20 +668,32 @@ static QmiMessageUimChangePinInput *
 change_pin_input_create (const gchar *str)
 {
     QmiMessageUimChangePinInput *input = NULL;
+    QmiUimSessionType session_type = QMI_UIM_SESSION_TYPE_CARD_SLOT_1;
     gchar **split;
+    guint len_split;
+    GError *error = NULL;
     QmiUimPinId pin_id;
     gchar *old_pin;
     gchar *new_pin;
 
     /* Prepare inputs.
      * Format of the string is:
-     *    "[(PIN1|PIN2),(old PIN),(new PIN)]"
+     *    "[(PIN1|PIN2),(old PIN),(new PIN)[,'key=value,...']]" with valid key = (session-type)
      */
-    split = g_strsplit (str, ",", -1);
-    if (qmicli_read_uim_pin_id_from_string (split[0], &pin_id) &&
+    split = g_strsplit (str, ",", 4);
+    len_split = g_strv_length (split);
+
+    /* Parse optional kv-pairs */
+    if (len_split >= 4) {
+        if (!qmicli_parse_key_value_string (split[3], &error, provisioning_session_type_handle, &session_type)) {
+            g_printerr ("error: could not parse input string '%s': %s\n", str, error->message);
+        }
+    }
+
+    if (error == NULL &&
+        qmicli_read_uim_pin_id_from_string (split[0], &pin_id) &&
         qmicli_read_non_empty_string (split[1], "old PIN", &old_pin) &&
         qmicli_read_non_empty_string (split[2], "new PIN", &new_pin)) {
-        GError *error = NULL;
         GArray *placeholder_aid;
 
         placeholder_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
@@ -623,7 +707,7 @@ change_pin_input_create (const gchar *str)
                 &error) ||
             !qmi_message_uim_change_pin_input_set_session (
                 input,
-                QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
+                session_type,
                 placeholder_aid, /* ignored */
                 &error)) {
             g_printerr ("error: couldn't create input data bundle: '%s'\n",
@@ -635,6 +719,7 @@ change_pin_input_create (const gchar *str)
         g_array_unref (placeholder_aid);
     }
     g_strfreev (split);
+    g_clear_error (&error);
 
     return input;
 }
