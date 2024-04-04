@@ -606,6 +606,7 @@
       <title>IMSA Requests</title>
       <xi:include href="xml/qmi-message-imsa-get-ims-registration-status.xml"/>
       <xi:include href="xml/qmi-message-imsa-get-ims-services-status.xml"/>
+      <xi:include href="xml/qmi-message-imsa-bind.xml"/>
     </section>
   </chapter>
 
