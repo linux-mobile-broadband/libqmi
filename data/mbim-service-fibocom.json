@@ -10,7 +10,10 @@
     "since"        : "1.32",
     "set"          : [ { "name"          : "CommandReq",
                          "format"        : "unsized-byte-array",
-                         "pad-array"     : "FALSE"} ],
+                         "pad-array"     : "FALSE",
+			 "personal-info" : "true" } ],
     "response"     : [ { "name"          : "CommandResp",
-                         "format"        : "unsized-byte-array"} ] }
+                         "format"        : "unsized-byte-array",
+			 "pad-array"     : "FALSE",
+			 "personal-info" : "true" } ] }
 ]
