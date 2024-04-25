@@ -45,10 +45,17 @@ typedef struct {
 static Context *ctx;
 
 /* Options */
+static gint bind_flag = -1;
 static gboolean get_services_enabled_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_MESSAGE_IMS_BIND
+    { "ims-bind", 0, 0, G_OPTION_ARG_INT, &bind_flag,
+      "Bind to IMS Settings (use with --client-no-release-cid)",
+      "[binding]"
+    },
+#endif
 #if defined HAVE_QMI_MESSAGE_IMS_GET_IMS_SERVICES_ENABLED_SETTING
     { "ims-get-ims-services-enabled-setting", 0, 0, G_OPTION_ARG_NONE, &get_services_enabled_flag,
       "Get IMS Services Enabled Setting",
@@ -86,7 +93,8 @@ qmicli_ims_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = (get_services_enabled_flag +
+    n_actions = ((bind_flag >= 0) +
+                 get_services_enabled_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -120,6 +128,37 @@ operation_shutdown (gboolean operation_status)
     context_free (ctx);
     qmicli_async_operation_done (operation_status, FALSE);
 }
+
+#if defined HAVE_QMI_MESSAGE_IMS_BIND
+
+static void
+bind_ready (QmiClientIms *client,
+            GAsyncResult *res)
+{
+    QmiMessageImsBindOutput *output;
+    g_autoptr(GError) error = NULL;
+
+    output = qmi_client_ims_bind_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_ims_bind_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't bind to IMS Settings: %s\n", error->message);
+        qmi_message_ims_bind_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] IMS Settings bind successful\n", qmi_device_get_path_display (ctx->device));
+
+    qmi_message_ims_bind_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_IMS_BIND */
 
 #if defined HAVE_QMI_MESSAGE_IMS_GET_IMS_SERVICES_ENABLED_SETTING
 
@@ -200,6 +239,23 @@ qmicli_ims_run (QmiDevice *device,
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
 
+#if defined HAVE_QMI_MESSAGE_IMS_BIND
+    if (bind_flag >= 0) {
+        QmiMessageImsBindInput *input;
+
+        input = qmi_message_ims_bind_input_new ();
+        qmi_message_ims_bind_input_set_binding (input, bind_flag, NULL);
+        g_debug ("Asynchronously binding to IMS settings service...");
+        qmi_client_ims_bind (ctx->client,
+                             input,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)bind_ready,
+                             NULL);
+        qmi_message_ims_bind_input_unref (input);
+        return;
+    }
+#endif /* HAVE_QMI_MESSAGE_IMS_BIND */
 #if defined HAVE_QMI_MESSAGE_IMS_GET_IMS_SERVICES_ENABLED_SETTING
     if (get_services_enabled_flag) {
         g_debug ("Asynchronously getting services enabled setting...");
