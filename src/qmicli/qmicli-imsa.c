@@ -45,11 +45,18 @@ typedef struct {
 static Context *ctx;
 
 /* Options */
+static gint bind_flag = -1;
 static gboolean get_ims_registration_status_flag;
 static gboolean get_ims_services_status_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_MESSAGE_IMSA_BIND
+    { "imsa-bind", 0, 0, G_OPTION_ARG_INT, &bind_flag,
+      "Bind to IMSA (use with --client-no-release-cid)",
+      "[binding]"
+    },
+#endif
 #if defined HAVE_QMI_MESSAGE_IMSA_GET_IMS_REGISTRATION_STATUS
     { "imsa-get-ims-registration-status", 0, 0, G_OPTION_ARG_NONE, &get_ims_registration_status_flag,
       "Get IMS registration status",
@@ -93,7 +100,8 @@ qmicli_imsa_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = (!!get_ims_registration_status_flag +
+    n_actions = ((bind_flag >= 0) +
+                 get_ims_registration_status_flag +
 		 get_ims_services_status_flag +
                  noop_flag);
 
@@ -128,6 +136,37 @@ operation_shutdown (gboolean operation_status)
     context_free (ctx);
     qmicli_async_operation_done (operation_status, FALSE);
 }
+
+#if defined HAVE_QMI_MESSAGE_IMSA_BIND
+
+static void
+bind_ready (QmiClientImsa *client,
+            GAsyncResult *res)
+{
+    QmiMessageImsaBindOutput *output;
+    g_autoptr(GError) error = NULL;
+
+    output = qmi_client_imsa_bind_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_imsa_bind_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't bind to IMSA: %s\n", error->message);
+        qmi_message_imsa_bind_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] IMSA bind successful\n", qmi_device_get_path_display (ctx->device));
+
+    qmi_message_imsa_bind_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_IMSA_BIND */
 
 #if defined HAVE_QMI_MESSAGE_IMSA_GET_IMS_REGISTRATION_STATUS
 
@@ -230,7 +269,7 @@ get_ims_services_status_ready (QmiClientImsa *client,
 
     if (qmi_message_imsa_get_ims_services_status_output_get_ims_video_telephony_service_registration_technology (output, &service_vt_technology, NULL))
         g_print ("\t\tTechnology: '%s'\n", qmi_imsa_registration_technology_get_string (service_vt_technology));
-       
+
     g_print ("\tUE to TAS service\n");
 
     if (qmi_message_imsa_get_ims_services_status_output_get_ims_ue_to_tas_service_status (output, &service_ut_status, NULL))
@@ -271,6 +310,23 @@ qmicli_imsa_run (QmiDevice *device,
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
 
+#if defined HAVE_QMI_MESSAGE_IMSA_BIND
+    if (bind_flag >= 0) {
+        QmiMessageImsaBindInput *input;
+
+        input = qmi_message_imsa_bind_input_new ();
+        qmi_message_imsa_bind_input_set_binding (input, bind_flag, NULL);
+        g_debug ("Asynchronously binding to IMSA service...");
+        qmi_client_imsa_bind (ctx->client,
+                              input,
+                              10,
+                              ctx->cancellable,
+                              (GAsyncReadyCallback)bind_ready,
+                              NULL);
+        qmi_message_imsa_bind_input_unref (input);
+        return;
+    }
+#endif /* HAVE_QMI_MESSAGE_IMSA_BIND */
 #if defined HAVE_QMI_MESSAGE_IMSA_GET_IMS_REGISTRATION_STATUS
     if (get_ims_registration_status_flag) {
         g_debug ("Asynchronously getting IMS registration status...");
