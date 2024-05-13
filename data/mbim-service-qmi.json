@@ -13,13 +13,13 @@
     "set"          : [ { "name"          : "QmiMsg",
                          "format"        : "unsized-byte-array",
                          "pad-array"     : "FALSE",
-		         "personal-info" : "true" } ],
+                         "personal-info" : "true" } ],
     "response"     : [ { "name"          : "QMUX",
                          "format"        : "unsized-byte-array",
                          "pad-array"     : "FALSE",
-			 "personal-info" : "true"} ],
+                         "personal-info" : "true"} ],
     "notification" : [ { "name"          : "QMUX",
                          "format"        : "unsized-byte-array",
                          "pad-array"     : "FALSE",
-			 "personal-info" : "true"} ]}
+                         "personal-info" : "true"} ]}
 ]
