@@ -125,10 +125,6 @@ query_rfim_ready (MbimDevice   *device,
     g_autoptr(GError)                 error = NULL;
     guint32                           element_count;
     MbimIntelRfimFrequencyValueArray *rfim_frequency;
-    g_autofree gchar                 *rssi_str = NULL;
-    g_autofree gchar                 *sinr_str = NULL;
-    g_autofree gchar                 *rsrq_str = NULL;
-    g_autofree gchar                 *rsrp_str = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -151,6 +147,11 @@ query_rfim_ready (MbimDevice   *device,
              element_count);
 
     for (i = 0; i < element_count; i++) {
+        g_autofree gchar *rssi_str = NULL;
+        g_autofree gchar *sinr_str = NULL;
+        g_autofree gchar *rsrq_str = NULL;
+        g_autofree gchar *rsrp_str = NULL;
+
         if (rfim_frequency[i]->rssi <= 31)
             rssi_str = g_strdup_printf ("%d dBm", -113 + (2 * rfim_frequency[i]->rssi));
         else
