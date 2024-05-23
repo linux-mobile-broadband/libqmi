@@ -3136,6 +3136,7 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
             qmi_message_dms_list_stored_images_output_unref (output);
             g_object_unref (task);
             operation_shutdown (FALSE);
+            get_stored_image_result_free (result);
             return;
         }
 
