@@ -849,12 +849,12 @@ power_on_sim_input_create (const gchar *slot_str)
     guint                         slot;
     GError                       *error = NULL;
 
-    input = qmi_message_uim_power_on_sim_input_new ();
-
     if (!qmicli_read_uint_from_string (slot_str, &slot) || (slot > G_MAXUINT8)) {
         g_printerr ("error: invalid slot number\n");
         return NULL;
     }
+
+    input = qmi_message_uim_power_on_sim_input_new ();
 
     if (!qmi_message_uim_power_on_sim_input_set_slot (input, slot, &error)) {
         g_printerr ("error: could not create SIM power on input: %s\n", error->message);
@@ -907,12 +907,12 @@ power_off_sim_input_create (const gchar *slot_str)
     guint                         slot;
     GError                       *error = NULL;
 
-    input = qmi_message_uim_power_off_sim_input_new ();
-
     if (!qmicli_read_uint_from_string (slot_str, &slot) || (slot > G_MAXUINT8)) {
         g_printerr ("error: invalid slot number\n");
         return NULL;
     }
+
+    input = qmi_message_uim_power_off_sim_input_new ();
 
     if (!qmi_message_uim_power_off_sim_input_set_slot (input, slot, &error)) {
         g_printerr ("error: could not create SIM power off input: %s\n", error->message);
