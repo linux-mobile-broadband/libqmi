@@ -2070,14 +2070,13 @@ static QmiMessageDmsActivateManualInput *
 activate_manual_input_create (const gchar *str)
 {
     QmiMessageDmsActivateManualInput *input;
-    gchar **split;
+    g_auto(GStrv) split = NULL;
     GError *error = NULL;
     gulong split_1_int;
 
     split = g_strsplit (str, ",", -1);
     if (g_strv_length (split) != 4) {
         g_printerr ("error: incorrect number of arguments given\n");
-        g_strfreev (split);
         return NULL;
     }
 
@@ -2103,7 +2102,6 @@ activate_manual_input_create (const gchar *str)
         input = NULL;
     }
 
-    g_strfreev(split);
     return input;
 }
 
@@ -3184,8 +3182,8 @@ get_stored_image (QmiClientDms *client,
                   gpointer user_data)
 {
     GetStoredImageContext *operation_ctx;
+    g_auto(GStrv) split = NULL;
     GTask *task;
-    gchar **split;
     guint i = 0;
     gint modem_index = -1;
     gint pri_index = -1;
