@@ -867,7 +867,7 @@ static int download_image(int serfd, char *buf, const char *image)
     fprintf(stderr, "\n");
 
 out:
-    if (imgfd > 0)
+    if (imgfd >= 0)
         close(imgfd);
     return ret;
 }
