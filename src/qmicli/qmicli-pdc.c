@@ -1127,6 +1127,7 @@ load_config_file_from_string (const gchar *str)
     hash_size = g_checksum_type_get_length (G_CHECKSUM_SHA1);
     checksum = g_checksum_new (G_CHECKSUM_SHA1);
     g_checksum_update (checksum, file_contents, file_size);
+    g_free (file_contents);
 
     data = g_slice_new (LoadConfigFileData);
     data->mapped_file = g_mapped_file_ref (mapped_file);
