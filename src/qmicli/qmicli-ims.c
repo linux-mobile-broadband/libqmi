@@ -195,16 +195,16 @@ get_services_enabled_ready (QmiClientIms *client,
     g_print ("[%s] IMS services:\n", qmi_device_get_path_display (ctx->device));
 
     if (qmi_message_ims_get_ims_services_enabled_setting_output_get_ims_voice_service_enabled (output, &service_voice_enabled, NULL))
-        g_print ("\t       IMS registration enabled: %s\n", service_ims_registration_enabled? "yes" : "no");
+        g_print ("\t          Voice service enabled: %s\n", service_voice_enabled? "yes" : "no");
 
     if (qmi_message_ims_get_ims_services_enabled_setting_output_get_ims_video_telephony_service_enabled (output, &service_vt_enabled, NULL))
-        g_print ("\t          Voice service enabled: %s\n", service_voice_enabled? "yes" : "no");
+        g_print ("\tVideo Telephony service enabled: %s\n", service_vt_enabled? "yes" : "no");
 
     if (qmi_message_ims_get_ims_services_enabled_setting_output_get_ims_voice_wifi_service_enabled (output, &service_voice_wifi_enabled, NULL))
         g_print ("\t     Voice WiFi service enabled: %s\n", service_voice_wifi_enabled? "yes" : "no");
 
     if (qmi_message_ims_get_ims_services_enabled_setting_output_get_ims_registration_service_enabled (output, &service_ims_registration_enabled, NULL))
-        g_print ("\tVideo Telephony service enabled: %s\n", service_vt_enabled? "yes" : "no");
+        g_print ("\t       IMS registration enabled: %s\n", service_ims_registration_enabled? "yes" : "no");
  
     if (qmi_message_ims_get_ims_services_enabled_setting_output_get_ims_ut_service_enabled (output, &service_ut_enabled, NULL))
         g_print ("\t      UE to TAS service enabled: %s\n", service_ut_enabled? "yes" : "no");
