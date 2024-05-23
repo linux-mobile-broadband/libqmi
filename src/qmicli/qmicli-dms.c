@@ -941,7 +941,7 @@ static QmiMessageDmsUimSetPinProtectionInput *
 uim_set_pin_protection_input_create (const gchar *str)
 {
     QmiMessageDmsUimSetPinProtectionInput *input = NULL;
-    gchar **split;
+    g_auto(GStrv) split = NULL;
     QmiDmsUimPinId pin_id;
     gboolean enable_disable;
     gchar *current_pin;
@@ -970,7 +970,6 @@ uim_set_pin_protection_input_create (const gchar *str)
             input = NULL;
         }
     }
-    g_strfreev (split);
 
     return input;
 }
@@ -1030,7 +1029,7 @@ static QmiMessageDmsUimVerifyPinInput *
 uim_verify_pin_input_create (const gchar *str)
 {
     QmiMessageDmsUimVerifyPinInput *input = NULL;
-    gchar **split;
+    g_auto(GStrv) split = NULL;
     QmiDmsUimPinId pin_id;
     gchar *current_pin;
 
@@ -1056,7 +1055,6 @@ uim_verify_pin_input_create (const gchar *str)
             input = NULL;
         }
     }
-    g_strfreev (split);
 
     return input;
 }
@@ -1116,7 +1114,7 @@ static QmiMessageDmsUimUnblockPinInput *
 uim_unblock_pin_input_create (const gchar *str)
 {
     QmiMessageDmsUimUnblockPinInput *input = NULL;
-    gchar **split;
+    g_auto(GStrv) split = NULL;
     QmiDmsUimPinId pin_id;
     gchar *puk;
     gchar *new_pin;
@@ -1145,7 +1143,6 @@ uim_unblock_pin_input_create (const gchar *str)
             input = NULL;
         }
     }
-    g_strfreev (split);
 
     return input;
 }
@@ -1205,7 +1202,7 @@ static QmiMessageDmsUimChangePinInput *
 uim_change_pin_input_create (const gchar *str)
 {
     QmiMessageDmsUimChangePinInput *input = NULL;
-    gchar **split;
+    g_auto(GStrv) split = NULL;
     QmiDmsUimPinId pin_id;
     gchar *old_pin;
     gchar *new_pin;
@@ -1234,7 +1231,6 @@ uim_change_pin_input_create (const gchar *str)
             input = NULL;
         }
     }
-    g_strfreev (split);
 
     return input;
 }
@@ -1567,7 +1563,7 @@ static QmiMessageDmsUimSetCkProtectionInput *
 uim_set_ck_protection_input_create (const gchar *str)
 {
     QmiMessageDmsUimSetCkProtectionInput *input = NULL;
-    gchar **split;
+    g_auto(GStrv) split = NULL;
     QmiDmsUimFacility facility;
     gboolean enable_disable;
     gchar *key;
@@ -1602,7 +1598,6 @@ uim_set_ck_protection_input_create (const gchar *str)
             }
         }
     }
-    g_strfreev (split);
 
     return input;
 }
@@ -1658,7 +1653,7 @@ static QmiMessageDmsUimUnblockCkInput *
 uim_unblock_ck_input_create (const gchar *str)
 {
     QmiMessageDmsUimUnblockCkInput *input = NULL;
-    gchar **split;
+    g_auto(GStrv) split = NULL;
     QmiDmsUimFacility facility;
     gchar *key;
 
@@ -1684,7 +1679,6 @@ uim_unblock_ck_input_create (const gchar *str)
             input = NULL;
         }
     }
-    g_strfreev (split);
 
     return input;
 }
@@ -2234,7 +2228,7 @@ static QmiMessageDmsSetUserLockStateInput *
 set_user_lock_state_input_create (const gchar *str)
 {
     QmiMessageDmsSetUserLockStateInput *input = NULL;
-    gchar **split;
+    g_auto(GStrv) split = NULL;
     gboolean enable_disable;
     gchar *code;
 
@@ -2261,7 +2255,6 @@ set_user_lock_state_input_create (const gchar *str)
             input = NULL;
         }
     }
-    g_strfreev (split);
 
     return input;
 }
@@ -2304,7 +2297,7 @@ static QmiMessageDmsSetUserLockCodeInput *
 set_user_lock_code_input_create (const gchar *str)
 {
     QmiMessageDmsSetUserLockCodeInput *input = NULL;
-    gchar **split;
+    g_auto(GStrv) split = NULL;
     gchar *old_code;
     gchar *new_code;
 
@@ -2330,7 +2323,6 @@ set_user_lock_code_input_create (const gchar *str)
             input = NULL;
         }
     }
-    g_strfreev (split);
 
     return input;
 }
