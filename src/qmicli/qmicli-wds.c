@@ -3197,14 +3197,14 @@ qmicli_wds_run (QmiDevice *device,
 #if defined HAVE_QMI_MESSAGE_WDS_SET_IP_FAMILY
     if (set_ip_family_str) {
         QmiMessageWdsSetIpFamilyInput *input;
+        QmiWdsIpFamily preference;
 
-        input = qmi_message_wds_set_ip_family_input_new ();
         switch (atoi (set_ip_family_str)) {
         case 4:
-            qmi_message_wds_set_ip_family_input_set_preference (input, QMI_WDS_IP_FAMILY_IPV4, NULL);
+            preference = QMI_WDS_IP_FAMILY_IPV4;
             break;
         case 6:
-            qmi_message_wds_set_ip_family_input_set_preference (input, QMI_WDS_IP_FAMILY_IPV6, NULL);
+            preference = QMI_WDS_IP_FAMILY_IPV6;
             break;
         default:
             g_printerr ("error: unknown IP type '%s' (not 4 or 6)\n",
@@ -3212,6 +3212,10 @@ qmicli_wds_run (QmiDevice *device,
             operation_shutdown (FALSE);
             return;
         }
+
+        input = qmi_message_wds_set_ip_family_input_new ();
+        qmi_message_wds_set_ip_family_input_set_preference (input, preference, NULL);
+
         g_debug ("Asynchronously set IP family...");
         qmi_client_wds_set_ip_family (client,
                                       input,
@@ -3441,7 +3445,6 @@ qmicli_wds_run (QmiDevice *device,
         guint profile_index;
 
         split = g_strsplit (delete_profile_str, ",", -1);
-        input = qmi_message_wds_delete_profile_input_new ();
 
         if (g_strv_length (split) != 2) {
             g_printerr ("error: expected 2 arguments for delete profile command\n");
@@ -3471,6 +3474,8 @@ qmicli_wds_run (QmiDevice *device,
             return;
         }
 
+        input = qmi_message_wds_delete_profile_input_new ();
+
         qmi_message_wds_delete_profile_input_set_profile_identifier (input, profile_type, (guint8)profile_index, NULL);
 
         g_strfreev (split);
@@ -3490,18 +3495,21 @@ qmicli_wds_run (QmiDevice *device,
 #if defined HAVE_QMI_MESSAGE_WDS_GET_PROFILE_LIST && defined HAVE_QMI_MESSAGE_WDS_GET_PROFILE_SETTINGS
     if (get_profile_list_str) {
         QmiMessageWdsGetProfileListInput *input;
+        QmiWdsProfileType profile_type;
 
-        input = qmi_message_wds_get_profile_list_input_new ();
         if (g_str_equal (get_profile_list_str, "3gpp"))
-            qmi_message_wds_get_profile_list_input_set_profile_type (input, QMI_WDS_PROFILE_TYPE_3GPP, NULL);
+            profile_type = QMI_WDS_PROFILE_TYPE_3GPP;
         else if (g_str_equal (get_profile_list_str, "3gpp2"))
-            qmi_message_wds_get_profile_list_input_set_profile_type (input, QMI_WDS_PROFILE_TYPE_3GPP2, NULL);
+            profile_type = QMI_WDS_PROFILE_TYPE_3GPP2;
         else {
             g_printerr ("error: invalid profile type '%s'. Expected '3gpp' or '3gpp2'.'\n",
                         get_profile_list_str);
             operation_shutdown (FALSE);
             return;
         }
+
+        input = qmi_message_wds_get_profile_list_input_new ();
+        qmi_message_wds_get_profile_list_input_set_profile_type (input, profile_type, NULL);
 
         g_debug ("Asynchronously get profile list...");
         qmi_client_wds_get_profile_list (ctx->client,
@@ -3574,18 +3582,21 @@ qmicli_wds_run (QmiDevice *device,
 #if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_SETTINGS
     if (get_default_settings_str) {
         QmiMessageWdsGetDefaultSettingsInput *input;
+        QmiWdsProfileType profile_type;
 
-        input = qmi_message_wds_get_default_settings_input_new ();
         if (g_str_equal (get_default_settings_str, "3gpp"))
-            qmi_message_wds_get_default_settings_input_set_profile_type (input, QMI_WDS_PROFILE_TYPE_3GPP, NULL);
+            profile_type = QMI_WDS_PROFILE_TYPE_3GPP;
         else if (g_str_equal (get_default_settings_str, "3gpp2"))
-            qmi_message_wds_get_default_settings_input_set_profile_type (input, QMI_WDS_PROFILE_TYPE_3GPP2, NULL);
+            profile_type = QMI_WDS_PROFILE_TYPE_3GPP2;
         else {
             g_printerr ("error: invalid default type '%s'. Expected '3gpp' or '3gpp2'.'\n",
                         get_default_settings_str);
             operation_shutdown (FALSE);
             return;
         }
+
+        input = qmi_message_wds_get_default_settings_input_new ();
+        qmi_message_wds_get_default_settings_input_set_profile_type (input, profile_type, NULL);
 
         g_debug ("Asynchronously get default settings...");
         qmi_client_wds_get_default_settings (ctx->client,
