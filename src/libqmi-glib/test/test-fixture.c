@@ -51,6 +51,7 @@ device_allocate_client_ready (QmiDevice    *device,
 
     service = qmi_client_get_service (client);
     g_assert (service > QMI_SERVICE_CTL);
+    g_assert ((unsigned)service < G_N_ELEMENTS (fixture->service_info));
     fixture->service_info[service].client = client;
     fixture->service_info[service].transaction_id = 0x0001;
     test_fixture_loop_stop (fixture);
