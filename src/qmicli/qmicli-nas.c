@@ -3837,6 +3837,7 @@ get_operator_name_ready (QmiClientNas *client,
                      element->lac1,
                      element->lac2,
                      element->plmn_name_record_identifier);
+	    g_free(mnc);
         }
     }
 
