@@ -75,5 +75,17 @@
                      "format" : "guint32" },
                    { "name"   : "Version",
                      "format" : "string",
-                     "max-size" : "120" } ] }
+                     "max-size" : "120" } ] },
+
+  // *********************************************************************************
+  { "name"         : "AT Command",
+    "type"         : "Command",
+    "since"        : "1.32",
+    "set"          : [ { "name"          : "CommandReq",
+                         "format"        : "unsized-byte-array",
+                         "pad-array"     : "FALSE",
+                         "personal-info" : "true"} ],
+    "response"     : [ { "name"          : "CommandResp",
+                         "format"        : "unsized-byte-array",
+                         "personal-info" : "true"} ] }
 ]

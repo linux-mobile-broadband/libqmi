@@ -31,6 +31,7 @@ static Context *ctx;
 /* Options */
 static gboolean  query_radio_state_flag;
 static gchar    *set_radio_state_str;
+static gchar    *set_at_command_str;
 
 static GOptionEntry entries[] = {
     { "quectel-query-radio-state", 0, 0, G_OPTION_ARG_NONE, &query_radio_state_flag,
@@ -40,6 +41,10 @@ static GOptionEntry entries[] = {
     { "quectel-set-radio-state", 0, 0, G_OPTION_ARG_STRING, &set_radio_state_str,
       "Set radio state",
       "[(on)]"
+    },
+    { "quectel-set-at-command", 0, 0, G_OPTION_ARG_STRING, &set_at_command_str,
+      "Send AT command to module, and receive AT response",
+      "\"<AT Command>\""
     },
     { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
@@ -69,7 +74,8 @@ mbimcli_quectel_options_enabled (void)
         return !!n_actions;
 
     n_actions = (query_radio_state_flag +
-                 !!set_radio_state_str);
+                 !!set_radio_state_str +
+                 !!set_at_command_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Quectel actions requested\n");
@@ -144,6 +150,39 @@ radio_state_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+qdu_at_command_ready (MbimDevice   *device,
+                      GAsyncResult *res)
+{
+    g_autoptr(GError)       error    = NULL;
+    guint32                 ret_size = 0;
+    const guint8           *ret_data = NULL;
+    g_autoptr(MbimMessage)  response = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_qdu_at_command_response_parse (
+            response,
+            &ret_size,
+            &ret_data,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    /* The first four data are the status of the at response */
+    g_print ("%.*s\n", (int)(ret_size - sizeof (guint32)), ret_data + sizeof (guint32));
+
+    shutdown (TRUE);
+}
+
 void
 mbimcli_quectel_run (MbimDevice   *device,
                      GCancellable *cancellable)
@@ -188,6 +227,31 @@ mbimcli_quectel_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)radio_state_ready,
                              GUINT_TO_POINTER (TRUE));
+        return;
+    }
+
+    /* Request to send AT command */
+    if (set_at_command_str) {
+        g_autoptr(GByteArray) buffer   = NULL;
+        gint32                cmdlen   = 0;
+        gint32                cmd_type = 0;
+
+        cmdlen = strlen (set_at_command_str);
+        buffer = g_byte_array_sized_new (cmdlen + sizeof (gint32) + 2);
+
+        /* Specify command type: AT -- 0 */
+        g_byte_array_append (buffer, (const guint8 *) &cmd_type, sizeof (gint32));
+        g_byte_array_append (buffer, (const guint8 *) set_at_command_str, cmdlen);
+
+        request = mbim_message_qdu_at_command_set_new (buffer->len,
+                                                       (const guint8 *) buffer->data,
+                                                       NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)qdu_at_command_ready,
+                             NULL);
         return;
     }
 
