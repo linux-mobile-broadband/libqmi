@@ -72,7 +72,8 @@ gboolean mbimcli_parse_sar_config_state_array (const gchar  *str,
     MBIMCLI_ENUM_LIST_ITEM (MbimUiccPassThroughAction,    uicc_pass_through_action,    "uicc pass through action")    \
     MBIMCLI_ENUM_LIST_ITEM (MbimIntelBootMode,            intel_boot_mode,             "intel boot mode")             \
     MBIMCLI_ENUM_LIST_ITEM (MbimTraceCommand,             trace_command,               "trace command")               \
-    MBIMCLI_ENUM_LIST_ITEM (MbimSmsFlag,                  sms_flag,                    "sms flag")
+    MBIMCLI_ENUM_LIST_ITEM (MbimSmsFlag,                  sms_flag,                    "sms flag")                    \
+    MBIMCLI_ENUM_LIST_ITEM (MbimQuectelCommandType,       quectel_command_type,        "quectel command type")
 
 #define MBIMCLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
     gboolean mbimcli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);

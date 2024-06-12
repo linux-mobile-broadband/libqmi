@@ -172,14 +172,14 @@ static const CidConfig cid_ms_basic_connect_extensions_config [MBIM_CID_MS_BASIC
 };
 
 /* Note: index of the array is CID-1 */
-#define MBIM_CID_QDU_LAST MBIM_CID_QDU_AT_COMMAND
+#define MBIM_CID_QDU_LAST MBIM_CID_QDU_COMMAND
 static const CidConfig cid_qdu_config [MBIM_CID_QDU_LAST] = {
     { SET,    QUERY,    NOTIFY    }, /* MBIM_CID_QDU_UPDATE_SESSION */
     { SET,    NO_QUERY, NO_NOTIFY }, /* MBIM_CID_QDU_FILE_OPEN */
     { SET,    NO_QUERY, NO_NOTIFY }, /* MBIM_CID_QDU_FILE_WRITE */
     { SET,    NO_QUERY, NO_NOTIFY }, /* MBIM_CID_QDU_QUECTEL_REBOOT */
     { SET,    NO_QUERY, NO_NOTIFY }, /* MBIM_CID_QDU_QUECTEL_READ_VERSION */
-    { SET,    NO_QUERY, NO_NOTIFY }, /* MBIM_CID_QDU_AT_COMMAND */
+    { SET,    NO_QUERY, NO_NOTIFY }, /* MBIM_CID_QDU_COMMAND */
 };
 
 /* Note: index of the array is CID-1 */

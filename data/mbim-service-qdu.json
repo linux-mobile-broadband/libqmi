@@ -78,14 +78,20 @@
                      "max-size" : "120" } ] },
 
   // *********************************************************************************
-  { "name"         : "AT Command",
+  { "name"         : "Command",
     "type"         : "Command",
     "since"        : "1.32",
-    "set"          : [ { "name"          : "CommandReq",
+    "set"          : [ { "name"          : "CommandType",
+                         "format"        : "guint32",
+                         "public-format" : "MbimQuectelCommandType"},
+                       { "name"          : "CommandString",
                          "format"        : "unsized-byte-array",
                          "pad-array"     : "FALSE",
                          "personal-info" : "true"} ],
-    "response"     : [ { "name"          : "CommandResp",
+    "response"     : [ { "name"          : "CommandResponseStatus",
+                         "format"        : "guint32",
+                         "public-format" : "MbimQuectelCommandResponseStatus"},
+                       { "name"          : "CommandResponseString",
                          "format"        : "unsized-byte-array",
                          "personal-info" : "true"} ] }
 ]

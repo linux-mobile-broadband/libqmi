@@ -1891,6 +1891,34 @@ typedef enum { /*< since=1.26.2 >*/
     MBIM_QUECTEL_RADIO_SWITCH_STATE_FCC_LOCKED = 4,
 } MbimQuectelRadioSwitchState;
 
+/**
+ * MbimQuectelCommandType:
+ * @MBIM_QUECTEL_COMMAND_TYPE_AT: Command type is AT.
+ * @MBIM_QUECTEL_COMMAND_TYPE_SYSTEM: Command type is SYSTEM.
+ *
+ * The types of commands sent via MBIM.
+ *
+ * Since: 1.32
+ */
+typedef enum { /*< since=1.32 >*/
+    MBIM_QUECTEL_COMMAND_TYPE_AT     = 0,
+    MBIM_QUECTEL_COMMAND_TYPE_SYSTEM = 1,
+} MbimQuectelCommandType;
+
+/**
+ * MbimQuectelCommandResponseStatus:
+ * @MBIM_QUECTEL_COMMAND_RESPONSE_STATUS_OK: Command return status OK.
+ * @MBIM_QUECTEL_COMMAND_RESPONSE_STATUS_FAIL: Command return status FAIL.
+ *
+ * The status returned by sending commands via MBIM.
+ *
+ * Since: 1.32
+ */
+typedef enum { /*< since=1.32 >*/
+    MBIM_QUECTEL_COMMAND_RESPONSE_STATUS_OK   = 0,
+    MBIM_QUECTEL_COMMAND_RESPONSE_STATUS_FAIL = 1,
+} MbimQuectelCommandResponseStatus;
+
 /*****************************************************************************/
 /* 'Serving Cell Information' */
 

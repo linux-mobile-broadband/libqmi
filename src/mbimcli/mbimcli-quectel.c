@@ -31,7 +31,7 @@ static Context *ctx;
 /* Options */
 static gboolean  query_radio_state_flag;
 static gchar    *set_radio_state_str;
-static gchar    *set_at_command_str;
+static gchar    *set_command_str;
 
 static GOptionEntry entries[] = {
     { "quectel-query-radio-state", 0, 0, G_OPTION_ARG_NONE, &query_radio_state_flag,
@@ -42,9 +42,10 @@ static GOptionEntry entries[] = {
       "Set radio state",
       "[(on)]"
     },
-    { "quectel-set-at-command", 0, 0, G_OPTION_ARG_STRING, &set_at_command_str,
-      "Send AT command to module, and receive AT response",
-      "\"<AT Command>\""
+    { "quectel-set-command", 0, 0, G_OPTION_ARG_STRING, &set_command_str,
+      "Send command to module (Command type is optional, defaults to AT, allowed options: "
+      "(at, system)",
+      "[(Command type),(\"Command\")]"
     },
     { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
@@ -75,7 +76,7 @@ mbimcli_quectel_options_enabled (void)
 
     n_actions = (query_radio_state_flag +
                  !!set_radio_state_str +
-                 !!set_at_command_str);
+                 !!set_command_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Quectel actions requested\n");
@@ -151,13 +152,14 @@ radio_state_ready (MbimDevice   *device,
 }
 
 static void
-qdu_at_command_ready (MbimDevice   *device,
+qdu_command_ready (MbimDevice   *device,
                       GAsyncResult *res)
 {
-    g_autoptr(GError)       error    = NULL;
-    guint32                 ret_size = 0;
-    const guint8           *ret_data = NULL;
-    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error      = NULL;
+    guint32                 ret_status = 0;
+    guint32                 ret_size   = 0;
+    const guint8           *ret_data   = NULL;
+    g_autoptr(MbimMessage)  response   = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
 
@@ -167,8 +169,9 @@ qdu_at_command_ready (MbimDevice   *device,
         return;
     }
 
-    if (!mbim_message_qdu_at_command_response_parse (
+    if (!mbim_message_qdu_command_response_parse (
             response,
+            &ret_status,
             &ret_size,
             &ret_data,
             &error)) {
@@ -177,10 +180,65 @@ qdu_at_command_ready (MbimDevice   *device,
         return;
     }
 
-    /* The first four data are the status of the at response */
-    g_print ("%.*s\n", (int)(ret_size - sizeof (guint32)), ret_data + sizeof (guint32));
+    if (ret_status == MBIM_QUECTEL_COMMAND_RESPONSE_STATUS_OK)
+        g_print ("%.*s\n", ret_size , ret_data);
+    else
+        g_print ("error: Command returns error!!\n");
 
     shutdown (TRUE);
+}
+
+static gboolean
+set_command_input_parse (const gchar             *str,
+                         gchar                  **command_str,
+                         MbimQuectelCommandType  *command_type)
+{
+    g_auto(GStrv)          split = NULL;
+    guint                  n_min = 1;
+    guint                  n_max = 2;
+    guint                  n     = 0;
+    MbimQuectelCommandType new_command_type;
+
+    g_assert (command_str != NULL);
+
+    /* Format of the string is:
+     *    "[\"Command\"]"
+     * or:
+     *    "[(Command type),(\"Command\")]"
+     */
+    split = g_strsplit (str, ",", -1);
+
+    if (g_strv_length (split) > n_max) {
+        g_printerr ("error: couldn't parse input string, too many arguments\n");
+        return FALSE;
+    }
+
+    if (g_strv_length (split) < n_min) {
+        g_printerr ("error: couldn't parse input string, missing arguments\n");
+        return FALSE;
+    }
+
+    if (command_type && (g_strv_length (split) == n_max)) {
+        const gchar *command_type_str;
+
+        command_type_str = split[n++];
+        if (!mbimcli_read_quectel_command_type_from_string (command_type_str, &new_command_type)) {
+            g_printerr ("error: couldn't parse input command-type: %s\n", command_type_str);
+            return FALSE;
+        }
+
+        if ((new_command_type != MBIM_QUECTEL_COMMAND_TYPE_AT) &&
+            (new_command_type != MBIM_QUECTEL_COMMAND_TYPE_SYSTEM)) {
+            g_printerr ("error: couldn't parse input string, invalid command type\n");
+            return FALSE;
+        }
+        *command_type = new_command_type;
+        *command_str = g_strdup (split[n]);
+    } else if (g_strv_length (split) == n_min) {
+        *command_str = g_strdup (split[n]);
+    }
+
+    return TRUE;
 }
 
 void
@@ -231,26 +289,28 @@ mbimcli_quectel_run (MbimDevice   *device,
     }
 
     /* Request to send AT command */
-    if (set_at_command_str) {
-        g_autoptr(GByteArray) buffer   = NULL;
-        gint32                cmdlen   = 0;
-        gint32                cmd_type = 0;
+    if (set_command_str) {
+        g_autofree gchar      *req_str = NULL;
+        guint32                req_size = 0;
+        MbimQuectelCommandType command_type = MBIM_QUECTEL_COMMAND_TYPE_AT;
 
-        cmdlen = strlen (set_at_command_str);
-        buffer = g_byte_array_sized_new (cmdlen + sizeof (gint32) + 2);
+        if (!set_command_input_parse (set_command_str, &req_str, &command_type)) {
+            g_printerr ("error: parse input string failed!\n");
+            shutdown (FALSE);
+            return;
+        }
 
-        /* Specify command type: AT -- 0 */
-        g_byte_array_append (buffer, (const guint8 *) &cmd_type, sizeof (gint32));
-        g_byte_array_append (buffer, (const guint8 *) set_at_command_str, cmdlen);
+        req_size = strlen (req_str);
 
-        request = mbim_message_qdu_at_command_set_new (buffer->len,
-                                                       (const guint8 *) buffer->data,
-                                                       NULL);
+        request = mbim_message_qdu_command_set_new (command_type,
+                                                    req_size,
+                                                    (const guint8 *) req_str,
+                                                    NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,
                              ctx->cancellable,
-                             (GAsyncReadyCallback)qdu_at_command_ready,
+                             (GAsyncReadyCallback)qdu_command_ready,
                              NULL);
         return;
     }
