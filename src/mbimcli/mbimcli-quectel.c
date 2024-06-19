@@ -193,10 +193,9 @@ set_command_input_parse (const gchar             *str,
                          gchar                  **command_str,
                          MbimQuectelCommandType  *command_type)
 {
-    g_auto(GStrv)          split = NULL;
-    guint                  n_min = 1;
-    guint                  n_max = 2;
-    guint                  n     = 0;
+    g_auto(GStrv)          split            = NULL;
+    guint                  num_parts        = 0;
+    g_autofree gchar      *command_type_str = NULL;
     MbimQuectelCommandType new_command_type;
 
     g_assert (command_str != NULL);
@@ -207,38 +206,52 @@ set_command_input_parse (const gchar             *str,
      *    "[(Command type),(\"Command\")]"
      */
     split = g_strsplit (str, ",", -1);
+    num_parts = g_strv_length (split);
 
-    if (g_strv_length (split) > n_max) {
-        g_printerr ("error: couldn't parse input string, too many arguments\n");
-        return FALSE;
-    }
+    /* The at command may have multiple commas, like:at+qcfg="usbcfg",0x2C7C,0x6008,0x00FF ,
+     * so we need to take the first split to see if it is the command type.
+     * If it is, then combine the remaining splits into a string.
+     * If not, combine the splits into a string. */
+    if (num_parts > 0 && split[0] != NULL) {
+        command_type_str = g_ascii_strdown (split[0], -1);
 
-    if (g_strv_length (split) < n_min) {
-        g_printerr ("error: couldn't parse input string, missing arguments\n");
-        return FALSE;
-    }
+        if (!g_strcmp0 (command_type_str, "at") ||
+            !g_strcmp0 (command_type_str, "system")) {
+            if (!mbimcli_read_quectel_command_type_from_string (command_type_str, &new_command_type)) {
+                g_printerr ("error: couldn't parse input command-type: %s\n", command_type_str);
+                return FALSE;
+            }
 
-    if (command_type && (g_strv_length (split) == n_max)) {
-        const gchar *command_type_str;
+            if ((new_command_type != MBIM_QUECTEL_COMMAND_TYPE_AT) &&
+                (new_command_type != MBIM_QUECTEL_COMMAND_TYPE_SYSTEM)) {
+                g_printerr ("error: couldn't parse input string, invalid command type.\n");
+                return FALSE;
+            }
 
-        command_type_str = split[n++];
-        if (!mbimcli_read_quectel_command_type_from_string (command_type_str, &new_command_type)) {
-            g_printerr ("error: couldn't parse input command-type: %s\n", command_type_str);
-            return FALSE;
+            *command_type = new_command_type;
+
+            if (num_parts > 1)
+                *command_str = g_strjoinv (",", split + 1);
+            else {
+                g_printerr ("error: couldn't parse input string, missing arguments.\n");
+                return FALSE;
+            }
+        } else if (num_parts > 1) {
+            *command_str = g_strjoinv (",", split);
+        } else {
+            *command_str = g_strdup (split[0]);
         }
 
-        if ((new_command_type != MBIM_QUECTEL_COMMAND_TYPE_AT) &&
-            (new_command_type != MBIM_QUECTEL_COMMAND_TYPE_SYSTEM)) {
-            g_printerr ("error: couldn't parse input string, invalid command type\n");
+        if (g_str_has_prefix (*command_str, "AT") || g_str_has_prefix (*command_str, "at"))
+            return TRUE;
+        else {
+            g_printerr ("error: Wrong AT command , command must start with \"AT\".\n");
             return FALSE;
         }
-        *command_type = new_command_type;
-        *command_str = g_strdup (split[n]);
-    } else if (g_strv_length (split) == n_min) {
-        *command_str = g_strdup (split[n]);
+    } else {
+        g_printerr ("error: The input string is empty, please re-enter.\n");
+        return FALSE;
     }
-
-    return TRUE;
 }
 
 void
