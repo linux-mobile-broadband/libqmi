@@ -34,9 +34,15 @@
  * @QMI_WDS_APN_TYPE_MASK_DEFAULT: Default/Internet traffic.
  * @QMI_WDS_APN_TYPE_MASK_IMS: IP Multimedia Subsystem.
  * @QMI_WDS_APN_TYPE_MASK_MMS: Multimedia Messaging Service.
+ * @QMI_WDS_APN_TYPE_MASK_DUN: DUN/tethering. Since 1.36.
+ * @QMI_WDS_APN_TYPE_MASK_SUPL: SUPL server access. Since 1.36.
+ * @QMI_WDS_APN_TYPE_MASK_HIPRI: Hi priority. Since 1.36.
  * @QMI_WDS_APN_TYPE_MASK_FOTA: over the air administration.
+ * @QMI_WDS_APN_TYPE_MASK_CBS: CBS. Since 1.36.
  * @QMI_WDS_APN_TYPE_MASK_IA: Initial Attach.
  * @QMI_WDS_APN_TYPE_MASK_EMERGENCY: Emergency.
+ * @QMI_WDS_APN_TYPE_MASK_UT: UT. Since 1.36.
+ * @QMI_WDS_APN_TYPE_MASK_MCX: Mission critical service. Since 1.36.
  *
  * APN type as a bitmask.
  *
@@ -46,9 +52,15 @@ typedef enum { /*< since=1.30 >*/
     QMI_WDS_APN_TYPE_MASK_DEFAULT   = ((guint64) 1) << 0,
     QMI_WDS_APN_TYPE_MASK_IMS       = ((guint64) 1) << 1,
     QMI_WDS_APN_TYPE_MASK_MMS       = ((guint64) 1) << 2,
+    QMI_WDS_APN_TYPE_MASK_DUN       = ((guint64) 1) << 3,
+    QMI_WDS_APN_TYPE_MASK_SUPL      = ((guint64) 1) << 4,
+    QMI_WDS_APN_TYPE_MASK_HIPRI     = ((guint64) 1) << 5,
     QMI_WDS_APN_TYPE_MASK_FOTA      = ((guint64) 1) << 6,
+    QMI_WDS_APN_TYPE_MASK_CBS       = ((guint64) 1) << 7,
     QMI_WDS_APN_TYPE_MASK_IA        = ((guint64) 1) << 8,
     QMI_WDS_APN_TYPE_MASK_EMERGENCY = ((guint64) 1) << 9,
+    QMI_WDS_APN_TYPE_MASK_UT        = ((guint64) 1) << 10,
+    QMI_WDS_APN_TYPE_MASK_MCX       = ((guint64) 1) << 11,
 } QmiWdsApnTypeMask;
 
 #endif /* _LIBQMI_GLIB_QMI_FLAGS64_WDS_H_ */
