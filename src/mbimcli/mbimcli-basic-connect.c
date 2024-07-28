@@ -727,9 +727,10 @@ set_pin_input_parse (const gchar  *str,
                      gchar       **new_pin,
                      MbimPinType  *pin_type)
 {
-    g_auto(GStrv) split = NULL;
-    guint n_min, n_max, n = 0;
-    MbimPinType new_pin_type;
+    g_auto(GStrv)     split = NULL;
+    guint             n_min, n_max, n = 0;
+    MbimPinType       new_pin_type;
+    g_autoptr(GError) error = NULL;
 
     g_assert (pin != NULL);
     n_min = (new_pin ? 2 : 1);
@@ -760,8 +761,8 @@ set_pin_input_parse (const gchar  *str,
         const gchar *pin_type_str;
 
         pin_type_str = split[n++];
-        if (!mbimcli_read_pin_type_from_string (pin_type_str, &new_pin_type)) {
-            g_printerr ("error: couldn't parse input pin-type: %s\n", pin_type_str);
+        if (!mbimcli_read_pin_type_from_string (pin_type_str, &new_pin_type, &error)) {
+            g_printerr ("error: couldn't parse input pin-type: %s\n", error->message);
             return FALSE;
         }
         if (new_pin_type == MBIM_PIN_TYPE_UNKNOWN ||
@@ -1375,9 +1376,7 @@ connect_activate_properties_handle (const gchar  *key,
         g_free (props->access_string);
         props->access_string = g_strdup (value);
     } else if (g_ascii_strcasecmp (key, "auth") == 0) {
-        if (!mbimcli_read_auth_protocol_from_string (value, &props->auth_protocol)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown auth: '%s'", value);
+        if (!mbimcli_read_auth_protocol_from_string (value, &props->auth_protocol, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "username") == 0) {
@@ -1387,27 +1386,19 @@ connect_activate_properties_handle (const gchar  *key,
         g_free (props->password);
         props->password = g_strdup (value);
     } else if (g_ascii_strcasecmp (key, "ip-type") == 0) {
-        if (!mbimcli_read_context_ip_type_from_string (value, &props->ip_type)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown ip-type: '%s'", value);
+        if (!mbimcli_read_context_ip_type_from_string (value, &props->ip_type, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "compression") == 0) {
-        if (!mbimcli_read_compression_from_string (value, &props->compression)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown compression: '%s'", value);
+        if (!mbimcli_read_compression_from_string (value, &props->compression, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "context-type") == 0) {
-        if (!mbimcli_read_context_type_from_string (value, &props->context_type)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown context-type: '%s'", value);
+        if (!mbimcli_read_context_type_from_string (value, &props->context_type, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "media-type") == 0) {
-        if (!mbimcli_read_access_media_type_from_string (value, &props->media_type)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown media-type: '%s'", value);
+        if (!mbimcli_read_access_media_type_from_string (value, &props->media_type, error)) {
             return FALSE;
         }
     } else {
@@ -1454,8 +1445,8 @@ set_connect_activate_parse (const gchar               *str,
 
             /* Use authentication method */
             if (split[1]) {
-                if (!mbimcli_read_auth_protocol_from_string (split[1], &props->auth_protocol)) {
-                    g_printerr ("error: couldn't parse input string, unknown auth protocol '%s'\n", split[1]);
+                if (!mbimcli_read_auth_protocol_from_string (split[1], &props->auth_protocol, &error)) {
+                    g_printerr ("error: couldn't parse auth protocol: %s\n", error->message);
                     return FALSE;
                 }
                 /* Username */
@@ -2174,21 +2165,15 @@ set_provisioned_contexts_foreach_cb (const gchar                   *key,
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "context-type") == 0) {
-        if (!mbimcli_read_context_type_from_string (value, &props->context_type)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown context-type: '%s'", value);
+        if (!mbimcli_read_context_type_from_string (value, &props->context_type, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "auth") == 0) {
-        if (!mbimcli_read_auth_protocol_from_string (value, &props->auth_protocol)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown auth: '%s'", value);
+        if (!mbimcli_read_auth_protocol_from_string (value, &props->auth_protocol, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "compression") == 0) {
-        if (!mbimcli_read_compression_from_string (value, &props->compression)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown compression: '%s'", value);
+        if (!mbimcli_read_compression_from_string (value, &props->compression, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "username") == 0) {
@@ -3008,7 +2993,8 @@ mbimcli_basic_connect_run (MbimDevice   *device,
     if (set_network_idle_hint_str) {
         MbimNetworkIdleHintState  network_state;
 
-        if (!mbimcli_read_network_idle_hint_state_from_string (set_network_idle_hint_str, &network_state)) {
+        if (!mbimcli_read_network_idle_hint_state_from_string (set_network_idle_hint_str, &network_state, &error)) {
+            g_printerr ("error: couldn't read idle hint state: %s\n", error->message);
             shutdown (FALSE);
             return;
         }
@@ -3045,7 +3031,8 @@ mbimcli_basic_connect_run (MbimDevice   *device,
     if (set_emergency_mode_str) {
         MbimEmergencyModeState  emergency_state;
 
-        if (!mbimcli_read_emergency_mode_state_from_string (set_emergency_mode_str, &emergency_state)) {
+        if (!mbimcli_read_emergency_mode_state_from_string (set_emergency_mode_str, &emergency_state, &error)) {
+            g_printerr ("error: couldn't read emergency mode state: %s\n", error->message);
             shutdown (FALSE);
             return;
         }

@@ -932,9 +932,7 @@ apdu_properties_handle (const gchar  *key,
         if (!props->command)
             return FALSE;
     } else if (g_ascii_strcasecmp (key, "secure-message") == 0) {
-        if (!mbimcli_read_uicc_secure_messaging_from_string (value, &props->secure_messaging)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
-                         "Failed to parse secure-message field");
+        if (!mbimcli_read_uicc_secure_messaging_from_string (value, &props->secure_messaging, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "channel") == 0) {
@@ -944,9 +942,7 @@ apdu_properties_handle (const gchar  *key,
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "classbyte-type") == 0) {
-        if (!mbimcli_read_uicc_class_byte_type_from_string (value, &props->class_byte_type)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
-                         "Failed to parse classbyte-type field");
+        if (!mbimcli_read_uicc_class_byte_type_from_string (value, &props->class_byte_type, error)) {
             return FALSE;
         }
     } else {
@@ -1437,9 +1433,10 @@ mbimcli_ms_uicc_low_level_access_run (MbimDevice   *device,
 
     /* Request to set UICC reset */
     if (set_uicc_reset_str) {
-        MbimUiccPassThroughAction  pass_through_action;
+        MbimUiccPassThroughAction pass_through_action;
 
-        if(!mbimcli_read_uicc_pass_through_action_from_string (set_uicc_reset_str, &pass_through_action)) {
+        if(!mbimcli_read_uicc_pass_through_action_from_string (set_uicc_reset_str, &pass_through_action, &error)) {
+            g_printerr ("error: couldn't parse pass-through action: %s\n", error->message);
             shutdown (FALSE);
             return;
         }

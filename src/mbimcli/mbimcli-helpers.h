@@ -43,7 +43,8 @@ gboolean mbimcli_parse_key_value_string (const gchar *str,
                                          gpointer user_data);
 
 gboolean mbimcli_parse_sar_config_state_array (const gchar  *str,
-                                               GPtrArray   **out);
+                                               GPtrArray   **out,
+                                               GError      **error);
 
 /* Common helpers to read enums from strings */
 
@@ -76,7 +77,7 @@ gboolean mbimcli_parse_sar_config_state_array (const gchar  *str,
     MBIMCLI_ENUM_LIST_ITEM (MbimQuectelCommandType,       quectel_command_type,        "quectel command type")
 
 #define MBIMCLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
-    gboolean mbimcli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);
+    gboolean mbimcli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out, GError **error);
 MBIMCLI_ENUM_LIST
 #undef MBIMCLI_ENUM_LIST_ITEM
 

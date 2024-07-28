@@ -197,6 +197,7 @@ set_command_input_parse (const gchar             *str,
     guint                  num_parts        = 0;
     g_autofree gchar      *command_type_str = NULL;
     MbimQuectelCommandType new_command_type;
+    g_autoptr(GError)      error            = NULL;
 
     g_assert (command_str != NULL);
 
@@ -217,8 +218,8 @@ set_command_input_parse (const gchar             *str,
 
         if (!g_strcmp0 (command_type_str, "at") ||
             !g_strcmp0 (command_type_str, "system")) {
-            if (!mbimcli_read_quectel_command_type_from_string (command_type_str, &new_command_type)) {
-                g_printerr ("error: couldn't parse input command-type: %s\n", command_type_str);
+            if (!mbimcli_read_quectel_command_type_from_string (command_type_str, &new_command_type, &error)) {
+                g_printerr ("error: couldn't parse input command-type: %s\n", error->message);
                 return FALSE;
             }
 

@@ -184,8 +184,9 @@ op_parse (const gchar *str,
           MbimSmsFlag *filter,
           guint32     *index)
 {
-    gboolean   status       = FALSE;
-    gchar    **filter_parts = NULL;
+    gboolean          status       = FALSE;
+    g_auto(GStrv)     filter_parts = NULL;
+    g_autoptr(GError) error        = NULL;
 
     g_assert (filter != NULL);
 
@@ -193,27 +194,36 @@ op_parse (const gchar *str,
     *index = 0;
 
     filter_parts = g_strsplit (str, "=", -1);
-    if (filter_parts[0])
-        status = mbimcli_read_sms_flag_from_string (filter_parts[0], filter);
-    if (status) {
-        if (*filter == MBIM_SMS_FLAG_INDEX) {
-            status = filter_parts[1] && mbimcli_read_uint_from_string (filter_parts[1], index);
-            if (!status) {
-                if (!filter_parts[1])
-                    g_printerr ("error: required index not given\n");
-                else
-                    g_printerr ("error: couln't parse sms index, should be a number\n");
-            }
-            if (*index == 0)
-                g_printerr ("error: index must be > 0\n");
-        } else if (filter_parts[1]) {
-            g_printerr ("error: unexpected assignment for the given operation\n");
-            status = FALSE;
-        }
-    } else
-        status = FALSE;
+    if (!filter_parts[0]) {
+        g_printerr ("error: invalid sms filter: %s\n", str);
+        return FALSE;
+    }
 
-    g_strfreev (filter_parts);
+    status = mbimcli_read_sms_flag_from_string (filter_parts[0], filter, &error);
+    if (!status) {
+        g_printerr ("error: invalid sms flag: %s\n", error->message);
+        return FALSE;
+    }
+
+    if (*filter == MBIM_SMS_FLAG_INDEX) {
+        status = filter_parts[1] && mbimcli_read_uint_from_string (filter_parts[1], index);
+        if (!status) {
+            if (!filter_parts[1])
+                g_printerr ("error: required index not given\n");
+            else
+                g_printerr ("error: couln't parse sms index, should be a number\n");
+            return FALSE;
+        }
+        /* status must be TRUE; validate index */
+        if (*index == 0) {
+            g_printerr ("error: index must be > 0\n");
+            return FALSE;
+        }
+    } else if (filter_parts[1]) {
+        g_printerr ("error: unexpected assignment for the given operation\n");
+        return FALSE;
+    }
+
     return status;
 }
 

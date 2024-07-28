@@ -874,57 +874,39 @@ set_provisioned_contexts_foreach_cb (const gchar                   *key,
                                      ProvisionedContextProperties  *props)
 {
     if (g_ascii_strcasecmp (key, "operation") == 0) {
-        if (!mbimcli_read_context_operation_from_string (value, &props->operation)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown operation: '%s'", value);
+        if (!mbimcli_read_context_operation_from_string (value, &props->operation, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "context-type") == 0) {
-        if (!mbimcli_read_context_type_from_string (value, &props->context_type)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown context-type: '%s'", value);
+        if (!mbimcli_read_context_type_from_string (value, &props->context_type, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "ip-type") == 0) {
-        if (!mbimcli_read_context_ip_type_from_string (value, &props->ip_type)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown ip-type: '%s'", value);
+        if (!mbimcli_read_context_ip_type_from_string (value, &props->ip_type, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "state") == 0) {
-        if (!mbimcli_read_context_state_from_string (value, &props->state)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown state: '%s'", value);
+        if (!mbimcli_read_context_state_from_string (value, &props->state, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "roaming-control") == 0) {
-        if (!mbimcli_read_context_roaming_control_from_string (value, &props->roaming_control)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown roaming-control: '%s'", value);
+        if (!mbimcli_read_context_roaming_control_from_string (value, &props->roaming_control, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "media-type") == 0) {
-        if (!mbimcli_read_context_media_type_from_string (value, &props->media_type)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown media-type: '%s'", value);
+        if (!mbimcli_read_context_media_type_from_string (value, &props->media_type, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "source") == 0) {
-        if (!mbimcli_read_context_source_from_string (value, &props->source)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown source: '%s'", value);
+        if (!mbimcli_read_context_source_from_string (value, &props->source, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "auth") == 0) {
-        if (!mbimcli_read_auth_protocol_from_string (value, &props->auth_protocol)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown auth: '%s'", value);
+        if (!mbimcli_read_auth_protocol_from_string (value, &props->auth_protocol, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "compression") == 0) {
-        if (!mbimcli_read_compression_from_string (value, &props->compression)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown compression: '%s'", value);
+        if (!mbimcli_read_compression_from_string (value, &props->compression, error)) {
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "username") == 0) {
@@ -1420,30 +1402,22 @@ set_registration_parameters_foreach_cb (const gchar             *key,
                                         RegistrationParameters  *params)
 {
     if (g_ascii_strcasecmp (key, "mico-mode") == 0) {
-        if (!mbimcli_read_mico_mode_from_string (value, &params->mico_mode)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown mico-mode: '%s'", value);
+        if (!mbimcli_read_mico_mode_from_string (value, &params->mico_mode, error)) {
             return FALSE;
         }
         params->mico_mode_set = TRUE;
     } else if (g_ascii_strcasecmp (key, "drx-cycle") == 0) {
-        if (!mbimcli_read_drx_cycle_from_string (value, &params->drx_cycle)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown drx-cycle: '%s'", value);
+        if (!mbimcli_read_drx_cycle_from_string (value, &params->drx_cycle, error)) {
             return FALSE;
         }
         params->drx_cycle_set = TRUE;
     } else if (g_ascii_strcasecmp (key, "ladn-info") == 0) {
-        if (!mbimcli_read_ladn_info_from_string (value, &params->ladn_info)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown ladn-info: '%s'", value);
+        if (!mbimcli_read_ladn_info_from_string (value, &params->ladn_info, error)) {
             return FALSE;
         }
         params->ladn_info_set = TRUE;
     } else if (g_ascii_strcasecmp (key, "default-pdu-activation-hint") == 0) {
-        if (!mbimcli_read_default_pdu_activation_hint_from_string (value, &params->pdu_hint)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown default-pdu-activation-hint: '%s'", value);
+        if (!mbimcli_read_default_pdu_activation_hint_from_string (value, &params->pdu_hint, error)) {
             return FALSE;
         }
         params->pdu_hint_set = TRUE;

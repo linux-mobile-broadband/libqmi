@@ -137,7 +137,8 @@ modem_reboot_v2_input_parse (const gchar       *str,
                              MbimIntelBootMode *out_boot_mode,
                              guint32           *out_timeout)
 {
-    g_auto(GStrv) split = NULL;
+    g_auto(GStrv)     split = NULL;
+    g_autoptr(GError) error = NULL;
 
     split = g_strsplit (modem_reboot_str, ",", -1);
 
@@ -151,8 +152,8 @@ modem_reboot_v2_input_parse (const gchar       *str,
         return FALSE;
     }
 
-    if (!mbimcli_read_intel_boot_mode_from_string (split[0], out_boot_mode)) {
-        g_printerr ("error: couldn't read boot mode, wrong value given as input\n");
+    if (!mbimcli_read_intel_boot_mode_from_string (split[0], out_boot_mode, &error)) {
+        g_printerr ("error: couldn't read boot mode: %s\n", error->message);
         return FALSE;
     }
 

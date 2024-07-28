@@ -449,7 +449,8 @@ mbimcli_parse_key_value_string (const gchar                 *str,
 
 gboolean
 mbimcli_parse_sar_config_state_array (const gchar  *str,
-                                      GPtrArray   **out)
+                                      GPtrArray   **out,
+                                      GError      **error)
 {
     g_autoptr(GPtrArray)  config_state_array = NULL;
     g_autoptr(GRegex)     regex = NULL;
@@ -480,11 +481,15 @@ mbimcli_parse_sar_config_state_array (const gchar  *str,
         if (g_ascii_strcasecmp (antenna_index_str, "all") == 0)
             config_state->antenna_index = 0xFFFFFFFF;
         else if (!mbimcli_read_uint_from_string (antenna_index_str, &config_state->antenna_index)) {
-            g_printerr ("error: invalid antenna index: '%s'\n", antenna_index_str);
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                         "invalid antenna index: '%s'",
+                         antenna_index_str);
             return FALSE;
         }
         if (!mbimcli_read_uint_from_string (backoff_index_str, &config_state->backoff_index)) {
-            g_printerr ("error: invalid backoff index: '%s'\n", backoff_index_str);
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                         "invalid backoff index: '%s'",
+                         backoff_index_str);
             return FALSE;
         }
 
@@ -493,12 +498,14 @@ mbimcli_parse_sar_config_state_array (const gchar  *str,
     }
 
     if (inner_error) {
-        g_printerr ("error: couldn't match config state array: %s\n", inner_error->message);
+        g_propagate_prefixed_error (error, inner_error,
+                                    "couldn't match config state array: ");
         return FALSE;
     }
 
     if (config_state_array->len == 0) {
-        g_printerr ("error: no elements found in the array\n");
+        g_set_error_literal (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                             "no elements found in the array");
         return FALSE;
     }
 
@@ -509,20 +516,24 @@ mbimcli_parse_sar_config_state_array (const gchar  *str,
 #define MBIMCLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)                    \
     gboolean                                                                  \
     mbimcli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str,         \
-                                                    TYPE *out)                \
+                                                    TYPE *out,                \
+                                                    GError **error)           \
     {                                                                         \
         GType type;                                                           \
         GEnumClass *enum_class;                                               \
         GEnumValue *enum_value;                                               \
                                                                               \
-        type = mbim_## TYPE_UNDERSCORE ##_get_type ();                         \
+        type = mbim_## TYPE_UNDERSCORE ##_get_type ();                        \
         enum_class = G_ENUM_CLASS (g_type_class_ref (type));                  \
         enum_value = g_enum_get_value_by_nick (enum_class, str);              \
                                                                               \
         if (enum_value)                                                       \
             *out = (TYPE)enum_value->value;                                   \
-        else                                                                  \
-            g_printerr ("error: invalid " DESCR " value given: '%s'\n", str); \
+        else {                                                                \
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,\
+                         "error: invalid " DESCR " value given: '%s'",        \
+                         str);                                                \
+        }                                                                     \
                                                                               \
         g_type_class_unref (enum_class);                                      \
         return !!enum_value;                                                  \

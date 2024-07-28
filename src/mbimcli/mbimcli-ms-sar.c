@@ -226,7 +226,8 @@ static gboolean
 sar_config_input_parse (const gchar         *str,
                         MbimSarControlMode  *mode,
                         MbimSarBackoffState *state,
-                        GPtrArray          **states_array)
+                        GPtrArray          **states_array,
+                        GError             **error)
 {
     g_auto(GStrv) split = NULL;
 
@@ -241,17 +242,16 @@ sar_config_input_parse (const gchar         *str,
     split = g_strsplit (str, ",", 3);
 
     if (g_strv_length (split) < 2) {
-        g_printerr ("error: couldn't parse input string, missing arguments\n");
+        g_set_error_literal (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                             "couldn't parse input string, missing arguments");
         return FALSE;
     }
 
-    if (!mbimcli_read_sar_control_mode_from_string (split[0], mode)) {
-        g_printerr ("error: invalid mode: '%s'\n", split[0]);
+    if (!mbimcli_read_sar_control_mode_from_string (split[0], mode, error)) {
         return FALSE;
     }
 
-    if (!mbimcli_read_sar_backoff_state_from_string (split[1], state)) {
-        g_printerr ("error: invalid state: '%s'\n", split[1]);
+    if (!mbimcli_read_sar_backoff_state_from_string (split[1], state, error)) {
         return FALSE;
     }
 
@@ -265,13 +265,13 @@ sar_config_input_parse (const gchar         *str,
         array_end   = strchr (split[2], ']');
 
         if (!array_begin || !array_end || (array_begin > array_end)) {
-            g_printerr ("error: invalid SAR config state array: '%s'\n", split[2]);
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "invalid SAR config state array: '%s'", split[2]);
             return FALSE;
         }
 
         array_str = g_strndup (&array_begin[1], array_end - array_begin - 1);
-        if (!mbimcli_parse_sar_config_state_array (array_str, states_array)) {
-            g_printerr ("error: failure parsing the SAR config state array contents: '%s'\n", array_str);
+        if (!mbimcli_parse_sar_config_state_array (array_str, states_array, error)) {
             return FALSE;
         }
     } else
@@ -327,6 +327,7 @@ mbimcli_ms_sar_run (MbimDevice   *device,
                     GCancellable *cancellable)
 {
     g_autoptr(MbimMessage) request = NULL;
+    g_autoptr(GError)      error   = NULL;
 
     /* Initialize context */
     ctx = g_slice_new (Context);
@@ -340,7 +341,8 @@ mbimcli_ms_sar_run (MbimDevice   *device,
         MbimSarBackoffState  state;
 
         g_debug ("Asynchronously setting SAR config");
-        if (!sar_config_input_parse (set_sar_config_str, &mode, &state, &states_array)) {
+        if (!sar_config_input_parse (set_sar_config_str, &mode, &state, &states_array, &error)) {
+            g_printerr ("error: couldn't parse SAR config: %s\n", error->message);
             shutdown (FALSE);
             return;
         }
