@@ -130,6 +130,9 @@ typedef enum { /*< since=1.0 >*/
  * @MBIM_STATUS_ERROR_SMS_LANG_NOT_SUPPORTED: Language not supported in SMS.
  * @MBIM_STATUS_ERROR_SMS_ENCODING_NOT_SUPPORTED: Encoding not supported in SMS.
  * @MBIM_STATUS_ERROR_SMS_FORMAT_NOT_SUPPORTED: Format not supported in SMS.
+ * @MBIM_STATUS_ERROR_MS_NO_LOGICAL_CHANNELS: Logical channel open not successful due to channels not available. Defined by Microsoft for UICC low level access. Since 1.32.
+ * @MBIM_STATUS_ERROR_MS_SELECT_FAILED: Logical channel open not successful due to SELECT failure. Defined by Microsoft for UICC low level access. Since 1.32.
+ * @MBIM_STATUS_ERROR_MS_INVALID_LOGICAL_CHANNEL: Logical channel number invalid. Defined by Microsoft for UICC low level access. Since 1.32.
  * @MBIM_STATUS_ERROR_INVALID_SIGNATURE: Invalid signature. Defined by Google for the carrier lock operation. Since 1.30.
  * @MBIM_STATUS_ERROR_INVALID_IMEI: Invalid IMEI. Defined by Google for the carrier lock operation. Since 1.30.
  * @MBIM_STATUS_ERROR_INVALID_TIMESTAMP: Invalid timestamp. Defined by Google for the carrier lock operation. Since 1.30.
@@ -187,6 +190,10 @@ typedef enum { /*< since=1.0 >*/
     MBIM_STATUS_ERROR_SMS_LANG_NOT_SUPPORTED           = 102, /*< nick=SmsLangNotSupported >*/
     MBIM_STATUS_ERROR_SMS_ENCODING_NOT_SUPPORTED       = 103, /*< nick=SmsEncodingNotSupported >*/
     MBIM_STATUS_ERROR_SMS_FORMAT_NOT_SUPPORTED         = 104, /*< nick=SmsFormatNotSupported >*/
+    /* Microsoft defined errors for low level UICC access */
+    MBIM_STATUS_ERROR_MS_NO_LOGICAL_CHANNELS            = 0x87430001, /*< nick=NoLogicalChannels >*/
+    MBIM_STATUS_ERROR_MS_SELECT_FAILED                  = 0x87430002, /*< nick=SelectFailed >*/
+    MBIM_STATUS_ERROR_MS_INVALID_LOGICAL_CHANNEL        = 0x87430003, /*< nick=InvalidLogicalChannel >*/
     /* google defined error for carrier lock */
     MBIM_STATUS_ERROR_INVALID_SIGNATURE                 = 0x91000001, /*< nick=InvalidSignature >*/
     MBIM_STATUS_ERROR_INVALID_IMEI                      = 0x91000002, /*< nick=InvalidImei >*/
