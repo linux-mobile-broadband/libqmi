@@ -66,4 +66,22 @@ typedef enum { /*< since=1.32 >*/
     QMI_GAS_USB_COMPOSITION_ENDPOINT_TYPE_HSIC  = 1,
 } QmiGasUsbCompositionEndpointType;
 
+/**
+ * QmiGasFirmwareAutoSimMode:
+ * @QMI_GAS_FIRMWARE_AUTO_SIM_DISABLE: Disable the automatic carrier switch according to the SIM.
+ * @QMI_GAS_FIRMWARE_AUTO_SIM_ENABLE: Enable the automatic carrier switch according to the SIM.
+ * @QMI_GAS_FIRMWARE_AUTO_SIM_ENABLE_ONE_SHOT: Enable the automatic carrier switch according to the SIM just for one time.
+ * @QMI_GAS_FIRMWARE_AUTO_SIM_PENDING_ONE_SHOT: Indicate the pending status of a single switch (used only in DMS Get Firmware Auto Sim).
+ *
+ * Automatic carrier switch according to the SIM mode.
+ *
+ * Since: 1.36
+ */
+typedef enum { /*< since=1.36 >*/
+    QMI_GAS_FIRMWARE_AUTO_SIM_DISABLE          = 0,
+    QMI_GAS_FIRMWARE_AUTO_SIM_ENABLE           = 1,
+    QMI_GAS_FIRMWARE_AUTO_SIM_ENABLE_ONE_SHOT  = 2,
+    QMI_GAS_FIRMWARE_AUTO_SIM_PENDING_ONE_SHOT = 3,
+} QmiGasFirmwareAutoSimMode;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_GAS_H_ */

@@ -1282,14 +1282,18 @@ qmi_qos_event_get_type
 <TITLE>GAS enumerations and flags</TITLE>
 QmiGasFirmwareListingMode
 QmiGasUsbCompositionEndpointType
+QmiGasFirmwareAutoSimMode
 <SUBSECTION Methods>
 qmi_gas_firmware_listing_mode_get_string
 qmi_gas_usb_composition_endpoint_type_get_string
+qmi_gas_firmware_auto_sim_mode_get_string
 <SUBSECTION Standard>
 QMI_TYPE_GAS_FIRMWARE_LISTING_MODE
 QMI_TYPE_GAS_USB_COMPOSITION_ENDPOINT_TYPE
+QMI_TYPE_GAS_FIRMWARE_AUTO_SIM_MODE
 qmi_gas_firmware_listing_mode_get_type
 qmi_gas_usb_composition_endpoint_type_get_type
+qmi_gas_firmware_auto_sim_mode_get_type
 </SECTION>
 
 <SECTION>
