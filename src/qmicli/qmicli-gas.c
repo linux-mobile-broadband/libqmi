@@ -32,6 +32,7 @@
 #include <qmi-common.h>
 
 #include "qmicli.h"
+#include "qmicli-helpers.h"
 
 #if defined HAVE_QMI_SERVICE_GAS
 
@@ -44,13 +45,15 @@ typedef struct {
 static Context *ctx;
 
 /* Options */
-static gboolean get_firmware_list_flag;
-static gboolean get_active_firmware_flag;
-static gint     set_active_firmware_int = -1;
-static gint     set_usb_composition_int = -1;
-static gboolean get_usb_composition_flag;
-static gboolean get_ethernet_mac_address_flag;
-static gboolean noop_flag;
+static gboolean  get_firmware_list_flag;
+static gboolean  get_active_firmware_flag;
+static gint      set_active_firmware_int = -1;
+static gint      set_usb_composition_int = -1;
+static gboolean  get_usb_composition_flag;
+static gboolean  get_ethernet_mac_address_flag;
+static gchar    *set_firmware_auto_sim_str;
+static gboolean  get_firmware_auto_sim_flag;
+static gboolean  noop_flag;
 
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_GAS_DMS_SET_USB_COMPOSITION
@@ -84,6 +87,18 @@ static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_ETHERNET_PDU_MAC_ADDRESS
     { "gas-dms-get-ethernet-mac-address", 0, 0, G_OPTION_ARG_NONE, &get_ethernet_mac_address_flag,
       "Gets the Ethernet PDU MAC address available in the modem",
+      NULL
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_SET_FIRMWARE_AUTO_SIM
+    { "gas-dms-set-firmware-auto-sim", 0, 0, G_OPTION_ARG_STRING, &set_firmware_auto_sim_str,
+      "Sets the automatic carrier switching mode according to the sim (allowed keys: mode (disable|enable|enable-one-shot), config-id",
+      "[\"key=value,...\"]"
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_FIRMWARE_AUTO_SIM
+    { "gas-dms-get-firmware-auto-sim", 0, 0, G_OPTION_ARG_NONE, &get_firmware_auto_sim_flag,
+      "Gets the automatic carrier switching mode according to the sim",
       NULL
     },
 #endif
@@ -124,6 +139,8 @@ qmicli_gas_options_enabled (void)
                  get_active_firmware_flag +
                  (set_active_firmware_int >= 0) +
                  get_ethernet_mac_address_flag +
+                 !!set_firmware_auto_sim_str +
+                 get_firmware_auto_sim_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -378,6 +395,160 @@ get_ethernet_pdu_mac_address_ready (QmiClientGas *client,
 
 #endif /* HAVE_QMI_MESSAGE_GAS_DMS_GET_ETHERNET_PDU_MAC_ADDRESS */
 
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_SET_FIRMWARE_AUTO_SIM
+
+typedef struct {
+    QmiGasFirmwareAutoSimMode auto_sim_mode;
+    guint8 config_id;
+} FirmwareAutoSimProperties;
+
+static gboolean
+set_firmware_auto_sim_properties_handle (const gchar  *key,
+                                         const gchar  *value,
+                                         GError      **error,
+                                         gpointer      user_data)
+{
+    FirmwareAutoSimProperties *props = user_data;
+
+    if (!value || !value[0]) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                     "key '%s' requires a value", key);
+        return FALSE;
+    }
+
+    if (g_ascii_strcasecmp (key, "mode") == 0) {
+        if (!qmicli_read_gas_firmware_auto_sim_mode_from_string (value, &props->auto_sim_mode)) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "failed reading key 'mode' unrecognized value: '%s'", value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "config-id") == 0) {
+        guint aux;
+
+        if (!qmicli_read_uint_from_string (value, &aux) || (aux >= G_MAXUINT8)) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "failed reading key 'config-id' value in range [0,254]: '%s'", value);
+            return FALSE;
+        }
+        props->config_id = (guint8) aux;
+        return TRUE;
+    }
+
+    g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                 "unrecognized key: '%s'", key);
+    return FALSE;
+}
+
+static QmiMessageGasDmsSetFirmwareAutoSimInput *
+set_firmware_auto_sim_input_create (const gchar *str)
+{
+    g_autoptr(QmiMessageGasDmsSetFirmwareAutoSimInput) input = NULL;
+    g_autoptr(GError)                                  error = NULL;
+    FirmwareAutoSimProperties props = {
+        .auto_sim_mode = 0xFF,
+        .config_id = 0xFF,
+    };
+
+    if (!str[0])
+        return NULL;
+
+    if (!qmicli_parse_key_value_string (str,
+                                        &error,
+                                        set_firmware_auto_sim_properties_handle,
+                                        &props)) {
+        g_printerr ("error: could not parse input string '%s'\n", error->message);
+        return NULL;
+    }
+
+    if (props.auto_sim_mode == 0xFF) {
+        g_printerr ("error: 'mode' is mandatory\n");
+        return NULL;
+    }
+
+    input = qmi_message_gas_dms_set_firmware_auto_sim_input_new ();
+    if (!qmi_message_gas_dms_set_firmware_auto_sim_input_set_auto_sim_mode (input, props.auto_sim_mode, &error)) {
+        g_printerr ("error: couldn't set auto sim mode: '%s'\n", error->message);
+        return NULL;
+    }
+    if (props.config_id != 0xFF) {
+        if (!qmi_message_gas_dms_set_firmware_auto_sim_input_set_config_id (input, props.config_id, &error)) {
+            g_printerr ("error: couldn't set config id: '%s'\n", error->message);
+            return NULL;
+        }
+    }
+
+    return g_steal_pointer (&input);
+}
+
+static void
+set_firmware_auto_sim_ready (QmiClientGas *client,
+                             GAsyncResult *res)
+{
+    g_autoptr(QmiMessageGasDmsSetFirmwareAutoSimOutput) output = NULL;
+    g_autoptr(GError)                                   error = NULL;
+
+    output = qmi_client_gas_dms_set_firmware_auto_sim_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_gas_dms_set_firmware_auto_sim_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't set firmware auto sim: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Firmware auto sim successfully updated\n");
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_GAS_DMS_SET_FIRMWARE_AUTO_SIM */
+
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_FIRMWARE_AUTO_SIM
+
+static void
+get_firmware_auto_sim_ready (QmiClientGas *client,
+                             GAsyncResult *res)
+{
+    g_autoptr(QmiMessageGasDmsGetFirmwareAutoSimOutput) output = NULL;
+    QmiGasFirmwareAutoSimMode auto_sim_mode;
+    guint8 config_id;
+    g_autoptr(GError) error = NULL;
+
+    output = qmi_client_gas_dms_get_firmware_auto_sim_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_gas_dms_get_firmware_auto_sim_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get firmware auto sim values: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_gas_dms_get_firmware_auto_sim_output_get_auto_sim_mode (output, &auto_sim_mode, &error)) {
+        g_printerr ("error: couldn't get firmware auto sim mode: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+    g_print ("Firmware auto sim mode: %s\n", qmi_gas_firmware_auto_sim_mode_get_string (auto_sim_mode));
+
+    if (qmi_message_gas_dms_get_firmware_auto_sim_output_get_config_id (output, &config_id, &error)) {
+        g_print ("Firmware auto sim config id: %u\n", config_id);
+    }
+
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_GAS_DMS_GET_FIRMWARE_AUTO_SIM */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -483,6 +654,38 @@ qmicli_gas_run (QmiDevice *device,
                                                          ctx->cancellable,
                                                          (GAsyncReadyCallback)get_ethernet_pdu_mac_address_ready,
                                                          NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_SET_FIRMWARE_AUTO_SIM
+    if (set_firmware_auto_sim_str) {
+        g_autoptr(QmiMessageGasDmsSetFirmwareAutoSimInput) input = NULL;
+
+        input = set_firmware_auto_sim_input_create (set_firmware_auto_sim_str);
+        if (input) {
+            g_debug ("Asynchronously setting firmware auto sim...");
+            qmi_client_gas_dms_set_firmware_auto_sim (client,
+                                                      input,
+                                                      10,
+                                                      ctx->cancellable,
+                                                      (GAsyncReadyCallback)set_firmware_auto_sim_ready,
+                                                      NULL);
+        } else
+            operation_shutdown (FALSE);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_FIRMWARE_AUTO_SIM
+    if (get_firmware_auto_sim_flag) {
+        g_debug ("Asynchronously getting firmware auto sim...");
+        qmi_client_gas_dms_get_firmware_auto_sim (ctx->client,
+                                                  NULL,
+                                                  10,
+                                                  ctx->cancellable,
+                                                  (GAsyncReadyCallback)get_firmware_auto_sim_ready,
+                                                  NULL);
         return;
     }
 #endif
