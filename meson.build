@@ -227,6 +227,7 @@ test_env = {
 
 subdir('src')
 subdir('utils')
+subdir('examples/simple-tester-c')
 
 enable_gtk_doc = get_option('gtk_doc')
 if enable_gtk_doc
