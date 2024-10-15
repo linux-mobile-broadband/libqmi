@@ -34,7 +34,7 @@ def device_close_ready(qmidev,result,user_data=None):
     try:
         qmidev.close_finish(result)
     except GLib.GError as error:
-        sys.stderr.write("Couldn't close QMI device: %s\n" % error.message)
+        sys.stderr.write("error: couldn't close QMI device: %s\n" % error.message)
     main_loop.quit()
 
 
@@ -46,7 +46,7 @@ def release_client_ready(qmidev,result,user_data=None):
     try:
         qmidev.release_client_finish(result)
     except GLib.GError as error:
-        sys.stderr.write("Couldn't release QMI client: %s\n" % error.message)
+        sys.stderr.write("error: couldn't release QMI client: %s\n" % error.message)
     device_close(qmidev)
 
 
@@ -59,7 +59,7 @@ def get_ids_ready(qmiclient,result,qmidev):
         output = qmiclient.get_ids_finish(result)
         output.get_result()
     except GLib.GError as error:
-        sys.stderr.write("Couldn't query device ids: %s\n" % error.message)
+        sys.stderr.write("error: couldn't query device ids: %s\n" % error.message)
         release_client(qmidev, qmiclient)
         return
 
@@ -108,7 +108,7 @@ def get_capabilities_ready(qmiclient,result,qmidev):
         print("networks:              %s" % networks)
 
     except GLib.GError as error:
-        sys.stderr.write("Couldn't query device capabilities: %s\n" % error.message)
+        sys.stderr.write("error: couldn't query device capabilities: %s\n" % error.message)
 
     qmiclient.get_ids(None, 10, None, get_ids_ready, qmidev)
 
@@ -117,7 +117,7 @@ def allocate_client_ready(qmidev,result,user_data=None):
     try:
         qmiclient = qmidev.allocate_client_finish(result)
     except GLib.GError as error:
-        sys.stderr.write("Couldn't allocate QMI client: %s\n" % error.message)
+        sys.stderr.write("error: couldn't allocate QMI client: %s\n" % error.message)
         device_close(qmidev)
         return
 
@@ -128,7 +128,7 @@ def open_ready(qmidev,result,user_data=None):
     try:
         qmidev.open_finish(result)
     except GLib.GError as error:
-        sys.stderr.write("Couldn't open QMI device: %s\n" % error.message)
+        sys.stderr.write("error: couldn't open QMI device: %s\n" % error.message)
         main_loop.quit()
         return
 
@@ -139,7 +139,7 @@ def new_ready(unused,result,user_data=None):
     try:
         qmidev = Qmi.Device.new_finish(result)
     except GLib.GError as error:
-        sys.stderr.write("Couldn't create QMI device: %s\n" % error.message)
+        sys.stderr.write("error: couldn't create QMI device: %s\n" % error.message)
         main_loop.quit()
         return
 
