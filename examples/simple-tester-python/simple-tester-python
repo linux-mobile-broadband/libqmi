@@ -24,43 +24,43 @@ gi.require_version('Qmi', '1.0')
 from gi.repository import GLib, Gio, Qmi
 
 main_loop = None
-
+device = None
 
 def signal_handler(data):
     main_loop.quit()
 
 
-def device_close_ready(qmidev,result,user_data=None):
+def device_close_ready(dev,result,user_data=None):
     try:
-        qmidev.close_finish(result)
+        dev.close_finish(result)
     except GLib.GError as error:
         sys.stderr.write("error: couldn't close QMI device: %s\n" % error.message)
     main_loop.quit()
 
 
-def device_close(qmidev):
-    qmidev.close_async(10, None, device_close_ready, None)
+def device_close():
+    device.close_async(10, None, device_close_ready, None)
 
 
-def release_client_ready(qmidev,result,user_data=None):
+def release_client_ready(dev,result,user_data=None):
     try:
-        qmidev.release_client_finish(result)
+        dev.release_client_finish(result)
     except GLib.GError as error:
         sys.stderr.write("error: couldn't release QMI client: %s\n" % error.message)
-    device_close(qmidev)
+    device_close()
 
 
-def release_client(qmidev,qmiclient):
-    qmidev.release_client(qmiclient, Qmi.DeviceReleaseClientFlags.RELEASE_CID, 10, None, release_client_ready, None)
+def release_client(client):
+    device.release_client(client, Qmi.DeviceReleaseClientFlags.RELEASE_CID, 10, None, release_client_ready, None)
 
 
-def get_ids_ready(qmiclient,result,qmidev):
+def get_ids_ready(client,result,user_data=None):
     try:
-        output = qmiclient.get_ids_finish(result)
+        output = client.get_ids_finish(result)
         output.get_result()
     except GLib.GError as error:
         sys.stderr.write("error: couldn't query device ids: %s\n" % error.message)
-        release_client(qmidev, qmiclient)
+        release_client(client)
         return
 
     try:
@@ -87,12 +87,12 @@ def get_ids_ready(qmiclient,result,qmidev):
     except:
         pass
 
-    release_client(qmidev, qmiclient)
+    release_client(client)
 
 
-def get_capabilities_ready(qmiclient,result,qmidev):
+def get_capabilities_ready(client,result,user_data=None):
     try:
-        output = qmiclient.get_capabilities_finish(result)
+        output = client.get_capabilities_finish(result)
         output.get_result()
 
         maxtxrate, maxrxrate, dataservicecaps, simcaps, radioifaces = output.get_info()
@@ -110,40 +110,41 @@ def get_capabilities_ready(qmiclient,result,qmidev):
     except GLib.GError as error:
         sys.stderr.write("error: couldn't query device capabilities: %s\n" % error.message)
 
-    qmiclient.get_ids(None, 10, None, get_ids_ready, qmidev)
+    client.get_ids(None, 10, None, get_ids_ready, None)
 
 
-def allocate_client_ready(qmidev,result,user_data=None):
+def allocate_client_ready(dev,result,user_data=None):
     try:
-        qmiclient = qmidev.allocate_client_finish(result)
+        client = dev.allocate_client_finish(result)
     except GLib.GError as error:
         sys.stderr.write("error: couldn't allocate QMI client: %s\n" % error.message)
-        device_close(qmidev)
+        device_close()
         return
 
-    qmiclient.get_capabilities(None, 10, None, get_capabilities_ready, qmidev)
+    client.get_capabilities(None, 10, None, get_capabilities_ready, None)
 
 
-def open_ready(qmidev,result,user_data=None):
+def open_ready(dev,result,user_data=None):
     try:
-        qmidev.open_finish(result)
+        dev.open_finish(result)
     except GLib.GError as error:
         sys.stderr.write("error: couldn't open QMI device: %s\n" % error.message)
         main_loop.quit()
         return
 
-    qmidev.allocate_client(Qmi.Service.DMS, Qmi.CID_NONE, 10, None, allocate_client_ready, None)
+    device.allocate_client(Qmi.Service.DMS, Qmi.CID_NONE, 10, None, allocate_client_ready, None)
 
 
 def new_ready(unused,result,user_data=None):
     try:
-        qmidev = Qmi.Device.new_finish(result)
+        global device
+        device = Qmi.Device.new_finish(result)
     except GLib.GError as error:
         sys.stderr.write("error: couldn't create QMI device: %s\n" % error.message)
         main_loop.quit()
         return
 
-    qmidev.open(Qmi.DeviceOpenFlags.PROXY | Qmi.DeviceOpenFlags.AUTO, 10, None, open_ready, None)
+    device.open(Qmi.DeviceOpenFlags.PROXY | Qmi.DeviceOpenFlags.AUTO, 10, None, open_ready, None)
 
 
 if __name__ == "__main__":
