@@ -38,6 +38,7 @@
 #define QMI_WDA_AGGREGATION_PROTOCOL_MAX_DATAGRAMS_UNDEFINED 0xFFFFFFFF
 #define QMI_WDA_AGGREGATION_PROTOCOL_MAX_DATAGRAM_SIZE_UNDEFINED 0xFFFFFFFF
 #define QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED -1
+#define QMI_WDA_LOOPBACK_REPLICATION_FACTOR_UNDEFINED 0
 
 /* Context */
 typedef struct {
@@ -50,6 +51,7 @@ static Context *ctx;
 /* Options */
 static gchar    *set_data_format_str;
 static gchar    *get_data_format_str;
+static gchar    *set_loopback_configuration_str;
 static gboolean  get_data_format_flag;
 static gboolean  get_supported_messages_flag;
 static gboolean  noop_flag;
@@ -89,6 +91,12 @@ static GOptionEntry entries[] = {
       NULL
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_WDA_LOOPBACK_CONFIGURATION
+    { "wda-set-loopback-configuration", 0, 0, G_OPTION_ARG_STRING, &set_loopback_configuration_str,
+      "Set loopback configuration (allowed keys: state (enabled|disabled), replication-factor);",
+      "[\"key=value,...\"]"
+    },
+#endif
     { "wda-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a WDA client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -123,6 +131,7 @@ qmicli_wda_options_enabled (void)
     n_actions = (!!set_data_format_str +
                  get_data_format_flag +
                  get_supported_messages_flag +
+                 !!set_loopback_configuration_str +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -730,6 +739,139 @@ get_supported_messages_ready (QmiClientWda *client,
 
 #endif /* HAVE_QMI_MESSAGE_WDA_GET_SUPPORTED_MESSAGES */
 
+#if defined HAVE_QMI_MESSAGE_WDA_LOOPBACK_CONFIGURATION
+typedef struct {
+    QmiWdaLoopBackState loopback_state;
+    guint32 replication_factor;
+} SetLoopbackConfigurationProperties;
+
+
+static gboolean
+set_loopback_configuration_properties_handle (const gchar  *key,
+                                              const gchar  *value,
+                                              GError      **error,
+                                              gpointer      user_data)
+{
+    SetLoopbackConfigurationProperties *props = (SetLoopbackConfigurationProperties *)user_data;
+
+    if (!value || !value[0]) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "key '%s' requires a value",
+                     key);
+        return FALSE;
+    }
+
+    if (g_ascii_strcasecmp (key, "state") == 0) {
+        if (!qmicli_read_wda_loop_back_state_from_string (value, &(props->loopback_state))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "Unrecognized Loopback state '%s'",
+                         value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "replication-factor") == 0) {
+        props->replication_factor = atoi (value);
+        return TRUE;
+    }
+
+    g_set_error (error,
+                 QMI_CORE_ERROR,
+                 QMI_CORE_ERROR_FAILED,
+                 "Unrecognized option '%s'",
+                 key);
+    return FALSE;
+}
+
+static QmiMessageWdaLoopbackConfigurationInput *
+set_loopback_configuration_input_create (const gchar *str)
+{
+    QmiMessageWdaLoopbackConfigurationInput *input = NULL;
+    GError *error = NULL;
+    SetLoopbackConfigurationProperties props = {
+        .loopback_state     = QMI_WDA_LOOPBACK_DISABLED,
+        .replication_factor = QMI_WDA_LOOPBACK_REPLICATION_FACTOR_UNDEFINED,
+    };
+
+    input = qmi_message_wda_loopback_configuration_input_new ();
+
+    if (!qmicli_parse_key_value_string (str,
+                                        &error,
+                                        set_loopback_configuration_properties_handle,
+                                        &props)) {
+        g_printerr ("error: could not parse input string '%s'\n", error->message);
+        g_error_free (error);
+        goto error_out;
+    }
+
+    if (props.replication_factor == QMI_WDA_LOOPBACK_REPLICATION_FACTOR_UNDEFINED) {
+        g_printerr ("error: 'replication-factor' is mandatory\n");
+        goto error_out;
+    }
+
+    if (!qmi_message_wda_loopback_configuration_input_set_loopback_state (
+            input,
+            props.loopback_state,
+            &error)) {
+        g_printerr ("error: could not set Loopback state '%d': %s\n",
+                    props.loopback_state, error->message);
+        g_error_free (error);
+        goto error_out;
+    }
+
+    if (!qmi_message_wda_loopback_configuration_input_set_replication_factor (
+            input,
+            props.replication_factor,
+            &error)) {
+        g_printerr ("error: could not set Loopback replication factor '%d': %s\n",
+                    props.replication_factor, error->message);
+        g_error_free (error);
+        goto error_out;
+    }
+
+    return input;
+
+error_out:
+    qmi_message_wda_loopback_configuration_input_unref (input);
+    return NULL;
+}
+
+static void
+set_loopback_configuration_ready (QmiClientWda *client,
+                                  GAsyncResult *res)
+{
+    QmiMessageWdaLoopbackConfigurationOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_wda_loopback_configuration_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wda_loopback_configuration_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't set loopback configuration: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_wda_loopback_configuration_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully set loopback configuration\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_wda_loopback_configuration_output_unref (output);
+    operation_shutdown (TRUE);
+}
+#endif /* HAVE_QMI_MESSAGE_WDA_LOOPBACK_CONFIGURATION */
+
 void
 qmicli_wda_run (QmiDevice *device,
                 QmiClientWda *client,
@@ -795,6 +937,29 @@ qmicli_wda_run (QmiDevice *device,
                                                ctx->cancellable,
                                                (GAsyncReadyCallback)get_supported_messages_ready,
                                                NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_WDA_LOOPBACK_CONFIGURATION
+    if (set_loopback_configuration_str) {
+        QmiMessageWdaLoopbackConfigurationInput *input;
+
+        input = set_loopback_configuration_input_create (set_loopback_configuration_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously setting loopback configuration...");
+        qmi_client_wda_loopback_configuration (ctx->client,
+                                               input,
+                                               10,
+                                               ctx->cancellable,
+                                               (GAsyncReadyCallback)set_loopback_configuration_ready,
+                                               NULL);
+
+        qmi_message_wda_loopback_configuration_input_unref (input);
         return;
     }
 #endif

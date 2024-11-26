@@ -35,6 +35,7 @@
     QMICLI_ENUM_LIST_ITEM (QmiDeviceExpectedDataFormat,                 device_expected_data_format,                  "device expected data format")   \
     QMICLI_ENUM_LIST_ITEM (QmiWdaLinkLayerProtocol,                     wda_link_layer_protocol,                      "link layer protocol")           \
     QMICLI_ENUM_LIST_ITEM (QmiWdaDataAggregationProtocol,               wda_data_aggregation_protocol,                "data aggregation protocol")     \
+    QMICLI_ENUM_LIST_ITEM (QmiWdaLoopBackState,                         wda_loop_back_state,                          "loopback state")                \
     QMICLI_ENUM_LIST_ITEM (QmiDataEndpointType,                         data_endpoint_type,                           "data endpoint type")            \
     QMICLI_ENUM_LIST_ITEM (QmiWdsAutoconnectSetting,                    wds_autoconnect_setting,                      "autoconnect setting")           \
     QMICLI_ENUM_LIST_ITEM (QmiWdsAutoconnectSettingRoaming,             wds_autoconnect_setting_roaming,              "autoconnect setting roaming")   \
