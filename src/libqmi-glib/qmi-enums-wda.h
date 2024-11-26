@@ -82,4 +82,18 @@ typedef enum { /*< since=1.10 >*/
     QMI_WDA_DATA_AGGREGATION_PROTOCOL_QMAPV5   = 0x09,
 } QmiWdaDataAggregationProtocol;
 
+/**
+ * QmiWdaLoopBackState:
+ * @QMI_WDA_LOOPBACK_DISABLED: Disabled.
+ * @QMI_WDA_LOOPBACK_ENABLED: Enabled.
+ *
+ * Loopback configuration state.
+ *
+ * Since: 1.36
+ */
+typedef enum { /*< since=1.36 >*/
+    QMI_WDA_LOOPBACK_DISABLED = 0x00,
+    QMI_WDA_LOOPBACK_ENABLED  = 0x01,
+} QmiWdaLoopBackState;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WDA_H_ */

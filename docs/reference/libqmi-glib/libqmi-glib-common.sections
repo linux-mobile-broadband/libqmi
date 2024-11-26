@@ -1060,14 +1060,18 @@ qmi_oma_hfa_feature_done_state_get_type
 <TITLE>WDA enumerations and flags</TITLE>
 QmiWdaLinkLayerProtocol
 QmiWdaDataAggregationProtocol
+QmiWdaLoopBackState
 <SUBSECTION Methods>
 qmi_wda_link_layer_protocol_get_string
 qmi_wda_data_aggregation_protocol_get_string
+qmi_wda_loop_back_state_get_string
 <SUBSECTION Standard>
 QMI_TYPE_WDA_LINK_LAYER_PROTOCOL
 QMI_TYPE_WDA_DATA_AGGREGATION_PROTOCOL
+QMI_TYPE_WDA_LOOP_BACK_STATE
 qmi_wda_link_layer_protocol_get_type
 qmi_wda_data_aggregation_protocol_get_type
+qmi_wda_loop_back_state_get_type
 </SECTION>
 
 <SECTION>

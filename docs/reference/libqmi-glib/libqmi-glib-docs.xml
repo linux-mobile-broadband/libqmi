@@ -403,10 +403,15 @@
     <xi:include href="xml/qmi-client-wda.xml"/>
     <xi:include href="xml/qmi-enums-wda.xml"/>
     <section>
+      <title>WDA Indications</title>
+      <xi:include href="xml/qmi-indication-wda-loopback-configuration.xml"/>
+    </section>
+    <section>
       <title>WDA Requests</title>
       <xi:include href="xml/qmi-message-wda-set-data-format.xml"/>
       <xi:include href="xml/qmi-message-wda-get-data-format.xml"/>
       <xi:include href="xml/qmi-message-wda-get-supported-messages.xml"/>
+      <xi:include href="xml/qmi-message-wda-loopback-configuration.xml"/>
     </section>
   </chapter>
 

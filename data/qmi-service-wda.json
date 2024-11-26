@@ -14,6 +14,10 @@
      "type"    : "Message-ID-Enum" },
 
   // *********************************************************************************
+  {  "name"    : "QMI Indication WDA",
+     "type"    : "Indication-ID-Enum" },
+
+  // *********************************************************************************
   {  "name"    : "Get Supported Messages",
      "type"    : "Message",
      "service" : "WDA",
@@ -258,5 +262,41 @@
                      "type"          : "TLV",
                      "since"         : "1.30",
                      "format"        : "guint8",
-                     "prerequisites" : [ { "common-ref" : "Success" } ] } ] }
+                     "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Loopback Configuration",
+     "type"    : "Message",
+     "service" : "WDA",
+     "id"      : "0x002f",
+     "since"   : "1.36",
+     "input"   : [  { "name"          : "Loopback state",
+                      "id"            : "0x01",
+                      "type"          : "TLV",
+                      "since"         : "1.36",
+                      "format"        : "guint8",
+                      "public-format" : "QmiWdaLoopBackState" },
+                    { "name"          : "Replication factor",
+                      "id"            : "0x10",
+                      "type"          : "TLV",
+                      "since"         : "1.36",
+                      "format"        : "guint32" } ],
+     "output"  : [  { "common-ref"    : "Operation Result" } ] },
+
+  {   "name"    : "Loopback Configuration",
+      "type"    : "Indication",
+      "service" : "WDA",
+      "id"      : "0x002f",
+      "since"   : "1.36",
+      "output"  : [ { "name"          : "Loopback state",
+                      "id"            : "0x01",
+                      "type"          : "TLV",
+                      "since"         : "1.36",
+                      "format"        : "guint8",
+                      "public-format" : "QmiWdaLoopBackState" },
+                    { "name"          : "Replication factor",
+                      "id"            : "0x10",
+                      "type"          : "TLV",
+                      "since"         : "1.36",
+                      "format"        : "guint32" } ] }
 ]
