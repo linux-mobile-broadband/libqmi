@@ -48,15 +48,15 @@ static void
 device_close (MbimDevice *device)
 {
     mbim_device_close (device,
-		       10,
-		       NULL,
-		       (GAsyncReadyCallback) close_ready,
-		       NULL);
+                       10,
+                       NULL,
+                       (GAsyncReadyCallback) close_ready,
+                       NULL);
 }
 
 static void
 query_device_caps_ready (MbimDevice   *device,
-			 GAsyncResult *res)
+                         GAsyncResult *res)
 {
     g_autoptr(GError)       error = NULL;
     g_autoptr(MbimMessage)  response = NULL;
@@ -84,8 +84,8 @@ query_device_caps_ready (MbimDevice   *device,
     if (!response) {
         g_printerr ("error: couldn't open the MbimDevice: %s\n",
                     error->message);
-	device_close (device);
-	return;
+        device_close (device);
+        return;
     }
 
     if (!mbim_message_device_caps_response_parse (
@@ -104,9 +104,9 @@ query_device_caps_ready (MbimDevice   *device,
             &hardware_info,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n",
-		    error->message);
-	device_close (device);
-	return;
+                    error->message);
+        device_close (device);
+        return;
     }
 
     device_type_str    = mbim_device_type_get_string (device_type);
@@ -135,7 +135,7 @@ query_device_caps_ready (MbimDevice   *device,
 
 static void
 open_full_ready (MbimDevice   *device,
-		 GAsyncResult *res)
+                 GAsyncResult *res)
 {
     g_autoptr(GError)      error = NULL;
     g_autoptr(MbimMessage) request = NULL;
@@ -149,11 +149,11 @@ open_full_ready (MbimDevice   *device,
 
     request = mbim_message_device_caps_query_new (NULL);
     mbim_device_command (device,
-			 request,
-			 10,
-			 NULL,
-			 (GAsyncReadyCallback)query_device_caps_ready,
-			 NULL);
+                         request,
+                         10,
+                         NULL,
+                         (GAsyncReadyCallback)query_device_caps_ready,
+                         NULL);
 }
 
 static void
@@ -172,11 +172,11 @@ new_ready (GObject      *unused,
 
     /* Open the device */
     mbim_device_open_full (device,
-			   MBIM_DEVICE_OPEN_FLAGS_PROXY,
-			   10,
-			   NULL,
-			   (GAsyncReadyCallback)open_full_ready,
-			   NULL);
+                           MBIM_DEVICE_OPEN_FLAGS_PROXY,
+                           10,
+                           NULL,
+                           (GAsyncReadyCallback)open_full_ready,
+                           NULL);
 }
 
 int main (int argc, char **argv)
