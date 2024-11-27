@@ -30,17 +30,17 @@ def signal_handler(data):
     main_loop.quit()
 
 
-def close_ready(mbimdev,result,user_data=None):
+def close_ready(device,result,user_data=None):
     try:
-        mbimdev.close_finish(result)
+        device.close_finish(result)
     except GLib.GError as error:
         sys.stderr.write("Couldn't close MBIM device: %s\n" % error.message)
     main_loop.quit()
 
 
-def query_device_caps_ready(mbimdev,result,user_data=None):
+def query_device_caps_ready(device,result,user_data=None):
     try:
-        response = mbimdev.command_finish(result)
+        response = device.command_finish(result)
         response.command_done_get_result()
         success, devtype, cellclass, voiceclass, simclass, dataclass, smscaps, controlcaps, maxsessions, customdataclass, deviceid, firmwareinfo, hardwareinfo = response.device_caps_response_parse()
 
@@ -61,30 +61,30 @@ def query_device_caps_ready(mbimdev,result,user_data=None):
     except GLib.GError as error:
         sys.stderr.write("Couldn't run MBIM command: %s\n" % error.message)
 
-    mbimdev.close(10, None, close_ready, None)
+    device.close(10, None, close_ready, None)
 
 
-def open_full_ready(mbimdev,result,user_data=None):
+def open_full_ready(device,result,user_data=None):
     try:
-        mbimdev.open_full_finish(result)
+        device.open_full_finish(result)
     except GLib.GError as error:
         sys.stderr.write("Couldn't open MBIM device: %s\n" % error.message)
         main_loop.quit()
         return
 
     request = Mbim.Message.device_caps_query_new ()
-    mbimdev.command(request, 10, None, query_device_caps_ready, None)
+    device.command(request, 10, None, query_device_caps_ready, None)
 
 
 def new_ready(unused,result,user_data=None):
     try:
-        mbimdev = Mbim.Device.new_finish(result)
+        device = Mbim.Device.new_finish(result)
     except GLib.GError as error:
         sys.stderr.write("Couldn't create MBIM device: %s\n" % error.message)
         main_loop.quit()
         return
 
-    mbimdev.open_full(Mbim.DeviceOpenFlags.PROXY, 10, None, open_full_ready, None)
+    device.open_full(Mbim.DeviceOpenFlags.PROXY, 10, None, open_full_ready, None)
 
 
 if __name__ == "__main__":
