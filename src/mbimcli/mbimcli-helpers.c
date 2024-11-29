@@ -540,3 +540,48 @@ mbimcli_parse_sar_config_state_array (const gchar  *str,
     }
 MBIMCLI_ENUM_LIST
 #undef MBIMCLI_ENUM_LIST_ITEM
+
+#define MBIMCLI_FLAGS_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)                               \
+    gboolean                                                                              \
+    mbimcli_read_## TYPE_UNDERSCORE ##_mask_from_string (const gchar *str,                \
+                                                         TYPE *out,                       \
+                                                         GError **error)                  \
+    {                                                                                     \
+        GType type;                                                                       \
+        GFlagsClass *flags_class;                                                         \
+        g_auto(GStrv) split = NULL;                                                       \
+        guint i;                                                                          \
+        GError *inner_error = NULL;                                                       \
+                                                                                          \
+        *out = 0;                                                                         \
+                                                                                          \
+        if (!str)                                                                         \
+            return TRUE;                                                                  \
+                                                                                          \
+        type = mbim_## TYPE_UNDERSCORE ##_get_type ();                                    \
+        flags_class = G_FLAGS_CLASS (g_type_class_ref (type));                            \
+                                                                                          \
+        split = g_strsplit (str, "|", -1);                                                \
+        for (i = 0; split && split[i] && !inner_error; i++) {                             \
+            GFlagsValue *flags_value;                                                     \
+                                                                                          \
+            flags_value = g_flags_get_value_by_nick (flags_class, split[i]);              \
+            if (flags_value)                                                              \
+                *out |= (TYPE)flags_value->value;                                         \
+            else {                                                                        \
+                inner_error = g_error_new (MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS, \
+                                           "error: invalid " DESCR " value given: '%s'",  \
+                                           str);                                          \
+            }                                                                             \
+        }                                                                                 \
+                                                                                          \
+        g_type_class_unref (flags_class);                                                 \
+                                                                                          \
+        if (inner_error) {                                                                \
+            g_propagate_error (error, inner_error);                                       \
+            return FALSE;                                                                 \
+        }                                                                                 \
+        return TRUE;                                                                      \
+    }
+MBIMCLI_FLAGS_LIST
+#undef MBIMCLI_FLAGS_LIST_ITEM

@@ -47,7 +47,7 @@ static gboolean  query_home_provider_flag;
 static gboolean  query_preferred_providers_flag;
 static gboolean  query_visible_providers_flag;
 static gboolean  query_register_state_flag;
-static gboolean  set_register_state_automatic_flag;
+static gchar    *set_register_state_str;
 static gboolean  query_signal_state_flag;
 static gboolean  query_packet_service_flag;
 static gboolean  set_packet_service_attach_flag;
@@ -67,6 +67,9 @@ static gboolean  query_network_idle_hint_flag;
 static gchar    *set_emergency_mode_str;
 static gboolean  query_emergency_mode_flag;
 static gchar    *set_service_activation_str;
+
+/* deprecated */
+static gboolean  register_automatic_flag;
 
 static gboolean query_connection_state_arg_parse (const char *option_name,
                                                   const char *value,
@@ -155,9 +158,9 @@ static GOptionEntry entries[] = {
       "Query registration state",
       NULL
     },
-    { "register-automatic", 0, 0, G_OPTION_ARG_NONE, &set_register_state_automatic_flag,
-      "Launch automatic registration",
-      NULL
+    { "set-register-state", 0, 0, G_OPTION_ARG_STRING, &set_register_state_str,
+      "Set basic register settings (allowed keys: action, provider-id, data-class)",
+      "[\"key=value,...\"]"
     },
     { "query-signal-state", 0, 0, G_OPTION_ARG_NONE, &query_signal_state_flag,
       "Query signal state",
@@ -234,6 +237,12 @@ static GOptionEntry entries[] = {
     { "set-service-activation", 0, 0, G_OPTION_ARG_STRING, &set_service_activation_str,
       "Set service activation",
       "[Data]"
+    },
+    /* Deprecated actions. They are kept for compatibility purposes, but should
+     * otherwise not be used in newly written code. */
+    { "register-automatic", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &register_automatic_flag,
+      NULL,
+      NULL
     },
     { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
@@ -318,7 +327,7 @@ mbimcli_basic_connect_options_enabled (void)
                  query_home_provider_flag +
                  query_preferred_providers_flag +
                  query_visible_providers_flag +
-                 set_register_state_automatic_flag +
+                 !!set_register_state_str +
                  query_signal_state_flag +
                  query_packet_service_flag +
                  set_packet_service_attach_flag +
@@ -337,7 +346,8 @@ mbimcli_basic_connect_options_enabled (void)
                  query_network_idle_hint_flag +
                  !!set_emergency_mode_str +
                  query_emergency_mode_flag +
-                 !!set_service_activation_str);
+                 !!set_service_activation_str +
+                 register_automatic_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Basic Connect actions requested\n");
@@ -1734,6 +1744,46 @@ register_state_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+typedef struct {
+    gchar              *provider_id;
+    MbimRegisterAction  action;
+    MbimDataClass       data_class;
+} RegisterStateProperties;
+
+static void
+register_state_properties_clear (RegisterStateProperties *props)
+{
+    g_free (props->provider_id);
+}
+
+G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(RegisterStateProperties, register_state_properties_clear);
+
+static gboolean
+set_register_state_foreach_cb (const gchar              *key,
+                               const gchar              *value,
+                               GError                  **error,
+                               RegisterStateProperties  *props)
+{
+    if (g_ascii_strcasecmp (key, "action") == 0) {
+        if (!mbimcli_read_register_action_from_string (value, &props->action, error)) {
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "provider-id") == 0) {
+        g_free (props->provider_id);
+        props->provider_id = g_strdup (value);
+    } else if (g_ascii_strcasecmp (key, "data-class") == 0) {
+        if (!mbimcli_read_data_class_mask_from_string (value, &props->data_class, error)) {
+            return FALSE;
+        }
+    } else {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "unrecognized option '%s'", key);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 static void
 signal_state_ready (MbimDevice   *device,
                     GAsyncResult *res)
@@ -2556,7 +2606,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         return;
     }
 
-    /* Query registration status? */
+    /* Query register state? */
     if (query_register_state_flag) {
         request = mbim_message_register_state_query_new (NULL);
         mbim_device_command (ctx->device,
@@ -2568,9 +2618,27 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         return;
     }
 
-    /* Launch automatic registration? */
-    if (set_register_state_automatic_flag) {
-        request = mbim_message_register_state_set_new (NULL, MBIM_REGISTER_ACTION_AUTOMATIC, 0, &error);
+    /* Update register state? */
+    if (set_register_state_str || register_automatic_flag) {
+        /* defaults for --register-automatic */
+        g_auto(RegisterStateProperties) props = {
+            .provider_id = NULL,
+            .action = MBIM_REGISTER_ACTION_AUTOMATIC,
+            .data_class = 0,
+        };
+
+        if (set_register_state_str) {
+            if (!mbimcli_parse_key_value_string (set_register_state_str,
+                                                 &error,
+                                                 (MbimParseKeyValueForeachFn)set_register_state_foreach_cb,
+                                                 &props)) {
+                g_printerr ("error: couldn't parse input string: %s\n", error->message);
+                shutdown (FALSE);
+                return;
+            }
+        }
+
+        request = mbim_message_register_state_set_new (props.provider_id, props.action, props.data_class, &error);
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
             shutdown (FALSE);

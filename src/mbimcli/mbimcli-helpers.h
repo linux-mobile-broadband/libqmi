@@ -76,11 +76,22 @@ gboolean mbimcli_parse_sar_config_state_array (const gchar  *str,
     MBIMCLI_ENUM_LIST_ITEM (MbimSmsFlag,                        sms_flag,                           "sms flag")                           \
     MBIMCLI_ENUM_LIST_ITEM (MbimQuectelCommandType,             quectel_command_type,               "quectel command type")               \
     MBIMCLI_ENUM_LIST_ITEM (MbimLteAttachContextOperation,      lte_attach_context_operation,       "lte attach context operation")       \
-    MBIMCLI_ENUM_LIST_ITEM (MbimLteAttachContextRoamingControl, lte_attach_context_roaming_control, "lte attach context roaming control")
+    MBIMCLI_ENUM_LIST_ITEM (MbimLteAttachContextRoamingControl, lte_attach_context_roaming_control, "lte attach context roaming control") \
+    MBIMCLI_ENUM_LIST_ITEM (MbimRegisterAction,                 register_action,                    "register action")
 
 #define MBIMCLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
     gboolean mbimcli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out, GError **error);
 MBIMCLI_ENUM_LIST
 #undef MBIMCLI_ENUM_LIST_ITEM
+
+/* Common helpers to read flags from strings */
+
+#define MBIMCLI_FLAGS_LIST                                            \
+    MBIMCLI_FLAGS_LIST_ITEM (MbimDataClass, data_class, "data class")
+
+#define MBIMCLI_FLAGS_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
+    gboolean mbimcli_read_## TYPE_UNDERSCORE ##_mask_from_string (const gchar *str, TYPE *out, GError **error);
+MBIMCLI_FLAGS_LIST
+#undef MBIMCLI_FLAGS_LIST_ITEM
 
 #endif /* __MBIMCLI_H__ */
