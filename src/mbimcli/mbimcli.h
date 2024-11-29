@@ -13,6 +13,7 @@
 #define __MBIMCLI_H__
 
 #define VALIDATE_UNKNOWN(str) ((str) ? (str) : "unknown")
+#define VALIDATE_EMPTY(str) ((str) ? (str) : "")
 
 /* Common */
 void mbimcli_async_operation_done (gboolean operation_status);

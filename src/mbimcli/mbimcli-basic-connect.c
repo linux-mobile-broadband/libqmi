@@ -2118,9 +2118,9 @@ provisioned_contexts_ready (MbimDevice   *device,
                  provisioned_contexts[i]->context_id,
                  VALIDATE_UNKNOWN (mbim_context_type_get_string (
                      mbim_uuid_to_context_type (&provisioned_contexts[i]->context_type))),
-                 VALIDATE_UNKNOWN (provisioned_contexts[i]->access_string),
-                 VALIDATE_UNKNOWN (provisioned_contexts[i]->user_name),
-                 VALIDATE_UNKNOWN (provisioned_contexts[i]->password),
+                 VALIDATE_EMPTY (provisioned_contexts[i]->access_string),
+                 VALIDATE_EMPTY (provisioned_contexts[i]->user_name),
+                 VALIDATE_EMPTY (provisioned_contexts[i]->password),
                  VALIDATE_UNKNOWN (mbim_compression_get_string (
                      provisioned_contexts[i]->compression)),
                  VALIDATE_UNKNOWN (mbim_auth_protocol_get_string (
