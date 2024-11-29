@@ -34,6 +34,7 @@ static Context *ctx;
 /* Options */
 static gchar    *query_pco_str;
 static gboolean  query_lte_attach_configuration_flag;
+static gchar    *set_lte_attach_configuration_str;
 static gboolean  query_lte_attach_status_flag; /* support for the deprecated name */
 static gboolean  query_lte_attach_info_flag;
 static gboolean  query_sys_caps_flag;
@@ -65,6 +66,10 @@ static GOptionEntry entries[] = {
     { "ms-query-lte-attach-configuration", 0, 0, G_OPTION_ARG_NONE, &query_lte_attach_configuration_flag,
       "Query LTE attach configuration",
       NULL
+    },
+    { "ms-set-lte-attach-configuration", 0, 0, G_OPTION_ARG_STRING, &set_lte_attach_configuration_str,
+      "Set LTE attach configurations (groups separated by '/' if more than one, with allowed-keys: ip-type, roaming-control, source, access-string, username, password, compression, auth)",
+      "[(default|restore-factory)[,\"key=value,...\"[/\"key=value,...\"[/\"key=value,...\"]]]"
     },
     { "ms-query-lte-attach-status", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &query_lte_attach_status_flag,
       NULL,
@@ -114,7 +119,7 @@ static GOptionEntry entries[] = {
     { "ms-device-reset", 0, 0, G_OPTION_ARG_NONE, &device_reset_flag,
       "Reset device",
       NULL
-    },    
+    },
     { "ms-query-version", 0, 0,G_OPTION_ARG_STRING , &query_version_str,
       "Exchange supported version information. Since MBIMEx v2.0.",
       "[(MBIM version),(MBIM extended version)]"
@@ -205,6 +210,7 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
 
     n_actions = (!!query_pco_str +
                  query_lte_attach_configuration_flag +
+                 !!set_lte_attach_configuration_str +
                  (query_lte_attach_status_flag || query_lte_attach_info_flag) +
                  query_sys_caps_flag +
                  query_device_caps_flag +
@@ -295,8 +301,8 @@ query_pco_ready (MbimDevice   *device,
 }
 
 static void
-query_lte_attach_configuration_ready (MbimDevice   *device,
-                                      GAsyncResult *res)
+lte_attach_configuration_ready (MbimDevice   *device,
+                                GAsyncResult *res)
 {
     g_autoptr(MbimMessage)                     response = NULL;
     g_autoptr(GError)                          error = NULL;
@@ -311,7 +317,7 @@ query_lte_attach_configuration_ready (MbimDevice   *device,
         return;
     }
 
-    g_print ("[%s] Successfully queried LTE attach configuration\n",
+    g_print ("[%s] LTE attach configuration available\n",
              mbim_device_get_path_display (device));
 
     if (!mbim_message_ms_basic_connect_extensions_lte_attach_configuration_response_parse (
@@ -339,6 +345,105 @@ query_lte_attach_configuration_ready (MbimDevice   *device,
 #undef VALIDATE_NA
 
     shutdown (TRUE);
+}
+
+static gboolean
+set_lte_attach_configuration_foreach_cb (const gchar                 *key,
+                                         const gchar                 *value,
+                                         GError                     **error,
+                                         MbimLteAttachConfiguration  *configuration)
+{
+    if (g_ascii_strcasecmp (key, "ip-type") == 0) {
+        if (!mbimcli_read_context_ip_type_from_string (value, &configuration->ip_type, error)) {
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "roaming-control") == 0) {
+        if (!mbimcli_read_lte_attach_context_roaming_control_from_string (value, &configuration->roaming, error)) {
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "source") == 0) {
+        if (!mbimcli_read_context_source_from_string (value, &configuration->source, error)) {
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "auth") == 0) {
+        if (!mbimcli_read_auth_protocol_from_string (value, &configuration->auth_protocol, error)) {
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "compression") == 0) {
+        if (!mbimcli_read_compression_from_string (value, &configuration->compression, error)) {
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "username") == 0) {
+        g_free (configuration->user_name);
+        configuration->user_name = g_strdup (value);
+    } else if (g_ascii_strcasecmp (key, "password") == 0) {
+        g_free (configuration->password);
+        configuration->password = g_strdup (value);
+    } else if (g_ascii_strcasecmp (key, "access-string") == 0) {
+        g_free (configuration->access_string);
+        configuration->access_string = g_strdup (value);
+    } else {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "unrecognized option '%s'", key);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+set_lte_attach_configuration_input_parse (const gchar                      *str,
+                                          MbimLteAttachContextOperation    *out_operation,
+                                          guint32                          *out_configuration_count,
+                                          MbimLteAttachConfigurationArray **out_configurations,
+                                          GError                          **error)
+{
+    g_auto(GStrv)                              outer_split = NULL;
+    g_auto(GStrv)                              inner_split = NULL;
+    g_autoptr(MbimLteAttachConfigurationArray) configurations = NULL;
+    guint32                                    configuration_count;
+    guint                                      i;
+
+    /* The first element in the string must be the operation. Split in two items,
+     * the second one will contain all the list of configuration groups. */
+    outer_split = g_strsplit (str, ",", 2);
+
+    if (!outer_split || !outer_split[0]) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "no operation specified");
+        return FALSE;
+    }
+
+    g_strstrip (outer_split[0]);
+    if (!mbimcli_read_lte_attach_context_operation_from_string (outer_split[0], out_operation, error))
+        return FALSE;
+
+    *out_configuration_count = 0;
+    *out_configurations = NULL;
+
+    /* This is allowed when restoring defaults */
+    if (!outer_split[1])
+        return TRUE;
+
+    inner_split = g_strsplit_set (outer_split[1], "/", -1);
+    g_assert (inner_split);
+
+    /* This array is compatible with mbim_lte_attach_configuration_array_free() */
+    configuration_count = g_strv_length (inner_split);
+    configurations = g_new0 (MbimLteAttachConfiguration *, configuration_count + 1);
+    for (i = 0; i < configuration_count; i++) {
+        configurations[i] = g_new0 (MbimLteAttachConfiguration, 1);
+        if (!mbimcli_parse_key_value_string (inner_split[i],
+                                             error,
+                                             (MbimParseKeyValueForeachFn)set_lte_attach_configuration_foreach_cb,
+                                             configurations[i])) {
+            return FALSE;
+        }
+    }
+
+    *out_configuration_count = configuration_count;
+    *out_configurations = g_steal_pointer (&configurations);
+    return TRUE;
 }
 
 static void
@@ -1699,7 +1804,45 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              request,
                              10,
                              ctx->cancellable,
-                             (GAsyncReadyCallback)query_lte_attach_configuration_ready,
+                             (GAsyncReadyCallback)lte_attach_configuration_ready,
+                             NULL);
+        return;
+    }
+
+    if (set_lte_attach_configuration_str) {
+        MbimLteAttachContextOperation              operation = MBIM_LTE_ATTACH_CONTEXT_OPERATION_DEFAULT;
+        g_autoptr(MbimLteAttachConfigurationArray) configurations = NULL;
+        guint32                                    configuration_count = 0;
+
+        g_debug ("Asynchronously setting LTE attach configuration...");
+
+        if (!set_lte_attach_configuration_input_parse (
+                set_lte_attach_configuration_str,
+                &operation,
+                &configuration_count,
+                &configurations,
+                &error)) {
+            g_printerr ("error: couldn't parse setting argument: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        request = mbim_message_ms_basic_connect_extensions_lte_attach_configuration_set_new (
+                      operation,
+                      configuration_count,
+                      (const MbimLteAttachConfiguration * const*)configurations,
+                      &error);
+        if (!request) {
+            g_printerr ("error: couldn't create request: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)lte_attach_configuration_ready,
                              NULL);
         return;
     }
