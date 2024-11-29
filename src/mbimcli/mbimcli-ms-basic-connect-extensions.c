@@ -333,14 +333,14 @@ lte_attach_configuration_ready (MbimDevice   *device,
 #define VALIDATE_NA(str) (str ? str : "n/a")
     for (i = 0; i < configuration_count; i++) {
         g_print ("Configuration %u:\n", i);
-        g_print ("  IP type:       %s\n", mbim_context_ip_type_get_string (configurations[i]->ip_type));
-        g_print ("  Roaming:       %s\n", mbim_lte_attach_context_roaming_control_get_string (configurations[i]->roaming));
-        g_print ("  Source:        %s\n", mbim_context_source_get_string (configurations[i]->source));
-        g_print ("  Access string: %s\n", VALIDATE_NA (configurations[i]->access_string));
-        g_print ("  Username:      %s\n", VALIDATE_NA (configurations[i]->user_name));
-        g_print ("  Password:      %s\n", VALIDATE_NA (configurations[i]->password));
-        g_print ("  Compression:   %s\n", mbim_compression_get_string (configurations[i]->compression));
-        g_print ("  Auth protocol: %s\n", mbim_auth_protocol_get_string (configurations[i]->auth_protocol));
+        g_print ("  IP type:       '%s'\n", mbim_context_ip_type_get_string (configurations[i]->ip_type));
+        g_print ("  Roaming:       '%s'\n", mbim_lte_attach_context_roaming_control_get_string (configurations[i]->roaming));
+        g_print ("  Source:        '%s'\n", mbim_context_source_get_string (configurations[i]->source));
+        g_print ("  Access string: '%s'\n", VALIDATE_NA (configurations[i]->access_string));
+        g_print ("  Username:      '%s'\n", VALIDATE_NA (configurations[i]->user_name));
+        g_print ("  Password:      '%s'\n", VALIDATE_NA (configurations[i]->password));
+        g_print ("  Compression:   '%s'\n", mbim_compression_get_string (configurations[i]->compression));
+        g_print ("  Auth protocol: '%s'\n", mbim_auth_protocol_get_string (configurations[i]->auth_protocol));
     }
 #undef VALIDATE_NA
 
@@ -510,26 +510,26 @@ query_lte_attach_info_ready (MbimDevice   *device,
     }
 
 #define VALIDATE_NA(str) (str ? str : "n/a")
-    g_print ("  Attach state:  %s\n", mbim_lte_attach_state_get_string (lte_attach_state));
-    g_print ("  IP type:       %s\n", mbim_context_ip_type_get_string (ip_type));
-    g_print ("  Access string: %s\n", VALIDATE_NA (access_string));
-    g_print ("  Username:      %s\n", VALIDATE_NA (user_name));
-    g_print ("  Password:      %s\n", VALIDATE_NA (password));
-    g_print ("  Compression:   %s\n", mbim_compression_get_string (compression));
-    g_print ("  Auth protocol: %s\n", mbim_auth_protocol_get_string (auth_protocol));
+    g_print ("  Attach state:  '%s'\n", mbim_lte_attach_state_get_string (lte_attach_state));
+    g_print ("  IP type:       '%s'\n", mbim_context_ip_type_get_string (ip_type));
+    g_print ("  Access string: '%s'\n", VALIDATE_NA (access_string));
+    g_print ("  Username:      '%s'\n", VALIDATE_NA (user_name));
+    g_print ("  Password:      '%s'\n", VALIDATE_NA (password));
+    g_print ("  Compression:   '%s'\n", mbim_compression_get_string (compression));
+    g_print ("  Auth protocol: '%s'\n", mbim_auth_protocol_get_string (auth_protocol));
     if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
         if (nw_error == 0)
-            g_print ("  Network error: none\n");
+            g_print ("  Network error: 'none'\n");
         else if (nw_error == 0xFFFFFFFF)
-            g_print ("  Network error: unknown\n");
+            g_print ("  Network error: 'unknown'\n");
         else {
             const gchar *nw_error_str;
 
             nw_error_str = mbim_nw_error_get_string (nw_error);
             if (nw_error_str)
-                g_print ("  Network error: %s\n", nw_error_str);
+                g_print ("  Network error: '%s'\n", nw_error_str);
             else
-                g_print ("  Network error: unknown (0x%08x)\n", nw_error);
+                g_print ("  Network error: 'unknown' (0x%08x)\n", nw_error);
         }
     }
 #undef VALIDATE_NA
