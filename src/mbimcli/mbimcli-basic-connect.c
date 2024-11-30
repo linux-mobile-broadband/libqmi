@@ -70,6 +70,7 @@ static gchar    *set_service_activation_str;
 
 /* deprecated */
 static gboolean  register_automatic_flag;
+static gboolean  query_registration_state_flag;
 
 static gboolean query_connection_state_arg_parse (const char *option_name,
                                                   const char *value,
@@ -154,8 +155,8 @@ static GOptionEntry entries[] = {
       "Query visible providers",
       NULL
     },
-    { "query-registration-state", 0, 0, G_OPTION_ARG_NONE, &query_register_state_flag,
-      "Query registration state",
+    { "query-register-state", 0, 0, G_OPTION_ARG_NONE, &query_register_state_flag,
+      "Query register state",
       NULL
     },
     { "set-register-state", 0, 0, G_OPTION_ARG_STRING, &set_register_state_str,
@@ -240,6 +241,10 @@ static GOptionEntry entries[] = {
     },
     /* Deprecated actions. They are kept for compatibility purposes, but should
      * otherwise not be used in newly written code. */
+    { "query-registration-state", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &query_registration_state_flag,
+      NULL,
+      NULL
+    },
     { "register-automatic", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &register_automatic_flag,
       NULL,
       NULL
@@ -347,6 +352,7 @@ mbimcli_basic_connect_options_enabled (void)
                  !!set_emergency_mode_str +
                  query_emergency_mode_flag +
                  !!set_service_activation_str +
+                 query_registration_state_flag +
                  register_automatic_flag);
 
     if (n_actions > 1) {
@@ -2607,7 +2613,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
     }
 
     /* Query register state? */
-    if (query_register_state_flag) {
+    if (query_register_state_flag || query_registration_state_flag) {
         request = mbim_message_register_state_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
