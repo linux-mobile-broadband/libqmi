@@ -3920,7 +3920,7 @@ set_plmn_name_input_plmn_create (const gchar *str)
         g_clear_pointer(&input, qmi_message_nas_get_plmn_name_input_unref);
     }
 
-    return input;
+    return g_steal_pointer (&input);
 }
 
 static void
