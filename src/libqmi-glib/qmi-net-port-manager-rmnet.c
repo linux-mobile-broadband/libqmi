@@ -262,8 +262,9 @@ transaction_complete (Transaction *tr,
         g_task_return_new_error (task,
                                  G_IO_ERROR,
                                  g_io_error_from_errno (saved_errno),
-                                 "Netlink message with transaction %u failed",
-                                 sequence_id);
+                                 "Netlink message with transaction %u failed: %s",
+                                 sequence_id,
+                                 g_strerror (saved_errno));
     }
 
     g_object_unref (task);
