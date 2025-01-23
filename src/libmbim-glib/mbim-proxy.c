@@ -1635,7 +1635,6 @@ dispose (GObject *object)
         if (g_socket_service_is_active (priv->socket_service))
             g_socket_service_stop (priv->socket_service);
         g_clear_object (&priv->socket_service);
-        g_unlink (MBIM_PROXY_SOCKET_PATH);
         g_debug ("UNIX socket service at '%s' stopped", MBIM_PROXY_SOCKET_PATH);
     }
 
