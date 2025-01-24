@@ -407,7 +407,7 @@ status ()
         exit 2
     else
         echo "Status: $CONN"
-        if [ "$CONN" != "connected" ]; then
+        if [ "$CONN" != "activated" ]; then
             exit 64
         fi
     fi
