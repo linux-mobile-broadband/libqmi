@@ -1097,6 +1097,16 @@ G_DEPRECATED typedef int QmiDeprecatedWdsVerboseCallEndReasonCm;
 #define QMI_WDS_VERBOSE_CALL_END_REASON_CM_CONFIGURATION_FAILED (QmiDeprecatedWdsVerboseCallEndReasonCm) QMI_WDS_VERBOSE_CALL_END_REASON_CM_CONFERENCE_FAILED
 
 /**
+ * QMI_WDS_VERBOSE_CALL_END_REASON_CM_MESSAGE_EXCEED_MAX_L2_LIMIT:
+ *
+ * Message exceed max L2 limit.
+ *
+ * Deprecated: 1.36: Use the correct #QMI_WDS_VERBOSE_CALL_END_REASON_CM_MESSAGE_EXCEEDS_MAX_L2_LIMIT name instead.
+ */
+G_DEPRECATED typedef int QmiDeprecatedWdsVerboseCallEndReasonCm;
+#define QMI_WDS_VERBOSE_CALL_END_REASON_CM_MESSAGE_EXCEED_MAX_L2_LIMIT (QmiDeprecatedWdsVerboseCallEndReasonCm) QMI_WDS_VERBOSE_CALL_END_REASON_CM_MESSAGE_EXCEED_MAX_L2_LIMIT
+
+/**
  * qmi_message_tlv_read_gfloat:
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
