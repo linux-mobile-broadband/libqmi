@@ -604,9 +604,9 @@ typedef gboolean (* QmiDeviceCommandAbortableParseResponseFn) (QmiDevice   *self
  * @message: the message to send.
  * @message_context: the context of the message.
  * @timeout: maximum time, in seconds, to wait for the response.
- * @abort_build_request_fn: (scope async): callback to build an abort request.
- * @abort_parse_response_fn: (scope async): callback to parse an abort response.
- * @abort_user_data: (closure): user data to pass to @build_request_fn and @parse_response_fn.
+ * @abort_build_request_fn: (scope async) (closure abort_user_data): callback to build an abort request.
+ * @abort_parse_response_fn: (scope async) (closure abort_user_data): callback to parse an abort response.
+ * @abort_user_data: user data to pass to @abort_build_request_fn and @abort_parse_response_fn.
  * @abort_user_data_free: (destroy abort_user_data): a #GDestroyNotify to free @abort_user_data.
  * @cancellable: a #GCancellable, or %NULL.
  * @callback: a #GAsyncReadyCallback to call when the operation is finished.
