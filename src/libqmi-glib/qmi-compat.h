@@ -3501,6 +3501,17 @@ gboolean qmi_message_nas_set_system_selection_preference_input_get_mnc_pds_digit
 
 #endif /* HAVE_QMI_MESSAGE_NAS_SET_SYSTEM_SELECTION_PREFERENCE */
 
+/**
+ * QMI_NAS_DL_BANDWIDTH_INVALID:
+ *
+ * Download bandwidth is invalid.
+ *
+ * Since: 1.16
+ * Deprecated: 1.36: Use the correct #QMI_NAS_DL_BANDWIDTH_UNKNOWN name instead.
+ */
+G_DEPRECATED typedef int QmiDeprecatedNasDLBandwidth;
+#define QMI_NAS_DL_BANDWIDTH_INVALID (QmiDeprecatedNasDLBandwidth) QMI_NAS_DL_BANDWIDTH_UNKNOWN
+
 #if defined HAVE_QMI_MESSAGE_PDC_CONFIG_CHANGE ||          \
     defined HAVE_QMI_MESSAGE_PDC_SET_SELECTED_CONFIG ||    \
     defined HAVE_QMI_MESSAGE_PDC_GET_CONFIG_INFO
