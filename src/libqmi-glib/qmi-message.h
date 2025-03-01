@@ -988,7 +988,7 @@ typedef void (* QmiMessageForeachRawTlvFn) (guint8        type,
  * qmi_message_foreach_raw_tlv:
  * @self: a #QmiMessage.
  * @func: (scope call): the function to call for each TLV.
- * @user_data: (closure func): user data to pass to the function.
+ * @user_data: (closure): user data to pass to the function.
  *
  * Calls the given function for each TLV found within the #QmiMessage.
  *
