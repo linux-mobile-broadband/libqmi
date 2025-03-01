@@ -1,3 +1,47 @@
+Overview of changes in libqmi 1.36.0
+----------------------------------------
+
+ * Build:
+   ** Ignore more files and add an EditorConfig file
+
+ * New request/response/indications:
+   ** gas: added "Get Ethernet PDU MAC Address", "Set Firmware Auto Sim"
+   ** ims: added "Bind" request/response.
+   ** imsa: added "Bind" request/response.
+   ** imsa: added "Register Indications", "Registration Status Changed",
+      and "Services Status Changed" messages
+   ** uim: added "Open Logical Channel", "Send APDU", and "Logical Channel"
+      request/responses.
+   ** wda: added "Loopback Configuration" request/response.
+
+ * New TLVs supported in existing messages:
+   ** nas: added the "Bearer ID" and "XLAT Capability" TLVs in the
+      "Packet Service Status" indication.
+   ** nas: added the "CLAT Enabled" and "IPv6 Prefix Delegation" TLVs in the
+      "Modify Profile" and "Get Profile Settings" responses.
+
+ * libqmi-glib:
+   ** Fix for 16-bit service indications on big-endian (BE) architectures
+   ** Fix qmi_wwan sysfs attr ownership to match that of the control device
+   ** Added more WDS APN Type Mask values (DUN, SUPL, HIRPI, CBS, UT, and MCX)
+   ** Added more NAS ActiveBand and DLBandwidth values
+   ** Added more WDS Verbose Call End Reason values
+
+ * qmi-proxy:
+   ** Don't mistakenly delete qmi-proxy binary when run from same directory
+
+ * qmicli:
+   ** QMI-over-MBIM commands like '--device-open-qmi', '--device-open-mbim',
+      and '--device-open-auto' are now hidden if libqmi was not built with
+      QMI-over-MBIM support
+   ** Added optional key/value pairs to '--uim-set-pin-protection',
+      '-uim-verify-pin', '--uim-unblock-pin', and '--uim-change-pin' to allow
+      PIN operations with multiple SIM cards
+   ** Added "--imsa-bind", "--ims-bind", "--uim-open-logical-channel",
+      "--send-apdu", "--gas-dms-set-firmware-auto-sim",
+      "--gas-dms-get-firmware-auto-sim", "--wda-set-loopback-configuration"
+   ** Fixed various memory leaks
+
 
 Overview of changes in libqmi 1.34.0
 ----------------------------------------
