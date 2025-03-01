@@ -66,6 +66,7 @@ static gboolean force_network_search_flag;
 static gboolean get_operator_name_flag;
 static gboolean get_lte_cphy_ca_info_flag;
 static gboolean get_rf_band_info_flag;
+static gboolean get_network_time_flag;
 static gboolean get_drx_flag;
 static gboolean get_supported_messages_flag;
 static gboolean swi_get_status_flag;
@@ -181,6 +182,12 @@ static GOptionEntry entries[] = {
       NULL
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_NETWORK_TIME
+    { "nas-get-network-time", 0, 0, G_OPTION_ARG_NONE, &get_network_time_flag,
+      "Get Network Time",
+      NULL
+    },
+#endif
 #if defined HAVE_QMI_MESSAGE_NAS_GET_DRX
     { "nas-get-drx", 0, 0, G_OPTION_ARG_NONE, &get_drx_flag,
       "Get DRX",
@@ -254,6 +261,7 @@ qmicli_nas_options_enabled (void)
                  get_operator_name_flag +
                  get_lte_cphy_ca_info_flag +
                  get_rf_band_info_flag +
+                 get_network_time_flag +
                  get_drx_flag +
                  get_supported_messages_flag +
                  swi_get_status_flag +
@@ -4250,6 +4258,98 @@ get_rf_band_info_ready (QmiClientNas *client,
 
 #endif /* HAVE_QMI_MESSAGE_NAS_GET_RF_BAND_INFORMATION */
 
+#if defined HAVE_QMI_MESSAGE_NAS_GET_NETWORK_TIME
+
+typedef struct {
+    guint16                         year;
+    guint8                          month;
+    guint8                          day;
+    guint8                          hour;
+    guint8                          minute;
+    guint8                          second;
+    QmiNasDayOfWeek                 day_of_week;
+    gint8                           tz_offset;
+    QmiNasDaylightSavingsAdjustment ds_adj;
+    QmiNasRadioInterface            radio_if;
+} NASNetworkTime;
+
+static void
+print_time (const char *prefix, const NASNetworkTime *nt)
+{
+    g_print ("%s Date:                            '%u-%02u-%02u'\n",
+             prefix, nt->year, nt->month, nt->day);
+    g_print ("%s Time:                            '%02u:%02u:%02u'\n",
+             prefix, nt->hour, nt->minute, nt->second);
+    g_print ("%s Day-of-Week:                     '%s'\n",
+             prefix, qmi_nas_day_of_week_get_string (nt->day_of_week));
+    g_print ("%s Timezone Offset:                 '%d' minutes\n",
+             prefix, nt->tz_offset * 15);
+    g_print ("%s Daylight Saving Time Adjustment: '%u' hours\n",
+             prefix, nt->ds_adj);
+    g_print ("%s Radio Interface:                 '%s'\n",
+             prefix, qmi_nas_radio_interface_get_string (nt->radio_if));
+}
+
+static void
+get_network_time_ready (QmiClientNas *client,
+                        GAsyncResult *res)
+{
+    g_autoptr(QmiMessageNasGetNetworkTimeOutput) output = NULL;
+    g_autoptr(GError)                            error = NULL;
+    NASNetworkTime                               nt = { 0 };
+
+    output = qmi_client_nas_get_network_time_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_network_time_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get network time: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got network time:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_message_nas_get_network_time_output_get_3gpp2_time (output,
+                                                                &nt.year,
+                                                                &nt.month,
+                                                                &nt.day,
+                                                                &nt.hour,
+                                                                &nt.minute,
+                                                                &nt.second,
+                                                                &nt.day_of_week,
+                                                                &nt.tz_offset,
+                                                                &nt.ds_adj,
+                                                                &nt.radio_if,
+                                                                NULL)) {
+        print_time ("\t3GPP2", &nt);
+    }
+
+    memset (&nt, 0, sizeof (nt));
+    if (qmi_message_nas_get_network_time_output_get_3gpp_time (output,
+                                                               &nt.year,
+                                                               &nt.month,
+                                                               &nt.day,
+                                                               &nt.hour,
+                                                               &nt.minute,
+                                                               &nt.second,
+                                                               &nt.day_of_week,
+                                                               &nt.tz_offset,
+                                                               &nt.ds_adj,
+                                                               &nt.radio_if,
+                                                               NULL)) {
+        print_time ("\t3GPP", &nt);
+    }
+
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_NETWORK_TIME */
+
 #if defined HAVE_QMI_MESSAGE_NAS_GET_DRX
 
 static void
@@ -4745,6 +4845,19 @@ qmicli_nas_run (QmiDevice *device,
                                                 ctx->cancellable,
                                                 (GAsyncReadyCallback)get_rf_band_info_ready,
                                                 NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_NETWORK_TIME
+    if (get_network_time_flag) {
+        g_debug ("Asynchronously getting network time ...");
+        qmi_client_nas_get_network_time (ctx->client,
+                                         NULL,
+                                         10,
+                                         ctx->cancellable,
+                                         (GAsyncReadyCallback)get_network_time_ready,
+                                         NULL);
         return;
     }
 #endif
