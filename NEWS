@@ -1,3 +1,47 @@
+Overview of changes in libmbim 1.32
+----------------------------------------
+
+ * Build:
+   ** Ignore more files and add an EditorConfig file
+
+ * New Fibocom service, including the following operations:
+   * MBIM_CID_FIBOCOM_AT_COMMAND
+
+ * New Compal service, including the following operations:
+   * MBIM_CID_COMPAL_AT_COMMAND
+
+ * Extend the Quectel service, including the following operations:
+   * MBIM_CID_QDU_AT_COMMAND
+
+ * mbim-proxy:
+   ** Ensure Client is kept around during message processing
+   ** Don't mistakenly delete mbim-proxy binary when run from same directory
+
+ * libmbim-glib:
+   ** Support structure sizes that are not 4-byte aligned
+   ** Fix building ms-uicc-low-level-access TerminalCapabilityData messages
+   ** Various TLV header parsing fixes for corner cases
+   ** Various leak fixes
+   ** Fix re-opening a device when it was closed due to errors
+   ** Assume QMI messages contain personal info that should be suppressed
+   ** Add more ms-uicc-low-level-access error values including
+      MBIM_STATUS_ERROR_MS_NO_LOGICAL_CHANNELS, MBIM_STATUS_ERROR_MS_SELECT_FAILED,
+      and MBIM_STATUS_ERROR_MS_INVALID_LOGICAL_CHANNEL
+
+ * mbimcli:
+   ** New '--sms-read' and '--sms-delete' actions.
+   ** New '--compal-query-at-command', '--fibocom-set-at-command',
+      and '--quectel-set-at-command' actions.
+   ** New MS Basic Connect '--ms-set-lte-attach-configuration'
+   ** New Basic Connect '--set-register-state' to allow automatic or manual
+      registration configuration.
+   ** Renamed Basic Connect '--query-registration-state' to
+      '--query-register-state' to be consistent with other actions. Old name
+      is kept as an alias for compatibility.
+
+ * mbim-network:
+   ** Fix matching ActivationState values during connect action
+
 
 Overview of changes in libmbim 1.30
 ----------------------------------------
