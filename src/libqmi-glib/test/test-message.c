@@ -334,6 +334,53 @@ test_message_parse_signed_int (void)
 
 #endif
 
+static void
+test_message_parse_empty_fixed_string (void)
+{
+    /* NAS response: Get System Info
+     * If the "Network ID Valid" field is false, then the MCC/MNC fields will
+     * contain all zeros. Make sure that's printed as an empty string and not
+     * an error.
+     */
+    const guint8 buffer[] = {
+        0x01,       /* marker */
+        0x2C, 0x00, /* qmux length */
+        0x80,       /* qmux flags */
+        0x03,       /* service: NAS */
+        0x03,       /* client */
+        0x02,       /* service flags: Response */
+        0x01, 0x00, /* transaction */
+        0x4D, 0x00, /* message: Get System Info */
+        0x20, 0x00, /* all tlvs length: 4 bytes */
+        /* TLV */
+        0x19,       /* type: LTE System Info v2 */
+        0x1D, 0x00, /* length: 29 bytes */
+        0x01,       /* Domain Valid */
+        0x04,       /* Domain */
+        0x01,       /* Service Capability Valid */
+        0x02,       /* Service Capability */
+        0x01,       /* Roaming Status Valid */
+        0x00,       /* Roaming Status */
+        0x01,       /* Forbidden Valid */
+        0x00,       /* Forbidden */
+        0x00,       /* LAC Valid */
+        0x00,0x00,  /* LAC */
+        0x01,       /* CID Valid */
+        0x0C, 0xF6, 0xE7, 0x02, /* CID */
+        0x01,       /* Registration Reject Info Valid */
+        0x02,       /* Registration Reject Domain */
+        0x0F,       /* Registration Reject Cause */
+        0x00,       /* Network ID Valid */
+        0x00, 0x00, 0x00, /* MCC */
+        0x00, 0x00, 0x00, /* MNC */
+        0x01,       /* TAC Valid */
+        0x4D, 0xBE  /* TAC */
+    };
+
+    test_message_printable_common (buffer, sizeof (buffer), QMI_MESSAGE_VENDOR_GENERIC, "mcc = '' mnc = ''");
+}
+
+
 /*****************************************************************************/
 
 static void
@@ -1712,6 +1759,7 @@ int main (int argc, char **argv)
 #if defined HAVE_QMI_MESSAGE_NAS_SWI_GET_STATUS
     g_test_add_func ("/libqmi-glib/message/parse/signed-int", test_message_parse_signed_int);
 #endif
+    g_test_add_func ("/libqmi-glib/message/parse/empty-fixed-string", test_message_parse_empty_fixed_string);
 
     g_test_add_func ("/libqmi-glib/message/new/request",           test_message_new_request);
     g_test_add_func ("/libqmi-glib/message/new/request-from-data", test_message_new_request_from_data);

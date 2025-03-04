@@ -1465,6 +1465,15 @@ qmi_message_tlv_read_fixed_size_string (QmiMessage  *self,
         return TRUE;
     }
 
+    /* Empty string? */
+    if (!ptr[0]) {
+        /* terminator at start of string */
+        *out = '\0';
+        /* but update offset with the full expected length */
+        *offset = (*offset + string_length);
+        return TRUE;
+    }
+
     g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_DATA, "invalid string");
     return FALSE;
 }
