@@ -2095,4 +2095,34 @@ typedef enum { /*< since=1.34 >*/
     QMI_WDS_PROFILE_SUBSCRIPTION_CHANGE_EVENT = 4
 } QmiWdsProfileChangeEvent;
 
+/**
+ * QmiWdsAddressAllocationPreference:
+ * @QMI_WDS_ADDRESS_ALLOCATION_PREFERENCE_NAS: allocate via Network Access Stratum (NAS).
+ * @QMI_WDS_ADDRESS_ALLOCATION_PREFERENCE_DHCP: allocate via DHCP.
+ *
+ * Address allocation preference.
+ *
+ * Since: 1.36
+ */
+typedef enum { /*< since=1.34 >*/
+    QMI_WDS_ADDRESS_ALLOCATION_PREFERENCE_NAS  = 0,
+    QMI_WDS_ADDRESS_ALLOCATION_PREFERENCE_DHCP = 1,
+} QmiWdsAddressAllocationPreference;
+
+/**
+ * QmiWdsPdpAccessControl:
+ * @QMI_WDS_PDP_ACCESS_CONTROL_NONE: no access control.
+ * @QMI_WDS_PDP_ACCESS_CONTROL_REJECT: reject.
+ * @QMI_WDS_PDP_ACCESS_CONTROL_PERMISSION: permission.
+ *
+ * PDP access control.
+ *
+ * Since: 1.36
+ */
+typedef enum { /*< since=1.34 >*/
+    QMI_WDS_PDP_ACCESS_CONTROL_NONE       = 0,
+    QMI_WDS_PDP_ACCESS_CONTROL_REJECT     = 1,
+    QMI_WDS_PDP_ACCESS_CONTROL_PERMISSION = 2,
+} QmiWdsPdpAccessControl;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WDS_H_ */

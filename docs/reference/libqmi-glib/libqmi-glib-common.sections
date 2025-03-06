@@ -625,6 +625,8 @@ QmiWdsClientType
 QmiWdsIpSupportType
 QmiWdsApnTypeMask
 QmiWdsProfileChangeEvent
+QmiWdsAddressAllocationPreference
+QmiWdsPdpAccessControl
 QMI_WDS_RATE_UNAVAILABLE
 <SUBSECTION Methods>
 qmi_wds_ip_family_get_string
@@ -682,6 +684,8 @@ qmi_wds_client_type_get_string
 qmi_wds_ip_support_type_get_string
 qmi_wds_apn_type_mask_build_string_from_mask
 qmi_wds_profile_change_event_get_string
+qmi_wds_address_allocation_preference_get_string
+qmi_wds_pdp_access_control_get_string
 <SUBSECTION Standard>
 QMI_TYPE_WDS_AUTHENTICATION
 QMI_TYPE_WDS_AUTOCONNECT_SETTING
@@ -737,6 +741,8 @@ QMI_TYPE_WDS_CLIENT_TYPE
 QMI_TYPE_WDS_IP_SUPPORT_TYPE
 QMI_TYPE_WDS_APN_TYPE_MASK
 QMI_TYPE_WDS_PROFILE_CHANGE_EVENT
+QMI_TYPE_WDS_ADDRESS_ALLOCATION_PREFERENCE
+QMI_TYPE_WDS_PDP_ACCESS_CONTROL
 qmi_wds_authentication_get_type
 qmi_wds_autoconnect_setting_get_type
 qmi_wds_autoconnect_setting_roaming_get_type
@@ -791,6 +797,8 @@ qmi_wds_client_type_get_type
 qmi_wds_ip_support_type_get_type
 qmi_wds_apn_type_mask_get_type
 qmi_wds_profile_change_event_get_type
+qmi_wds_address_allocation_preference_get_type
+qmi_wds_pdp_access_control_get_type
 </SECTION>
 
 <SECTION>
