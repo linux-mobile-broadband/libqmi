@@ -2436,6 +2436,16 @@ gboolean qmi_message_nas_get_cell_location_info_output_get_geran_info (
 
 #endif /* HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO */
 
+/**
+ * QMI_NAS_NETWORK_SERVICE_DOMAIN_UNKNOWN:
+ *
+ * Unknown service domain.
+ *
+ * Deprecated: 1.36: Use the correct #QMI_NAS_NETWORK_SERVICE_DOMAIN_CAMPED name instead.
+ */
+G_DEPRECATED typedef int QmiDeprecatedNasNetworkServiceDomain;
+#define QMI_NAS_NETWORK_SERVICE_DOMAIN_UNKNOWN (QmiDeprecatedNasNetworkServiceDomain) QMI_NAS_NETWORK_SERVICE_DOMAIN_CAMPED
+
 #if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUMBER
 
 /**
