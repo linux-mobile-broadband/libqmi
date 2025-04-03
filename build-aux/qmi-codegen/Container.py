@@ -74,6 +74,15 @@ class Container:
                            copy = dict(common)
                            if 'prerequisites' in field_dictionary:
                                copy['prerequisites'] = field_dictionary['prerequisites']
+
+                           # Prefer message's TLV ID and name over the common-ref's TLV ID
+                           # and name; some QMI messages use the same struct with different
+                           # IDs and names (like NAS Get/Set Preferred Networks).
+                           if 'id' in field_dictionary:
+                               copy['id'] = field_dictionary['id']
+                           if 'name' in field_dictionary:
+                               copy['name'] = field_dictionary['name']
+
                            # If an explicit 'since' is given in the field, prefer it over any other one
                            if 'since' in field_dictionary:
                                copy['since'] = field_dictionary['since']
@@ -81,6 +90,7 @@ class Container:
                            # If the common type has a 'since', take it only if it is newer than the one from the message
                            elif not 'since' in copy or utils.version_compare(copy['since'],self.since) > 0:
                                copy['since'] = self.since
+
                            new_dict.append(copy)
                            break
                     else:

@@ -1043,6 +1043,59 @@ get_home_network_ready (QmiClientNas *client,
 #if defined HAVE_QMI_MESSAGE_NAS_GET_PREFERRED_NETWORKS
 
 static void
+print_preferred_networks (GArray      *preferred_networks_array,
+                          GArray      *pcs_digit_array,
+                          const gchar *detail)
+{
+    if (preferred_networks_array) {
+        guint i;
+
+        g_print ("%s%sPreferred PLMN list:\n", detail ? detail : "", detail ? " " : "");
+        if (preferred_networks_array->len == 0)
+            g_print ("\t<empty>\n");
+        for (i = 0; i < preferred_networks_array->len; i++) {
+            QmiMessageNasGetPreferredNetworksOutputPreferredNetworksElement *element;
+            g_autofree gchar *access_tech_string = NULL;
+
+            /* Rely on the fact that QmiMessageNasGetPreferredNetworksOutputPreferredNetworksElement
+             * is the same layout as QmiMessageNasGetPreferredNetworksOutputStaticPreferredNetworksElement.
+             */
+            element = &g_array_index (preferred_networks_array, QmiMessageNasGetPreferredNetworksOutputPreferredNetworksElement, i);
+            access_tech_string = qmi_nas_plmn_access_technology_identifier_build_string_from_mask (element->radio_access_technology);
+            g_print ("[%u]:\n"
+                     "\tMCC: '%" G_GUINT16_FORMAT "'\n"
+                     "\tMNC: '%" G_GUINT16_FORMAT "'\n"
+                     "\tAccess Technology: '%s'\n",
+                     i,
+                     element->mcc,
+                     element->mnc,
+                     VALIDATE_MASK_NONE (access_tech_string));
+        }
+    }
+
+    if (pcs_digit_array) {
+        guint i;
+
+        g_print ("%s%sPCS digit status:\n", detail ? detail : "", detail ? " " : "");
+        if (pcs_digit_array->len == 0)
+            g_print ("\t<empty>\n");
+        for (i = 0; i < pcs_digit_array->len; i++) {
+            QmiMessageNasGetPreferredNetworksOutputMncPcsDigitIncludeStatusElement *element;
+
+            element = &g_array_index (pcs_digit_array, QmiMessageNasGetPreferredNetworksOutputMncPcsDigitIncludeStatusElement, i);
+            g_print ("[%u]:\n"
+                     "\tMCC: '%" G_GUINT16_FORMAT "'\n"
+                     "\tMNC: '%" G_GUINT16_FORMAT "'\n"
+                     "\tMCC with PCS digit: '%s'\n",
+                     i,
+                     element->mcc,
+                     element->mnc,
+                     element->includes_pcs_digit ? "yes" : "no");
+        }
+    }
+}
+
+static void
 get_preferred_networks_ready (QmiClientNas *client,
                               GAsyncResult *res)
 {
@@ -1070,49 +1123,19 @@ get_preferred_networks_ready (QmiClientNas *client,
     g_print ("[%s] Successfully got preferred networks:\n",
              qmi_device_get_path_display (ctx->device));
 
-    if (qmi_message_nas_get_preferred_networks_output_get_preferred_networks (output, &preferred_networks_array, NULL)) {
-        guint i;
+    /* User-defined networks */
+    preferred_networks_array = NULL;
+    qmi_message_nas_get_preferred_networks_output_get_preferred_networks (output, &preferred_networks_array, NULL);
+    pcs_digit_array = NULL;
+    qmi_message_nas_get_preferred_networks_output_get_mnc_pcs_digit_include_status (output, &pcs_digit_array, NULL);
+    print_preferred_networks (preferred_networks_array, pcs_digit_array, NULL);
 
-        g_print ("Preferred PLMN list:\n");
-        if (preferred_networks_array->len == 0)
-            g_print ("\t<empty>\n");
-        for (i = 0; i < preferred_networks_array->len; i++) {
-            QmiMessageNasGetPreferredNetworksOutputPreferredNetworksElement *element;
-            g_autofree gchar *access_tech_string = NULL;
-
-            element = &g_array_index (preferred_networks_array, QmiMessageNasGetPreferredNetworksOutputPreferredNetworksElement, i);
-            access_tech_string = qmi_nas_plmn_access_technology_identifier_build_string_from_mask (element->radio_access_technology);
-            g_print ("[%u]:\n"
-                     "\tMCC: '%" G_GUINT16_FORMAT "'\n"
-                     "\tMNC: '%" G_GUINT16_FORMAT "'\n"
-                     "\tAccess Technology: '%s'\n",
-                     i,
-                     element->mcc,
-                     element->mnc,
-                     VALIDATE_MASK_NONE (access_tech_string));
-        }
-    }
-
-    if (qmi_message_nas_get_preferred_networks_output_get_mnc_pcs_digit_include_status (output, &pcs_digit_array, NULL)) {
-        guint i;
-
-        g_print ("PCS digit status:\n");
-        if (pcs_digit_array->len == 0)
-            g_print ("\t<empty>\n");
-        for (i = 0; i < pcs_digit_array->len; i++) {
-            QmiMessageNasGetPreferredNetworksOutputMncPcsDigitIncludeStatusElement *element;
-
-            element = &g_array_index (pcs_digit_array, QmiMessageNasGetPreferredNetworksOutputMncPcsDigitIncludeStatusElement, i);
-            g_print ("[%u]:\n"
-                     "\tMCC: '%" G_GUINT16_FORMAT "'\n"
-                     "\tMNC: '%" G_GUINT16_FORMAT "'\n"
-                     "\tMCC with PCS digit: '%s'\n",
-                     i,
-                     element->mcc,
-                     element->mnc,
-                     element->includes_pcs_digit ? "yes" : "no");
-        }
-    }
+    /* Operator-defined networks */
+    preferred_networks_array = NULL;
+    qmi_message_nas_get_preferred_networks_output_get_static_preferred_networks (output, &preferred_networks_array, NULL);
+    pcs_digit_array = NULL;
+    qmi_message_nas_get_preferred_networks_output_get_static_mnc_pcs_digit_include_status (output, &pcs_digit_array, NULL);
+    print_preferred_networks (preferred_networks_array, pcs_digit_array, "Static");
 
     qmi_message_nas_get_preferred_networks_output_unref (output);
     operation_shutdown (TRUE);
