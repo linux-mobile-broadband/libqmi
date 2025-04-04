@@ -226,6 +226,13 @@
       "format"        : "guint8",
       "public-format" : "gboolean" },
 
+    { "common-ref"    : "WDS PDP Access Control",
+      "name"          : "PDP Access Control",
+      "id"            : "0x20",
+      "type"          : "TLV",
+      "format"        : "guint8",
+      "public-format" : "QmiWdsPdpAccessControl" },
+
     { "common-ref"    : "WDS PCSCF Address Using DHCP",
       "name"          : "PCSCF Address Using DHCP",
       "id"            : "0x21",
@@ -360,6 +367,13 @@
       "fixed-size"    : "8",
       "array-element" : { "format" : "guint16",
                           "endian" : "network" } },
+
+    { "common-ref"    : "WDS Address Allocation Preference",
+      "name"          : "Address Allocation Preference",
+      "id"            : "0x2D",
+      "type"          : "TLV",
+      "format"        : "guint8",
+      "public-format" : "QmiWdsAddressAllocationPreference" },
 
     { "common-ref" : "WDS LTE QoS Parameters",
       "name"       : "LTE QoS Parameters",
@@ -1161,7 +1175,8 @@
                      "since"         : "1.18" },
                    { "common-ref"    : "WDS PCSCF Address Using PCO",
                      "since"         : "1.18" },
-                   // 0x20, PDP access control flag
+                   { "common-ref"    : "WDS PDP Access Control",
+                     "since"         : "1.36" },
                    { "common-ref"    : "WDS PCSCF Address Using DHCP",
                      "since"         : "1.18" },
                    { "common-ref"    : "WDS IMCN Flag",
@@ -1184,7 +1199,8 @@
                      "since"         : "1.18" },
                    { "common-ref"    : "WDS IPv6 Secondary DNS Address Preference",
                      "since"         : "1.18" },
-                   // 0x2D, DHCP/NAS Preference
+                   { "common-ref"    : "WDS Address Allocation Preference",
+                     "since"         : "1.36" },
                    { "common-ref"    : "WDS LTE QoS Parameters",
                      "since"         : "1.18" },
                    { "common-ref"    : "WDS APN Disabled Flag",
@@ -1270,7 +1286,8 @@
                      "since"         : "1.18" },
                    { "common-ref"    : "WDS PCSCF Address Using PCO",
                      "since"         : "1.18" },
-                   // 0x20, PDP access control flag
+                   { "common-ref"    : "WDS PDP Access Control",
+                     "since"         : "1.36" },
                    { "common-ref"    : "WDS PCSCF Address Using DHCP",
                      "since"         : "1.18" },
                    { "common-ref"    : "WDS IMCN Flag",
@@ -1293,7 +1310,8 @@
                      "since"         : "1.18" },
                    { "common-ref"    : "WDS IPv6 Secondary DNS Address Preference",
                      "since"         : "1.18" },
-                   // 0x2D, DHCP/NAS Preference
+                   { "common-ref"    : "WDS Address Allocation Preference",
+                     "since"         : "1.36" },
                    { "common-ref"    : "WDS LTE QoS Parameters",
                      "since"         : "1.18" },
                    { "common-ref"    : "WDS APN Disabled Flag",
@@ -1449,7 +1467,9 @@
                     { "common-ref"    : "WDS PCSCF Address Using PCO",
                       "since"         : "1.8",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
-                    // 0x20, PDP access control flag
+                    { "common-ref"    : "WDS PDP Access Control",
+                      "since"         : "1.36",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     { "common-ref"    : "WDS PCSCF Address Using DHCP",
                       "since"         : "1.8",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
@@ -1482,7 +1502,9 @@
                     { "common-ref"    : "WDS IPv6 Secondary DNS Address Preference",
                       "since"         : "1.8",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
-                    // 0x2D, DHCP/NAS Preference
+                    { "common-ref"    : "WDS Address Allocation Preference",
+                      "since"         : "1.36",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     { "common-ref"    : "WDS LTE QoS Parameters",
                       "since"         : "1.18",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
@@ -1595,7 +1617,9 @@
                     { "common-ref"    : "WDS PCSCF Address Using PCO",
                       "since"         : "1.8",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
-                    // 0x20, PDP access control flag
+                    { "common-ref"    : "WDS PDP Access Control",
+                      "since"         : "1.36",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     { "common-ref"    : "WDS PCSCF Address Using DHCP",
                       "since"         : "1.8",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
@@ -1628,11 +1652,15 @@
                     { "common-ref"    : "WDS IPv6 Secondary DNS Address Preference",
                       "since"         : "1.8",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
-                    // 0x2D, DHCP/NAS Preference
+                    { "common-ref"    : "WDS Address Allocation Preference",
+                      "since"         : "1.36",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     { "common-ref"    : "WDS LTE QoS Parameters",
                       "since"         : "1.18",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
-                    // 0x2F, APN disabled flag
+                    { "common-ref"    : "WDS APN Disabled Flag",
+                      "since"         : "1.36",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     // 0x30, PDN inactivity timeout
                     // 0x31, APN class
                     // 0x90, Negotiate DNS server preference
