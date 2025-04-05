@@ -115,6 +115,8 @@ gboolean qmicli_read_firmware_id_from_string                 (const gchar *str,
                                                               guint *out_index);
 gboolean qmicli_read_binary_array_from_string                (const gchar *str,
                                                               GArray **out);
+gboolean qmicli_read_cbs_channels_from_string                (const gchar *str,
+                                                              GArray **out_channels);
 gboolean qmicli_read_authentication_from_string              (const gchar *str,
                                                               QmiWdsAuthentication *out);
 gboolean qmicli_read_pdp_type_from_string                    (const gchar *str,
