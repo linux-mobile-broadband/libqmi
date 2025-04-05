@@ -564,6 +564,28 @@
                                            "value"     : "QMI_PROTOCOL_ERROR_ACK_NOT_SENT" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Set Broadcast Activation",
+     "type"    : "Message",
+     "service" : "WMS",
+     "id"      : "0x003c",
+     "since"   : "1.38",
+     "input"   : [ { "name"     : "Activation",
+                     "id"       : "0x01",
+                     "type"     : "TLV",
+                     "since"    : "1.38",
+                     "format"   : "sequence",
+                     "contents" : [ { "name"          : "Message Mode",
+                                      "format"        : "guint8",
+                                      "public-format" : "QmiWmsMessageMode" },
+                                    { "name"          : "Activate",
+                                      "id"            : "0x01",
+                                      "type"          : "TLV",
+                                      "since"         : "1.38",
+                                      "format"        : "guint8",
+                                      "public-format" : "gboolean" } ] } ],
+     "output"  : [  { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "Set Broadcast Config",
      "type"    : "Message",
      "service" : "WMS",
