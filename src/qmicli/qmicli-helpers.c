@@ -460,7 +460,7 @@ qmicli_read_parse_3gpp_mcc_mnc (const gchar *str,
     g_autofree gchar *copy = NULL;
     guint16 mcc = 0, mnc = 0;
     gboolean pcs_digit = FALSE;
-    
+
     copy = g_strdup (str);
     if (!parse_3gpp_mcc_mnc (copy, &mcc, &mnc, &pcs_digit)) {
         g_printerr ("error: invalid net selection MCC/MNC: '%s'\n", str);
