@@ -7,6 +7,7 @@ browse_url = "https://gitlab.freedesktop.org/mobile-broadband/libqmi.git"
 repository_url = "https://gitlab.freedesktop.org/mobile-broadband/libqmi/"
 website_url = "https://www.freedesktop.org/wiki/Software/libqmi/"
 dependencies = [ "GObject-2.0", "Gio-2.0"]
+logo_url = "libqmi.svg"
 devhelp = true
 search_index = true
 
@@ -26,6 +27,9 @@ show_index_summary = true
 show_class_hierarchy = true
 
 [extra]
+content_images = [
+  "libqmi.svg",
+]
 urlmap_file = "urlmap.js"
 
 [source-location]
