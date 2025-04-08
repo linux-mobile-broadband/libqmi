@@ -57,6 +57,7 @@ sections_txt = custom_target(
   capture: true,
   command: [find_program('cat'), '@INPUT@'] + gen_sections,
   depends: gen_sections_deps,
+  build_by_default: true,
 )
 
 version_xml = configure_file(
