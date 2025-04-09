@@ -1,7 +1,8 @@
 [
   // *********************************************************************************
-  {  "name"    : "IMSP",
-     "type"    : "Service" },
+  {  "name"        : "IMSP",
+     "type"        : "Service",
+     "description" : "IP Multimedia Subsystem Presence Service" },
 
   // *********************************************************************************
   {  "name"    : "QMI Client IMSP",

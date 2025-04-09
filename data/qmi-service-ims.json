@@ -1,7 +1,8 @@
 [
   // *********************************************************************************
-  {  "name"    : "IMS",
-     "type"    : "Service" },
+  {  "name"        : "IMS",
+     "type"        : "Service",
+     "description" : "IP Multimedia Subsystem Settings Service" },
 
   // *********************************************************************************
   {  "name"    : "QMI Client IMS",
