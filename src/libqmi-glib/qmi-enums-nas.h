@@ -381,7 +381,7 @@ typedef enum { /*< since=1.0 >*/
  * @QMI_NAS_NETWORK_SERVICE_DOMAIN_CS: Circuit switched.
  * @QMI_NAS_NETWORK_SERVICE_DOMAIN_PS: Packet switched.
  * @QMI_NAS_NETWORK_SERVICE_DOMAIN_CS_PS: Circuit and packet switched.
- * @QMI_NAS_NETWORK_SERVICE_DOMAIN_CAMPED: Camped.
+ * @QMI_NAS_NETWORK_SERVICE_DOMAIN_CAMPED: Camped. Since 1.36.
  *
  * Network Service Domain.
  *

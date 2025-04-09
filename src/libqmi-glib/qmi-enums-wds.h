@@ -2104,7 +2104,7 @@ typedef enum { /*< since=1.34 >*/
  *
  * Since: 1.36
  */
-typedef enum { /*< since=1.34 >*/
+typedef enum { /*< since=1.36 >*/
     QMI_WDS_ADDRESS_ALLOCATION_PREFERENCE_NAS  = 0,
     QMI_WDS_ADDRESS_ALLOCATION_PREFERENCE_DHCP = 1,
 } QmiWdsAddressAllocationPreference;
@@ -2119,7 +2119,7 @@ typedef enum { /*< since=1.34 >*/
  *
  * Since: 1.36
  */
-typedef enum { /*< since=1.34 >*/
+typedef enum { /*< since=1.36 >*/
     QMI_WDS_PDP_ACCESS_CONTROL_NONE       = 0,
     QMI_WDS_PDP_ACCESS_CONTROL_REJECT     = 1,
     QMI_WDS_PDP_ACCESS_CONTROL_PERMISSION = 2,
