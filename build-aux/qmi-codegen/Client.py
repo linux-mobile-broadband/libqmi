@@ -90,6 +90,8 @@ class Client:
                 '/**\n'
                 ' * ${camelcase}:\n'
                 ' *\n'
+                ' * #QmiClient which handles operations in the ${service} service.\n'
+                ' *\n'
                 ' * The #${camelcase} structure contains private data and should only be accessed\n'
                 ' * using the provided API.\n'
                 ' *\n'
@@ -112,17 +114,6 @@ class Client:
         hfile.write(string.Template(template).substitute(translations))
 
         template = ''
-        if self.service != 'CTL':
-            template += (
-                '\n'
-                '/**\n'
-                ' * SECTION: ${hyphened}\n'
-                ' * @title: ${camelcase}\n'
-                ' * @short_description: #QmiClient for the ${service} service.\n'
-                ' *\n'
-                ' * #QmiClient which handles operations in the ${service} service.\n'
-                ' */\n'
-                '\n')
         template += (
             'G_DEFINE_TYPE (${camelcase}, ${underscore}, QMI_TYPE_CLIENT)\n')
 
