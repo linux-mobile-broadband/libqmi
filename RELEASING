@@ -1,20 +1,16 @@
-
 The libqmi releases are generated using meson.
 
-0.1) For major releases:
+
+1) For major releases:
      * Increment qmi_minor_version and reset qmi_micro_version.
      * Assuming API/ABI compatibility, increment both current and age.
 
-0.2) For stable branch releases:
+2) For stable branch releases:
      * Increment qmi_micro_version.
 
-1) Add signed tag:
-    $ git tag -s 1.32.0
+3) Bump 'version' in meson.build (eg, to "1.28.0")
 
-   The description included in the signed tag could be:
-    Release 1.32.0
-
-2) Configure and build the whole project, making sure gtk-doc and introspection
+4) Configure and build the whole project, making sure gtk-doc and introspection
    are enabled:
     $ meson setup build \
         --prefix=/usr \
@@ -23,11 +19,19 @@ The libqmi releases are generated using meson.
         -Dgtk_doc=true
     $ ninja -C build
 
-3) Run the test suite and install locally:
+5) Run the test suite and install locally:
     $ ninja -C build dist
     $ sudo ninja -C build install
 
-4) Create directories for the manpages and gtk-doc documentation in
+6) Push changes to a release MR on gitlab; once CI passes merge the PR.
+
+7) Add signed tag pointing to the merge commit for the release MR:
+    $ git tag -s 1.32.0
+
+   The description included in the signed tag could be:
+    Release 1.32.0
+
+8) Create directories for the manpages and gtk-doc documentation in
    freedesktop.org, and also update the 'latest' links:
     $ ssh fd.o
     [fd.o] $ cd ${libqmi}/man/
@@ -39,15 +43,15 @@ The libqmi releases are generated using meson.
     [fd.o] $ mkdir -p ${VERSION}
     [fd.o] $ ln -s ${VERSION} latest
 
-5) Generate HTML for the manpages:
+9) Generate HTML for the manpages:
     $ roffit < build/docs/man/qmicli.1 > qmicli.1.html
     $ roffit < build/docs/man/qmi-network.1 > qmi-network.1.html
     $ roffit < build/docs/man/qmi-firmware-update.1 > qmi-firmware-update.1.html
 
-6) Upload manpages in HTML to freedesktop.org:
+10) Upload manpages in HTML to freedesktop.org:
     $ scp *.1.html fd.o:${libqmi}/man/${VERSION}/
 
-7) Copy documentation from /usr/share/gtk-doc and fix online references manually
+11) Copy documentation from /usr/share/gtk-doc and fix online references manually
     $ mkdir html
     $ cp -r /usr/share/gtk-doc/html/libqmi-glib/* html/
     $ for FILE in $(ls html/*.html); do \
@@ -56,15 +60,15 @@ The libqmi releases are generated using meson.
         sed -i 's|<a[^>]* href="\.\./gio/[^"]*|<a href="https://docs.gtk.org/gio/|g' $FILE; \
       done
 
-8) Upload the modified HTML files to freedesktop.org:
+12) Upload the modified HTML files to freedesktop.org:
     $ scp html/* fd.o:${libqmi}/libqmi-glib/${VERSION}/
 
-10.1) For major releases:
+13) For major releases:
      * Fork new stable branch (e.g. qmi-${MAJOR}-${MINOR})
      * Post-release version bump in the main branch, increment qmi_minor_version.
      * Post-release version bump in the stable branch, increment qmi_micro_version.
 
-10.2) For stable branch releases:
+13.1) For stable branch releases:
      * Post-release version bump, increment qmi_micro_version.
 
 -------------------------------------------------------------------------------
