@@ -68,7 +68,7 @@ typedef enum { /*< since=1.20 >*/
  *
  * General result of a received indication.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_INDICATION_STATUS_SUCCESS            = 0,
@@ -93,7 +93,7 @@ typedef enum { /*< since=1.22 >*/
  *
  * Status of a received session indication.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_SESSION_STATUS_SUCCESS         = 0,
@@ -113,7 +113,7 @@ typedef enum { /*< since=1.22 >*/
  *
  * Whether to request a single or periodic fixes.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_FIX_RECURRENCE_TYPE_REQUEST_PERIODIC_FIXES = 1,
@@ -131,7 +131,7 @@ typedef enum { /*< since=1.22 >*/
  *
  * Which operation mode to use.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_OPERATION_MODE_DEFAULT    = 1,
@@ -149,7 +149,7 @@ typedef enum { /*< since=1.22 >*/
  *
  * State of the engine.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_ENGINE_STATE_ON  = 1,
@@ -169,7 +169,7 @@ typedef enum { /*< since=1.22 >*/
  *
  * Which technology has been used.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_TECHNOLOGY_USED_SATELLITE          = 1 << 0,
@@ -192,7 +192,7 @@ typedef enum { /*< since=1.22 >*/
  *
  * Reliability of the provided information.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_RELIABILITY_NOT_SET  = 0,
@@ -224,7 +224,7 @@ typedef enum { /*< since=1.22 >*/
  *
  * Source of the used time.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_TIME_SOURCE_INVALID                =  0,
@@ -259,7 +259,7 @@ typedef enum { /*< since=1.22 >*/
  *
  * Which information about the satellite is valid.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_SATELLITE_VALID_INFORMATION_SYSTEM                = 1 << 0,
@@ -282,7 +282,7 @@ typedef enum { /*< since=1.22 >*/
  *
  * Which location system a satellite is part of.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_SYSTEM_GPS     = 1,
@@ -299,7 +299,7 @@ typedef enum { /*< since=1.22 >*/
  *
  * Whether a satellite is healthy or unhealthy.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_HEALTH_STATUS_UNHEALTHY = 0,
@@ -313,7 +313,7 @@ typedef enum { /*< since=1.22 >*/
  *
  * Whether the ephemeris or almanac exist for a satellite.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_NAVIGATION_DATA_HAS_EPHEMERIS = 0,
@@ -328,7 +328,7 @@ typedef enum { /*< since=1.22 >*/
  *
  * Whether the engine searches or tracks a satellite.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_SATELLITE_STATUS_IDLE      = 0,

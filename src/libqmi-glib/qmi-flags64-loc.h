@@ -54,7 +54,7 @@
  *
  * For which events to register the subscription.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_EVENT_REGISTRATION_FLAG_POSITION_REPORT                    = 1 <<  0,
@@ -89,7 +89,7 @@ typedef enum { /*< since=1.22 >*/
  *
  * Which sensors where used and for which measurements.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_SENSOR_DATA_USAGE_ACCELEROMETER_USED = 1 <<  0,
@@ -124,7 +124,7 @@ typedef enum { /*< since=1.22 >*/
  *
  * Flags to use when deleting GNSS assistance data.
  *
- * Since 1.22
+ * Since: 1.22
  */
 typedef enum { /*< since=1.22 >*/
     QMI_LOC_DELETE_GNSS_DATA_GPS_SVDIR     =  1 << 0,
