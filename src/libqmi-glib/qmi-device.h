@@ -42,17 +42,6 @@
 
 G_BEGIN_DECLS
 
-/**
- * SECTION:qmi-device
- * @title: QmiDevice
- * @short_description: Generic QMI device handling routines
- *
- * #QmiDevice is a generic type in charge of controlling the access of multiple
- * #QmiClient objects to the managed QMI port.
- *
- * A #QmiDevice can only handle one single QMI port.
- */
-
 #define QMI_TYPE_DEVICE            (qmi_device_get_type ())
 #define QMI_DEVICE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), QMI_TYPE_DEVICE, QmiDevice))
 #define QMI_DEVICE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  QMI_TYPE_DEVICE, QmiDeviceClass))
@@ -130,6 +119,13 @@ typedef struct _QmiDevicePrivate QmiDevicePrivate;
 /**
  * QmiDevice:
  *
+ * Generic QMI device handling routines
+ *
+ * `QmiDevice` is a generic type in charge of controlling the access of multiple
+ * [class@Client] objects to the managed QMI port.
+ *
+ * A `QmiDevice` can only handle one single QMI port.
+
  * The #QmiDevice structure contains private data and should only be accessed
  * using the provided API.
  *
