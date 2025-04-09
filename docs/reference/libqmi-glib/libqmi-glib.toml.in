@@ -27,6 +27,9 @@ show_index_summary = true
 show_class_hierarchy = true
 
 [extra]
+content_files = [
+  @CONTENT_FILES@
+]
 content_images = [
   "libqmi.svg",
 ]

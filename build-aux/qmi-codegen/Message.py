@@ -443,22 +443,6 @@ class Message:
             utils.add_separator(hfile, 'INDICATION', self.fullname);
             utils.add_separator(cfile, 'INDICATION', self.fullname);
 
-        if not self.static and self.service != 'CTL':
-            translations = { 'hyphened' : utils.build_dashed_name (self.fullname),
-                             'fullname' : self.service + ' ' + self.name,
-                             'type'     : 'response' if self.type == 'Message' else 'indication',
-                             'operation' : 'create requests and parse responses' if self.type == 'Message' else 'parse indications' }
-            template = (
-                '\n'
-                '/**\n'
-                ' * SECTION: ${hyphened}\n'
-                ' * @title: ${fullname} ${type}\n'
-                ' * @short_description: Methods to manage the ${fullname} ${type}.\n'
-                ' *\n'
-                ' * Collection of methods to ${operation} of the ${fullname} message.\n'
-                ' */\n')
-            hfile.write(string.Template(template).substitute(translations))
-
         if self.type == 'Message':
             hfile.write('\n/* --- Input -- */\n');
             cfile.write('\n/* --- Input -- */\n');
@@ -475,62 +459,59 @@ class Message:
     Emit the sections
     """
     def emit_sections(self, sfile):
+        message = []
+        types = []
+
         if self.static:
             return
 
         translations = { 'hyphened'            : utils.build_dashed_name (self.fullname),
-                         'fullname_underscore' : utils.build_underscore_name(self.fullname),
-                         'camelcase'           : utils.build_camelcase_name (self.fullname),
                          'service'             : utils.build_underscore_name (self.service),
+                         'service_camelcase'   : utils.build_camelcase_name (self.service),
                          'name_underscore'     : utils.build_underscore_name (self.name),
-                         'build_symbol'        : self.build_symbol,
                          'fullname'            : self.service + ' ' + self.name,
                          'type'                : 'response' if self.type == 'Message' else 'indication' }
-
-        sections = { 'public-types'   : '',
-                     'public-methods' : '',
-                     'standard'       : '',
-                     'private'        : '' }
-
-        if self.input:
-            self.input.add_sections (sections)
-        self.output.add_sections (sections)
 
         if self.type == 'Message':
             template = ''
             if not self.static and self.output is not None and self.output.fields is not None:
                 template += (
-                    '<SUBSECTION ${camelcase}Parsers>\n'
-                    'qmi_message_${service}_${name_underscore}_response_parse\n')
+                    '- [func@message_${service}_${name_underscore}_response_parse]\n\n')
             template += (
-                '<SUBSECTION ${camelcase}ClientMethods>\n'
-                'qmi_client_${service}_${name_underscore}\n'
-                'qmi_client_${service}_${name_underscore}_finish\n')
-            sections['public-methods'] += string.Template(template).substitute(translations)
-            translations['message_type'] = 'request'
+                '- [method@QmiClient${service_camelcase}.${name_underscore}]\n\n'
+                '- [method@QmiClient${service_camelcase}.${name_underscore}_finish]\n')
+            message = string.Template(template).substitute(translations)
+            translations['message_type'] = 'request and response'
+            translations['message_type_subject'] = 'Request'
         elif self.type == 'Indication':
             if not self.static and self.output is not None and self.output.fields is not None:
                 template = (
-                    '<SUBSECTION ${camelcase}Parsers>\n'
-                    'qmi_indication_${service}_${name_underscore}_indication_parse\n')
-                sections['public-methods'] += string.Template(template).substitute(translations)
+                    '- [func@indication_${service}_${name_underscore}_indication_parse]\n')
+                message = string.Template(template).substitute(translations)
             translations['message_type'] = 'indication'
+            translations['message_type_subject'] = 'Indication'
 
-        translations['public_types']   = sections['public-types']
-        translations['public_methods'] = sections['public-methods']
-        translations['standard']       = sections['standard']
-        translations['private']        = sections['private']
+        translations['message'] = message or ''
+
+        translations['message_types'] = ''
+        if not self.static:
+            if self.output is not None and self.output.fields is not None:
+                translations['output_type'] = utils.build_camelcase_name (self.output.fullname)
+                template = ('- [struct@${output_type}]\n')
+                translations['message_types'] += string.Template(template).substitute(translations)
+            if self.input is not None and self.input.fields is not None:
+                translations['input_type'] = utils.build_camelcase_name (self.input.fullname)
+                template = ('- [struct@${input_type}]')
+                translations['message_types'] += string.Template(template).substitute(translations)
 
         template = (
-            '<SECTION>\n'
-            '<FILE>${hyphened}</FILE>\n'
-            '${public_types}'
-            '${public_methods}'
-            '<SUBSECTION Private>\n'
-            '${build_symbol}\n'
-            '${private}'
-            '<SUBSECTION Standard>\n'
-            '${standard}'
-            '</SECTION>\n'
+            '### ${fullname} ${message_type_subject}\n'
+            'Methods to manage the ${fullname} ${message_type}:\n'
+            '\n'
+            '${message}\n'
+            '\n'
+            'Types to manage the ${fullname} ${message_type}:\n'
+            '\n'
+            '${message_types}'
             '\n')
         sfile.write(string.Template(template).substitute(translations))

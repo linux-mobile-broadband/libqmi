@@ -35,6 +35,7 @@ class Client:
     def __init__(self, objects_dictionary):
         self.name = None
         self.service = None
+        self.description = ''
 
         # Loop items in the list, looking for the special 'Client' type
         for object_dictionary in objects_dictionary:
@@ -43,6 +44,9 @@ class Client:
                 self.since = object_dictionary['since'] if 'since' in object_dictionary else ''
             elif object_dictionary['type'] == 'Service':
                 self.service = object_dictionary['name']
+
+            if not self.description:
+                self.description = object_dictionary.get('description', '')
 
         # We NEED the Client field and the Service field
         if self.name is None:
@@ -586,24 +590,21 @@ class Client:
             return
 
         translations = { 'underscore'                 : utils.build_underscore_name(self.name),
+                         'description'                : self.description,
                          'no_prefix_underscore_upper' : utils.build_underscore_name(self.name[4:]).upper(),
                          'camelcase'                  : utils.build_camelcase_name (self.name),
-                         'hyphened'                   : utils.build_dashed_name (self.name) }
+                         'hyphened'                   : utils.build_dashed_name (self.name),
+                         'service_uppercase'          : self.service.upper() }
 
         template = (
-            '<SECTION>\n'
-            '<FILE>${hyphened}</FILE>\n'
-            '<TITLE>${camelcase}</TITLE>\n'
-            '${camelcase}\n'
-            '<SUBSECTION Standard>\n'
-            '${camelcase}Class\n'
-            'QMI_TYPE_${no_prefix_underscore_upper}\n'
-            'QMI_${no_prefix_underscore_upper}\n'
-            'QMI_${no_prefix_underscore_upper}_CLASS\n'
-            'QMI_IS_${no_prefix_underscore_upper}\n'
-            'QMI_IS_${no_prefix_underscore_upper}_CLASS\n'
-            'QMI_${no_prefix_underscore_upper}_GET_CLASS\n'
-            '${underscore}_get_type\n'
-            '</SECTION>\n'
+            'title: ${service_uppercase} - ${description}\n'
+            'slug: ${hyphened}\n'
+            '\n'
+            '# Client\n'
+            '[class@${camelcase}] - QmiClient for the ${service_uppercase} service\n'
+            '\n'
+            '# Messages\n'
+            '\n'
+            'Messages of the ${service_uppercase} service\n'
             '\n')
         sfile.write(string.Template(template).substitute(translations))
