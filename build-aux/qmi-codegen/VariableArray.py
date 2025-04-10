@@ -279,7 +279,7 @@ class VariableArray(Variable):
         self.array_element.emit_get_printable(f, line_prefix + '        ', self.personal_info or is_personal);
 
         template = (
-            '${lp}        g_string_append (printable, " \'");\n'
+            '${lp}        g_string_append (printable, "\'");\n'
             '${lp}    }\n'
             '\n'
             '${lp}    g_string_append (printable, "}");\n'
