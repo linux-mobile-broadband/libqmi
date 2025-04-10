@@ -51,7 +51,7 @@ def codegen_main():
     # Prepare output file names
     output_file_c = open(opts.output + ".c", 'w')
     output_file_h = open(opts.output + ".h", 'w')
-    output_file_sections = open(opts.output + ".sections", 'w')
+    output_file_sections = open(opts.output + ".md", 'w')
 
     # If a collection given, load it
     collection_list_json = None

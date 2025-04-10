@@ -13,6 +13,8 @@ project(
   meson_version: '>= 0.53.0',
 )
 
+fs = import('fs')
+
 qmi_name = meson.project_name()
 qmi_version = meson.project_version()
 version_array = qmi_version.split('.')

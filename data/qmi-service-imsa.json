@@ -1,7 +1,8 @@
 [
   // *********************************************************************************
-  {  "name"    : "IMSA",
-     "type"    : "Service" },
+  {  "name"        : "IMSA",
+     "type"        : "Service",
+     "description" : "IP Multimedia Subsystem Application Service" },
 
   // *********************************************************************************
   {  "name"    : "QMI Client IMSA",

@@ -290,7 +290,7 @@ foreach service: services
   #        source file, to the path has to be used. the first workaround is to use the
   #        build paths to point to the files, and the second workaround is to use
   #        custom target objects to force its building.
-  gen_sections += [meson.current_build_dir() / name + '.sections']
+  gen_sections += [meson.current_build_dir() / name + '.md']
   gen_sections_deps += [generated]
 endforeach
 

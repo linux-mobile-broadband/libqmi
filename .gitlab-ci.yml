@@ -12,13 +12,14 @@ stages:
 .common_variables:
   variables:
     FDO_UPSTREAM_REPO: mobile-broadband/libqmi
-    FDO_DISTRIBUTION_VERSION: '20.04'
-    FDO_DISTRIBUTION_TAG: '2021-11-05.1'
+    FDO_DISTRIBUTION_VERSION: '22.04'
+    FDO_DISTRIBUTION_TAG: '2025-04-08.1'
     FDO_DISTRIBUTION_PACKAGES: ca-certificates git gcc autoconf automake libtool
                                libgirepository1.0-dev libglib2.0-dev autopoint
                                gtk-doc-tools python-is-python3 libglib2.0-doc
                                libgudev-1.0-dev gobject-introspection valac
                                bash-completion meson ninja-build help2man
+                               gi-docgen
 
 build container:
   extends:

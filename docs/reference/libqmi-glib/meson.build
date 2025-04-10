@@ -1,32 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2019 - 2021 Iñigo Martinez <inigomartinez@gmail.com>
 
-subdir('xml')
-
-doc_module = 'libqmi-glib'
-
 src_dirs = [
   generated_inc,
   libqmi_glib_inc,
-]
-
-private_headers = [
-  'qmi-ctl.h',
-  'qmi-endpoint.h',
-  'qmi-endpoint-mbim.h',
-  'qmi-endpoint-qmux.h',
-  'qmi-endpoint-qrtr.h',
-  'qmi-enums-private.h',
-  'qmi-enum-types-private.h',
-  'qmi-file.h',
-  'qmi-flag-types-private.h',
-  'qmi-helpers.h',
-  'qmi-net-port-manager.h',
-  'qmi-net-port-manager-rmnet.h',
-  'qmi-net-port-manager-qmiwwan.h',
-  'test-fixture.h',
-  'test-port-context.h',
-  'if_link_rmnet.h',
 ]
 
 scan_args = [
@@ -34,50 +11,50 @@ scan_args = [
   '--deprecated-guards="QMI_DISABLE_DEPRECATED"',
 ]
 
-glib_prefix = glib_dep.get_pkgconfig_variable('prefix')
+md_files = []
+foreach md_src : gen_sections
+  md_files += fs.name(md_src)
+endforeach
 
-fixxref_args = [
-  '--html-dir=' + (qmi_prefix / gnome.gtkdoc_html_dir(doc_module)),
-  '--extra-dir=' + (glib_prefix / gnome.gtkdoc_html_dir('glib')),
-  '--extra-dir=' + (glib_prefix / gnome.gtkdoc_html_dir('gio')),
-]
+toml_data = configuration_data()
+toml_data.set('VERSION', meson.project_version())
+toml_data.set('CONTENT_FILES', '"' + '","'.join(md_files) + '"')
 
-name = doc_module + '-sections.txt'
+qmi_toml = configure_file(
+  input: 'libqmi-glib.toml.in',
+  output: 'libqmi-glib.toml',
+  configuration: toml_data,
+)
 
-'''
-FIXME: gen_sections should be used in the `input` field but it would add
-       a dependency over file paths that are not yet created, so
-       the `depends` section is used to generate alternate dependency.
-       This is fixed in newer meson versions.
-'''
-sections_txt = custom_target(
-  name,
-  input: 'libqmi-glib-common.sections',
-  output: name,
-  capture: true,
-  command: [find_program('cat'), '@INPUT@'] + gen_sections,
-  depends: gen_sections_deps,
+dependency(
+  'gi-docgen',
+  version: '>= 2021.1',
+  native: true,
+  required: get_option('gtk_doc'),
+)
+
+gidocgen = find_program('gi-docgen')
+
+docs_dir = qmi_datadir / 'doc'
+
+custom_target(
+  'libqmi-glib',
+  input: [qmi_toml, libqmi_glib_gir[0]],
+  output: 'libqmi-glib-@0@'.format(qmi_gir_version),
+  command: [
+    gidocgen,
+    'generate',
+    '--quiet',
+    '--config=@INPUT0@',
+    '--output-dir=@OUTPUT@',
+    '--no-namespace-dir',
+    '--content-dir=@0@'.format(meson.current_source_dir()),
+    '--content-dir=@0@'.format(meson.project_build_root() / 'src' / 'libqmi-glib' / 'generated'),
+    '--fatal-warnings',
+    '@INPUT1@',
+  ],
   build_by_default: true,
-)
-
-version_xml = configure_file(
-  input: 'version.xml.in',
-  output: '@BASENAME@',
-  configuration: version_conf,
-)
-
-gnome.gtkdoc(
-  doc_module,
-  main_xml: doc_module + '-docs.xml',
-  src_dir: src_dirs,
-  ignore_headers: private_headers,
-  include_directories: top_inc,
-  gobject_typesfile: doc_module + '.types',
-  dependencies: libqmi_glib_dep,
-  namespace: 'qmi',
-  scan_args: scan_args,
-  fixxref_args: fixxref_args,
-  content_files: [sections_txt, version_xml],
   install: true,
-  check: true,
+  install_dir: docs_dir,
+  depends: gen_sections_deps,
 )
