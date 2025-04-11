@@ -460,7 +460,7 @@ qmicli_read_parse_3gpp_mcc_mnc (const gchar *str,
     g_autofree gchar *copy = NULL;
     guint16 mcc = 0, mnc = 0;
     gboolean pcs_digit = FALSE;
-    
+
     copy = g_strdup (str);
     if (!parse_3gpp_mcc_mnc (copy, &mcc, &mnc, &pcs_digit)) {
         g_printerr ("error: invalid net selection MCC/MNC: '%s'\n", str);
@@ -648,6 +648,74 @@ qmicli_read_binary_array_from_string (const gchar *str,
 
     return TRUE;
 }
+
+#if defined HAVE_QMI_MESSAGE_WMS_GET_BROADCAST_CONFIG
+
+gboolean
+qmicli_read_cbs_channels_from_string (const gchar *str,
+                                      GArray **out_channels)
+{
+    g_autoptr(GArray) array = NULL;
+    g_auto(GStrv) channel_strings = NULL;
+
+    array = g_array_new (FALSE, FALSE, sizeof (QmiMessageWmsSetBroadcastConfigInputChannelsElement));
+    channel_strings = g_strsplit (str, ",", -1);
+    if (channel_strings) {
+        guint i;
+
+        for (i = 0; channel_strings[i]; i++) {
+            char *startptr, *endptr;
+            gint64 start;
+
+            startptr = channel_strings[i];
+            start = g_ascii_strtoll (startptr, &endptr, 10);
+            if (startptr == endptr || start > G_MAXUINT16 || start < 0) {
+                g_printerr ("error: Couldn't parse '%s' as CBS channel start value",
+                            channel_strings[i]);
+                return FALSE;
+            }
+            if (*endptr == '\0') {
+                QmiMessageWmsSetBroadcastConfigInputChannelsElement ch;
+
+                ch.start = start;
+                ch.end = start;
+                ch.selected = TRUE;
+                g_array_append_val (array, ch);
+            } else if (*endptr == '-') {
+                gint64 end;
+
+                startptr = endptr + 1;
+                end = g_ascii_strtoll (startptr, &endptr, 10);
+                if (startptr == endptr || end > G_MAXUINT16 || end < 0) {
+                    g_printerr ("error: Couldn't parse '%s' as CBS channel end value",
+                                channel_strings[i]);
+                    return FALSE;
+                }
+                if (*endptr == '\0') {
+                    QmiMessageWmsSetBroadcastConfigInputChannelsElement ch;
+
+                    ch.start = start;
+                    ch.end = end;
+                    ch.selected = TRUE;
+                    g_array_append_val (array, ch);
+                } else {
+                    g_printerr ("error: Couldn't parse '%s' as CBS channel end value",
+                                channel_strings[i]);
+                    return FALSE;
+                }
+            } else {
+                g_printerr ("error: Couldn't parse '%s' as CBS channel value",
+                            channel_strings[i]);
+                return FALSE;
+            }
+        }
+    }
+
+    *out_channels = g_steal_pointer (&array);
+    return TRUE;
+}
+
+#endif
 
 gboolean
 qmicli_validate_device_open_flags (QmiDeviceOpenFlags mask)

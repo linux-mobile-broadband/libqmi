@@ -51,6 +51,8 @@ static gboolean get_routes_flag;
 static gchar *set_routes_str;
 static gboolean reset_flag;
 static gboolean noop_flag;
+static gchar *set_broadcast_config_str;
+static gboolean get_broadcast_config_flag;
 
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_WMS_GET_SUPPORTED_MESSAGES
@@ -69,6 +71,18 @@ static GOptionEntry entries[] = {
     { "wms-set-routes", 0, 0, G_OPTION_ARG_STRING, &set_routes_str,
       "Set SMS route information (keys: type, class, storage, receipt-action)",
       "[\"key=value,...\"]"
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_WMS_SET_BROADCAST_CONFIG
+    { "wms-set-cbs-channels", 0, 0, G_OPTION_ARG_STRING, &set_broadcast_config_str,
+      "Set CBS channels (e.g. 4371-4372,4370,4373-4380",
+      "[start-end,start-end]",
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_WMS_GET_BROADCAST_CONFIG
+    { "wms-get-cbs-channels", 0, 0, G_OPTION_ARG_NONE, &get_broadcast_config_flag,
+      "Get CBS channels",
+      NULL,
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_WMS_RESET
@@ -111,6 +125,8 @@ qmicli_wms_options_enabled (void)
     n_actions = (get_supported_messages_flag +
                  get_routes_flag +
                  !!set_routes_str +
+                 !!set_broadcast_config_str +
+                 get_broadcast_config_flag +
                  reset_flag +
                  noop_flag);
 
@@ -440,6 +456,129 @@ set_routes_ready (QmiClientWms *client,
 
 #endif /* HAVE_QMI_MESSAGE_WMS_SET_ROUTES */
 
+#if defined HAVE_QMI_MESSAGE_WMS_SET_BROADCAST_CONFIG
+
+static QmiMessageWmsSetBroadcastConfigInput *
+set_broadcast_config_input_create (const gchar  *str,
+                                   GError      **error)
+{
+    g_autoptr(QmiMessageWmsSetBroadcastConfigInput) input = NULL;
+    g_autoptr (GArray) channels_list = NULL;
+    GError *inner_error = NULL;
+
+    if (!qmicli_read_cbs_channels_from_string (str, &channels_list)) {
+        return NULL;
+    }
+
+    if (channels_list->len == 0) {
+        g_set_error_literal (error,
+                             QMI_CORE_ERROR,
+                             QMI_CORE_ERROR_FAILED,
+                             "cbs channels list was empty");
+        return NULL;
+    }
+
+    /* Create input */
+    input = qmi_message_wms_set_broadcast_config_input_new ();
+
+    if (!qmi_message_wms_set_broadcast_config_input_set_message_mode (input,
+                                                                      QMI_WMS_MESSAGE_MODE_GSM_WCDMA,
+                                                                      &inner_error)) {
+        g_propagate_error (error, inner_error);
+        return NULL;
+    }
+
+    if (!qmi_message_wms_set_broadcast_config_input_set_channels (input, channels_list, &inner_error)) {
+        g_propagate_error (error, inner_error);
+        return NULL;
+    }
+
+    return g_steal_pointer (&input);
+}
+
+static void
+set_broadcast_config_ready (QmiClientWms *client,
+                            GAsyncResult *res)
+{
+    g_autoptr(QmiMessageWmsSetBroadcastConfigOutput) output = NULL;
+    g_autoptr(GError) error = NULL;
+
+    output = qmi_client_wms_set_broadcast_config_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wms_set_broadcast_config_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't set CBS channels: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully set cbs channels\n",
+             qmi_device_get_path_display (ctx->device));
+
+    operation_shutdown (TRUE);
+}
+
+#endif
+
+#if defined HAVE_QMI_MESSAGE_WMS_GET_BROADCAST_CONFIG
+
+static void
+get_broadcast_config_ready (QmiClientWms *client,
+                            GAsyncResult *res)
+{
+    g_autoptr(QmiMessageWmsGetBroadcastConfigOutput) output = NULL;
+    g_autoptr(GError) error = NULL;
+    GArray *channels = NULL;
+    gboolean active;
+    guint i;
+
+    output = qmi_client_wms_get_broadcast_config_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wms_get_broadcast_config_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get CBS channels: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wms_get_broadcast_config_output_get_config (output, &active, &channels, &error)) {
+        g_printerr ("error: couldn't get CBS channels: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully get cbs channels: ", qmi_device_get_path_display (ctx->device));
+
+    for (i = 0; i < channels->len; i++) {
+        QmiMessageWmsGetBroadcastConfigOutputConfigChannelsElement ch;
+
+        ch = g_array_index (channels, QmiMessageWmsGetBroadcastConfigOutputConfigChannelsElement, i);
+        if (!ch.selected)
+            continue;
+
+        if (i > 0)
+            g_print (",");
+
+        if (ch.start == ch.end)
+            g_print ("%d", ch.start);
+        else
+            g_print ("%d-%d", ch.start, ch.end);
+    }
+    g_print ("\n");
+
+    operation_shutdown (TRUE);
+}
+
+#endif
+
 #if defined HAVE_QMI_MESSAGE_WMS_RESET
 
 static void
@@ -538,6 +677,52 @@ qmicli_wms_run (QmiDevice *device,
                                    (GAsyncReadyCallback)set_routes_ready,
                                    NULL);
         return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_WMS_SET_BROADCAST_CONFIG
+    if (set_broadcast_config_str) {
+        g_autoptr(QmiMessageWmsSetBroadcastConfigInput) input = NULL;
+        g_autoptr(GError) error = NULL;
+
+        input = set_broadcast_config_input_create (set_broadcast_config_str, &error);
+        if (!input) {
+            g_printerr ("Failed to set cbs channels: %s\n", error->message);
+            operation_shutdown (FALSE);
+            return;
+        }
+        g_debug ("Asynchronously setting CBS channels...");
+        qmi_client_wms_set_broadcast_config (ctx->client,
+                                         input,
+                                         10,
+                                         ctx->cancellable,
+                                         (GAsyncReadyCallback)set_broadcast_config_ready,
+                                         NULL);
+        return;
+    }
+#endif
+#if defined HAVE_QMI_MESSAGE_WMS_GET_BROADCAST_CONFIG
+    if (get_broadcast_config_flag) {
+        g_autoptr(QmiMessageWmsGetBroadcastConfigInput) input = NULL;
+        g_autoptr(GError) error = NULL;
+
+        input = qmi_message_wms_get_broadcast_config_input_new ();
+        if (!qmi_message_wms_get_broadcast_config_input_set_message_mode (input,
+                                                                          QMI_WMS_MESSAGE_MODE_GSM_WCDMA,
+                                                                          &error)) {
+            g_printerr ("Failed to get cbs channels: %s\n", error->message);
+            return;
+        }
+
+        g_debug ("Asynchronously getting CBS channels...");
+        qmi_client_wms_get_broadcast_config (ctx->client,
+                                             input,
+                                             10,
+                                             ctx->cancellable,
+                                             (GAsyncReadyCallback)get_broadcast_config_ready,
+                                             NULL);
+        return;
+
     }
 #endif
 

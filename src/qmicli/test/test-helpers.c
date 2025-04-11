@@ -179,6 +179,59 @@ test_helpers_binary_array_from_string_4 (void)
 
 /******************************************************************************/
 
+#if defined HAVE_QMI_MESSAGE_WMS_GET_BROADCAST_CONFIG
+
+static void
+test_helpers_cbs_channels_from_string (void)
+{
+    g_autoptr (GArray) channels = NULL;
+    QmiMessageWmsSetBroadcastConfigInputChannelsElement ch;
+    gboolean ret = FALSE;
+
+    ret = qmicli_read_cbs_channels_from_string ("asdf", &channels);
+    g_assert_false (ret);
+    g_assert_null (channels);
+
+    ret = qmicli_read_cbs_channels_from_string ("4370", &channels);
+    g_assert_true (ret);
+    g_assert_cmpuint (channels->len, ==, 1);
+    ch = g_array_index (channels, QmiMessageWmsSetBroadcastConfigInputChannelsElement, 0);
+    g_assert_cmpuint (ch.start, ==, 4370);
+    g_assert_cmpuint (ch.end, ==, 4370);
+    g_clear_pointer (&channels, g_array_unref);
+
+    ret = qmicli_read_cbs_channels_from_string ("4370,4371-abc", &channels);
+    g_assert_false (ret);
+    g_assert_null (channels);
+
+    ret = qmicli_read_cbs_channels_from_string ("4370,,4371-5000", &channels);
+    g_assert_false (ret);
+    g_assert_null (channels);
+
+    ret = qmicli_read_cbs_channels_from_string ("4370,,-5000", &channels);
+    g_assert_false (ret);
+    g_assert_null (channels);
+
+    ret = qmicli_read_cbs_channels_from_string ("65537", &channels);
+    g_assert_false (ret);
+    g_assert_null (channels);
+
+    ret = qmicli_read_cbs_channels_from_string ("4370,4371-5000", &channels);
+    g_assert_true (ret);
+    g_assert_cmpuint (channels->len, ==, 2);
+    ch = g_array_index (channels, QmiMessageWmsSetBroadcastConfigInputChannelsElement, 0);
+    g_assert_cmpuint (ch.start, ==, 4370);
+    g_assert_cmpuint (ch.end, ==, 4370);
+    ch = g_array_index (channels, QmiMessageWmsSetBroadcastConfigInputChannelsElement, 1);
+    g_assert_cmpuint (ch.start, ==, 4371);
+    g_assert_cmpuint (ch.end, ==, 5000);
+    g_clear_pointer (&channels, g_array_unref);
+}
+
+#endif
+
+/******************************************************************************/
+
 static void
 test_helpers_supported_messages_list (void)
 {
@@ -310,6 +363,10 @@ int main (int argc, char **argv)
     g_test_add_func ("/qmicli/helpers/binary-array-from-string/2", test_helpers_binary_array_from_string_2);
     g_test_add_func ("/qmicli/helpers/binary-array-from-string/3", test_helpers_binary_array_from_string_3);
     g_test_add_func ("/qmicli/helpers/binary-array-from-string/4", test_helpers_binary_array_from_string_4);
+
+#if defined HAVE_QMI_MESSAGE_WMS_GET_BROADCAST_CONFIG
+    g_test_add_func ("/qmicli/helpers/cbs-channels-from-string", test_helpers_cbs_channels_from_string);
+#endif
 
     g_test_add_func ("/qmicli/helpers/supported-message-list",      test_helpers_supported_messages_list);
     g_test_add_func ("/qmicli/helpers/supported-message-list/none", test_helpers_supported_messages_list_none);
