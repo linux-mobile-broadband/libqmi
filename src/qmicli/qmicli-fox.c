@@ -49,6 +49,7 @@ static Context *ctx;
 
 /* Options */
 static gchar *get_firmware_version_str;
+static gchar *set_fcc_authentication_str;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -56,6 +57,12 @@ static GOptionEntry entries[] = {
     { "fox-get-firmware-version", 0, 0, G_OPTION_ARG_STRING, &get_firmware_version_str,
       "Get firmware version",
       "[firmware-mcfg-apps|firmware-mcfg|apps]"
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_FOX_SET_FCC_AUTHENTICATION
+    { "fox-set-fcc-authentication", 0, 0, G_OPTION_ARG_STRING, &set_fcc_authentication_str,
+      "Set FCC authentication",
+      "[magic-string,magic-number]"
     },
 #endif
     { "fox-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
@@ -90,6 +97,7 @@ qmicli_fox_options_enabled (void)
         return !!n_actions;
 
     n_actions = (!!get_firmware_version_str +
+                 !!set_fcc_authentication_str + 
                  noop_flag);
 
     if (n_actions > 1) {
@@ -187,6 +195,35 @@ get_firmware_version_ready (QmiClientFox *client,
 
 #endif /* HAVE_QMI_MESSAGE_FOX_GET_FIRMWARE_VERSION */
 
+#if defined HAVE_QMI_MESSAGE_FOX_SET_FCC_AUTHENTICATION
+
+static void
+set_fcc_authentication_ready (QmiClientFox *client,
+                              GAsyncResult *res)
+{
+    g_autoptr(QmiMessageFoxSetFccAuthenticationOutput) output = NULL;
+    g_autoptr(GError)                                  error = NULL;
+
+    output = qmi_client_fox_set_fcc_authentication_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_fox_set_fcc_authentication_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't run Fox FCC authentication: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully run Fox FCC authentication\n",
+             qmi_device_get_path_display (ctx->device));
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_FOX_SET_FCC_AUTHENTICATION */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -224,6 +261,46 @@ qmicli_fox_run (QmiDevice *device,
                                              (GAsyncReadyCallback)get_firmware_version_ready,
                                              NULL);
         qmi_message_fox_get_firmware_version_input_unref (input);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_FOX_SET_FCC_AUTHENTICATION
+    if (set_fcc_authentication_str) {
+        g_autoptr(QmiMessageFoxSetFccAuthenticationInput) input = NULL;
+        g_auto(GStrv) split = NULL;
+        gulong magic_number;
+
+        split = g_strsplit (set_fcc_authentication_str, ",", -1);
+        if (g_strv_length (split) < 2) {
+            g_printerr ("error: missing fields\n");
+            operation_shutdown (FALSE);
+            return;
+        }
+        if (g_strv_length (split) > 2) {
+            g_printerr ("error: too many fields given\n");
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        magic_number = strtoul (split[1], NULL, 10);
+        if (magic_number > 0xFF) {
+            g_printerr ("error: magic number value out of [0,255] range\n");
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously running Fox FCC authentication...");
+
+        input = qmi_message_fox_set_fcc_authentication_input_new ();
+        qmi_message_fox_set_fcc_authentication_input_set_magic_string (input, split[0], NULL);
+        qmi_message_fox_set_fcc_authentication_input_set_magic_number (input, magic_number, NULL);
+        qmi_client_fox_set_fcc_authentication (ctx->client,
+                                               input,
+                                               10,
+                                               ctx->cancellable,
+                                               (GAsyncReadyCallback)set_fcc_authentication_ready,
+                                               NULL);
         return;
     }
 #endif
