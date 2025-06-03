@@ -586,6 +586,7 @@
     <section>
       <title>FOX Requests</title>
       <xi:include href="xml/qmi-message-fox-get-firmware-version.xml"/>
+      <xi:include href="xml/qmi-message-fox-set-fcc-authentication.xml"/>
     </section>
   </chapter>
 

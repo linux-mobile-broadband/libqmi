@@ -31,5 +31,23 @@
                      "type"      : "TLV",
                      "since"     : "1.32",
                      "format"    : "string",
-                     "prerequisites": [ { "common-ref" : "Success" } ] } ] }
+                     "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+  // *********************************************************************************
+  {  "name"    : "Set FCC Authentication",
+     "type"    : "Message",
+     "service" : "FOX",
+     "id"      : "0x5571",
+     "since"   : "1.38",
+     "input"   : [ { "name"          : "Magic String",
+                     "id"            : "0x01",
+                     "type"          : "TLV",
+                     "since"         : "1.38",
+                     "format"        : "string" },
+                   { "name"          : "Magic Number",
+                     "id"            : "0x02",
+                     "type"          : "TLV",
+                     "since"         : "1.38",
+                     "format"        : "guint8",
+                     "prerequisites" : "0x01-first" } ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] }
 ]
