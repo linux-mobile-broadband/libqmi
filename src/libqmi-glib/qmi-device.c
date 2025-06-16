@@ -2660,7 +2660,7 @@ device_open_step (GTask *task)
     case DEVICE_OPEN_CONTEXT_STEP_OPEN_ENDPOINT:
         qmi_endpoint_open (self->priv->endpoint,
                            !!(ctx->flags & QMI_DEVICE_OPEN_FLAGS_PROXY),
-                           5,
+                           10,
                            g_task_get_cancellable (task),
                            (GAsyncReadyCallback)endpoint_ready,
                            task);
