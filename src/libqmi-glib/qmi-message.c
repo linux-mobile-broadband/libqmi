@@ -529,10 +529,10 @@ qmi_message_new_from_data (QmiService   service,
      * with enough room to copy the rest of the message into */
     if (service == QMI_SERVICE_CTL) {
         message_len = sizeof (struct control_header) +
-            ((struct control_message *)(qmi_data->data))->header.tlv_length;
+            GUINT16_FROM_LE (((struct control_message *)(qmi_data->data))->header.tlv_length);
     } else {
         message_len = sizeof (struct service_header) +
-            ((struct service_message *)(qmi_data->data))->header.tlv_length;
+            GUINT16_FROM_LE (((struct service_message *)(qmi_data->data))->header.tlv_length);
     }
 
     /* Use the size of qmux_header for both QMUX and QRTR as they are the same */
