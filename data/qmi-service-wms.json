@@ -754,6 +754,21 @@
                                        "size-prefix-format" : "guint8" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Indication Register",
+     "type"    : "Message",
+     "service" : "WMS",
+     "id"      : "0x0047",
+     "since"   : "1.38",
+     "input"   : [  { "name"          : "Report Transport Network Registration Status",
+                      "id"            : "0x11",
+                      "mandatory"     : "no",
+                      "type"          : "TLV",
+                      "since"         : "1.38",
+                      "format"        : "guint8",
+                      "public-format" : "gboolean" } ],
+     "output"  : [  { "common-ref"    : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "Get Transport Network Registration Status",
      "type"    : "Message",
      "service" : "WMS",
@@ -767,6 +782,19 @@
                      "since"         : "1.0",
                      "format"        : "guint8",
                      "public-format" : "QmiWmsNWRegistration",
-                     "prerequisites" : [ { "common-ref" : "Success" } ] } ] }
+                     "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Transport Network Registration Status",
+     "type"    : "Indication",
+     "service" : "WMS",
+     "id"      : "0x004B",
+     "since"   : "1.38",
+     "output"  : [ { "name"          : "Registration Status",
+                     "id"            : "0x01",
+                     "type"          : "TLV",
+                     "since"         : "1.0",
+                     "format"        : "guint8",
+                     "public-format" : "QmiWmsNWRegistration" } ] }
 
 ]
