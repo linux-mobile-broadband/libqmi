@@ -751,7 +751,22 @@
                                        "fixed-size" : "3" },
                                      { "name"               : "Digits",
                                        "format"             : "string",
-                                       "size-prefix-format" : "guint8" } ] } ] }
+                                       "size-prefix-format" : "guint8" } ] } ] },
 
+  // *********************************************************************************
+  {  "name"    : "Get Transport Network Registration Status",
+     "type"    : "Message",
+     "service" : "WMS",
+     "id"      : "0x004a",
+     "since"   : "1.38",
+     "input"   : [ ],
+     "output"  : [ { "common-ref"    : "Operation Result" },
+                   { "name"          : "Registration Status",
+                     "id"            : "0x10",
+                     "type"          : "TLV",
+                     "since"         : "1.0",
+                     "format"        : "guint8",
+                     "public-format" : "QmiWmsNWRegistration",
+                     "prerequisites" : [ { "common-ref" : "Success" } ] } ] }
 
 ]
