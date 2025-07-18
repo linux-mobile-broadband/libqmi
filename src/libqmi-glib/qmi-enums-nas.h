@@ -53,6 +53,7 @@
  * @QMI_NAS_RADIO_INTERFACE_LTE: LTE.
  * @QMI_NAS_RADIO_INTERFACE_TD_SCDMA: TD-SCDMA.
  * @QMI_NAS_RADIO_INTERFACE_5GNR: 5G NR. Since 1.26.
+ * @QMI_NAS_RADIO_INTERFACE_NO_CHANGE: Keep the current radio interface. Since 1.38.
  *
  * Radio interface technology.
  *
@@ -69,6 +70,7 @@ typedef enum { /*< since=1.0 >*/
     QMI_NAS_RADIO_INTERFACE_LTE         = 0x08,
     QMI_NAS_RADIO_INTERFACE_TD_SCDMA    = 0x09,
     QMI_NAS_RADIO_INTERFACE_5GNR        = 0x0C,
+    QMI_NAS_RADIO_INTERFACE_NO_CHANGE   = 0xFF,
 } QmiNasRadioInterface;
 
 /**
