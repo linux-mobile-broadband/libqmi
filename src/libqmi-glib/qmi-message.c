@@ -66,6 +66,9 @@
 #include "qmi-fox.h"
 #include "qmi-atr.h"
 #include "qmi-ssc.h"
+#include "qmi-ims.h"
+#include "qmi-imsa.h"
+#include "qmi-imsp.h"
 
 #define PACKED __attribute__((packed))
 
@@ -1833,6 +1836,7 @@ qmi_message_get_printable_full (QmiMessage        *self,
 #if defined HAVE_QMI_SERVICE_ATR
         contents = __qmi_message_atr_get_printable (self, context, line_prefix);
 #endif
+        break;
     case QMI_SERVICE_IMSP:
 #if defined HAVE_QMI_SERVICE_IMSP
         contents = __qmi_message_imsp_get_printable (self, context, line_prefix);
