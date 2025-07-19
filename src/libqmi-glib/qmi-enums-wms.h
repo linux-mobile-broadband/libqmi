@@ -483,4 +483,24 @@ typedef enum { /*< since=1.28 >*/
     QMI_WMS_ACK_FAILURE_CAUSE_NOT_SENT              = 0x02,
 } QmiWmsAckFailureCause;
 
+/**
+ * QmiWmsNWRegistration:
+ * @QMI_WMS_NW_REGISTRATION_STATUS_NO_SERVICE: No service
+ * @QMI_WMS_NW_REGISTRATION_STATUS_IN_PROCESS: In process to acquire
+ * @QMI_WMS_NW_REGISTRATION_STATUS_FAILURE: Permanent failure.
+ * @QMI_WMS_NW_REGISTRATION_STATUS_LIMITED_SERVICE: Limited service
+ * @QMI_WMS_NW_REGISTRATION_STATUS_FULL_SERVICE: Full service.
+ *
+ * The current network registration service for WMS.
+ *
+ * Since: 1.38
+ */
+typedef enum { /*< since=1.38 >*/
+    QMI_WMS_NW_REGISTRATION_STATUS_NO_SERVICE         = 0x00,
+    QMI_WMS_NW_REGISTRATION_STATUS_IN_PROCESS         = 0x01,
+    QMI_WMS_NW_REGISTRATION_STATUS_FAILURE            = 0x02,
+    QMI_WMS_NW_REGISTRATION_STATUS_LIMITED_SERVICE    = 0x03,
+    QMI_WMS_NW_REGISTRATION_STATUS_FULL_SERVICE       = 0x04,
+} QmiWmsNWRegistration;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WMS_H_ */
