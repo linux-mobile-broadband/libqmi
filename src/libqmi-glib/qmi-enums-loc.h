@@ -160,7 +160,7 @@ typedef enum { /*< since=1.22 >*/
  * QmiLocTechnologyUsed:
  * @QMI_LOC_TECHNOLOGY_USED_SATELLITE: Satellite.
  * @QMI_LOC_TECHNOLOGY_USED_CELLULAR: Cellular.
- * @QMI_LOC_TECHNOLOGY_USED_WIFI: Wifi.
+ * @QMI_LOC_TECHNOLOGY_USED_WIFI: WiFi.
  * @QMI_LOC_TECHNOLOGY_USED_SENSORS: Sensors.
  * @QMI_LOC_TECHNOLOGY_USED_REFERENCE_LOCATION: Reference Location.
  * @QMI_LOC_TECHNOLOGY_USED_INJECTED_POSITION: Injected Position.
@@ -505,5 +505,124 @@ typedef enum { /*< since=1.28 >*/
     QMI_LOC_LOCK_TYPE_MT   = 3,
     QMI_LOC_LOCK_TYPE_ALL  = 4,
 } QmiLocLockType;
+
+
+/**
+ * QmiLocAltitudeSource:
+ * @QMI_LOC_ALTITUDE_SOURCE_UNKNOWN: Altitude source is unknown.
+ * @QMI_LOC_ALTITUDE_SOURCE_GPS: Altitude is determined by GPS.
+ * @QMI_LOC_ALTITUDE_SOURCE_CELL_ID: Altitude determined based on cell id.
+ * @QMI_LOC_ALTITUDE_SOURCE_ENHANCED_CELL_ID: Altitude determined based on enchanced information about cell id.
+ * @QMI_LOC_ALTITUDE_SOURCE_WIFI: Altitude determined by available WiFi networks.
+ * @QMI_LOC_ALTITUDE_SOURCE_TERRESTRIAL: Terrestrial source of altitude.
+ * @QMI_LOC_ALTITUDE_SOURCE_TERRESTRIAL_HYBRID: Hybrid terrestrial source of altitude.
+ * @QMI_LOC_ALTITUDE_SOURCE_ALTITUDE_DATABASE: Altitude database is used as a source for altitude.
+ * @QMI_LOC_ALTITUDE_SOURCE_BAROMETRIC_ALTIMETER: Altitude determined using barometric altimeter.
+ * @QMI_LOC_ALTITUDE_SOURCE_OTHER: Altitude determined using other sources.
+ *
+ * Source of the used altitude.
+ *
+ * Since: 1.37
+ */
+typedef enum { /*< since=1.37 >*/
+    QMI_LOC_ALTITUDE_SOURCE_UNKNOWN              =  0,
+    QMI_LOC_ALTITUDE_SOURCE_GPS                  =  1,
+    QMI_LOC_ALTITUDE_SOURCE_CELL_ID              =  2,
+    QMI_LOC_ALTITUDE_SOURCE_ENHANCED_CELL_ID     =  3,
+    QMI_LOC_ALTITUDE_SOURCE_WIFI                 =  4,
+    QMI_LOC_ALTITUDE_SOURCE_TERRESTRIAL          =  5,
+    QMI_LOC_ALTITUDE_SOURCE_TERRESTRIAL_HYBRID   =  6,
+    QMI_LOC_ALTITUDE_SOURCE_ALTITUDE_DATABASE    =  7,
+    QMI_LOC_ALTITUDE_SOURCE_BAROMETRIC_ALTIMETER =  8,
+    QMI_LOC_ALTITUDE_SOURCE_OTHER                =  9,
+} QmiLocAltitudeSource;
+
+/**
+ * QmiLocAltitudeDependency:
+ * @QMI_LOC_ALTITUDE_DEPENDENCY_UNKNOWN: Unknown.
+ * @QMI_LOC_ALTITUDE_DEPENDENCY_FULLY_INTERDEPENDENT: Fully interdependent.
+ * @QMI_LOC_ALTITUDE_DEPENDENCY_ON_LAT_LON: Altitude depends on latitude and longitude.
+ * @QMI_LOC_ALTITUDE_DEPENDENCY_FULLY_INDEPENDENT: Altitude is fully independent.
+ *
+ * Dependency between the horizontal and altitude position components.
+ *
+ * Since: 1.37
+ */
+typedef enum { /*< since=1.37 >*/
+    QMI_LOC_ALTITUDE_DEPENDENCY_UNKNOWN              =  0,
+    QMI_LOC_ALTITUDE_DEPENDENCY_FULLY_INTERDEPENDENT =  1,
+    QMI_LOC_ALTITUDE_DEPENDENCY_ON_LAT_LON           =  2,
+    QMI_LOC_ALTITUDE_DEPENDENCY_FULLY_INDEPENDENT    =  3,
+} QmiLocAltitudeDependency;
+
+
+/**
+ * QmiLocAltitudeUncertainty:
+ * @QMI_LOC_ALTITUDE_UNCERTAINTY_UNKNOWN: Unknown.
+ * @QMI_LOC_ALTITUDE_UNCERTAINTY_POINT: Uncertainty is valid at the injected horizontal position coordinates only.
+ * @QMI_LOC_ALTITUDE_UNCERTAINTY_FULL: Uncertainty applies to the position of the device regardless of horizontal position.
+ *
+ * Region of uncertainty.
+ *
+ * Since: 1.37
+ */
+typedef enum { /*< since=1.37 >*/
+    QMI_LOC_ALTITUDE_UNCERTAINTY_UNKNOWN =  0,
+    QMI_LOC_ALTITUDE_UNCERTAINTY_POINT   =  1,
+    QMI_LOC_ALTITUDE_UNCERTAINTY_FULL    =  2,
+} QmiLocAltitudeUncertainty;
+
+
+/**
+ * QmiLocPositionSource:
+ * @QMI_LOC_POSITION_SOURCE_GNSS: Position source is GNSS.
+ * @QMI_LOC_POSITION_SOURCE_CELL_ID: Position is based on Cell ID.
+ * @QMI_LOC_POSITION_SOURCE_ENHANCED_CELL_ID: Position is based on enhaced information about Cell ID.
+ * @QMI_LOC_POSITION_SOURCE_WIFI: Position is based on available WiFi networks.
+ * @QMI_LOC_POSITION_SOURCE_TERRESTRIAL: Position source is terrestrial.
+ * @QMI_LOC_POSITION_SOURCE_GNSS_TERRESTRIAL_HYBRID: Position source is GNSS terrestrial hybrid.
+ * @QMI_LOC_POSITION_SOURCE_OTHER: Other sources of position information.
+ * @QMI_LOC_POSITION_SOURCE_DRE: Position source is the Dead Reckoning Engine.
+ * @QMI_LOC_POSITION_SOURCE_FLP: Position source is Fused Location Provider.
+ * @QMI_LOC_POSITION_SOURCE_NLP: Position source is Network Location Provider.
+ * @QMI_LOC_POSITION_SOURCE_FLP_ALE: Position source is derived from Fused Location Provider - Android Location Engine.
+ *
+ * Source from which this position was obtained.
+ * If altitude is specified and the altitude source is not specified, the engine
+ * assumes that the altitude was obtained using the specified position source.
+ * If both altitude and altitude source are specified, the engine assumes
+ * that only latitude and longitude were obtained using the specified position
+ * source.
+ *
+ * Since: 1.37
+ */
+typedef enum { /*< since=1.37 >*/
+    QMI_LOC_POSITION_SOURCE_GNSS                    = 0,
+    QMI_LOC_POSITION_SOURCE_CELL_ID                 = 1,
+    QMI_LOC_POSITION_SOURCE_ENHANCED_CELL_ID        = 2,
+    QMI_LOC_POSITION_SOURCE_WIFI                    = 3,
+    QMI_LOC_POSITION_SOURCE_TERRESTRIAL             = 4,
+    QMI_LOC_POSITION_SOURCE_GNSS_TERRESTRIAL_HYBRID = 5,
+    QMI_LOC_POSITION_SOURCE_OTHER                   = 6,
+    QMI_LOC_POSITION_SOURCE_DRE                     = 7,
+    QMI_LOC_POSITION_SOURCE_FLP                     = 8,
+    QMI_LOC_POSITION_SOURCE_NLP                     = 9,
+    QMI_LOC_POSITION_SOURCE_FLP_ALE                 = 10,
+} QmiLocPositionSource;
+
+
+/**
+ * QmiLocPositionSourceProvider:
+ * @QMI_LOC_POSITION_SOURCE_PROVIDER_EXTERNAL: Position is sourced from an external module.
+ * @QMI_LOC_POSITION_SOURCE_PROVIDER_INTERNAL: Position is sourced from an internal module.
+ *
+ * Source provider from which this position was obtained.
+ *
+ * Since: 1.37
+ */
+typedef enum { /*< since=1.37 >*/
+    QMI_LOC_POSITION_SOURCE_PROVIDER_EXTERNAL = 0,
+    QMI_LOC_POSITION_SOURCE_PROVIDER_INTERNAL = 1,
+} QmiLocPositionSourceProvider;
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_LOC_H_ */

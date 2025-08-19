@@ -561,6 +561,46 @@ gboolean qmi_message_tlv_write_sized_guint (QmiMessage  *self,
                                             guint64      in,
                                             GError     **error);
 
+/**
+ * qmi_message_tlv_write_gfloat:
+ * @self: a #QmiMessage.
+ * @endian: target endianness, swapped from host byte order if necessary.
+ * @in: a #gfloat in host byte order.
+ * @error: return location for error or %NULL.
+ *
+ * Appends a float to the TLV being built. The number to be
+ * written is expected to be given in host endianness, and this method takes
+ * care of converting the value written to the byte order specified by @endian.
+ *
+ * Returns: %TRUE if the variable is successfully added, otherwise %FALSE is returned and @error is set.
+ *
+ * Since: 1.37
+ */
+gboolean qmi_message_tlv_write_gfloat (QmiMessage  *self,
+                                       QmiEndian    endian,
+                                       gfloat       in,
+                                       GError     **error);
+
+
+/**
+ * qmi_message_tlv_write_gdouble:
+ * @self: a #QmiMessage.
+ * @endian: target endianness, swapped from host byte order if necessary.
+ * @in: a #gdouble in host byte order.
+ * @error: return location for error or %NULL.
+ *
+ * Appends a double to the TLV being built. The number to be
+ * written is expected to be given in host endianness, and this method takes
+ * care of converting the value written to the byte order specified by @endian.
+ *
+ * Returns: %TRUE if the variable is successfully added, otherwise %FALSE is returned and @error is set.
+ *
+ * Since: 1.37
+ */
+gboolean qmi_message_tlv_write_gdouble (QmiMessage  *self,
+                                        QmiEndian    endian,
+                                        gdouble      in,
+                                        GError     **error);
 
 /**
  * qmi_message_tlv_write_string:

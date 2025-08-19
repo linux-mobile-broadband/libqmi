@@ -933,6 +933,44 @@ qmi_message_tlv_write_sized_guint (QmiMessage  *self,
 }
 
 gboolean
+qmi_message_tlv_write_gfloat (QmiMessage  *self,
+                              QmiEndian    endian,
+                              gfloat       in,
+                              GError     **error)
+{
+    gfloat tmp;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+
+    /* Check for overflow of message size */
+    if (!tlv_error_if_write_overflow (self, sizeof (in), error))
+        return FALSE;
+
+    tmp = (endian == QMI_ENDIAN_BIG ? QMI_GFLOAT_TO_BE (in) : QMI_GFLOAT_TO_LE (in));
+    g_byte_array_append (self, (guint8 *)&tmp, sizeof (tmp));
+    return TRUE;
+}
+
+gboolean
+qmi_message_tlv_write_gdouble (QmiMessage  *self,
+                               QmiEndian    endian,
+                               gdouble       in,
+                               GError     **error)
+{
+    gdouble tmp;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+
+    /* Check for overflow of message size */
+    if (!tlv_error_if_write_overflow (self, sizeof (in), error))
+        return FALSE;
+
+    tmp = (endian == QMI_ENDIAN_BIG ? QMI_GDOUBLE_TO_BE (in) : QMI_GDOUBLE_TO_LE (in));
+    g_byte_array_append (self, (guint8 *)&tmp, sizeof (tmp));
+    return TRUE;
+}
+
+gboolean
 qmi_message_tlv_write_string (QmiMessage   *self,
                               guint8        n_size_prefix_bytes,
                               const gchar  *in,
