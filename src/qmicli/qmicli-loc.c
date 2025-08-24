@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <locale.h>
+#include <math.h>
 #include <string.h>
 
 #include <glib.h>
@@ -64,6 +65,7 @@ typedef struct {
     guint           set_operation_mode_indication_id;
     guint           get_engine_lock_indication_id;
     guint           set_engine_lock_indication_id;
+    guint           inject_position_indication_id;
 } Context;
 static Context *ctx;
 
@@ -84,6 +86,8 @@ static gboolean get_operation_mode_flag;
 static gchar   *set_operation_mode_str;
 static gboolean get_engine_lock_flag;
 static gchar   *set_engine_lock_str;
+static gdouble  inject_position_latitude = NAN;
+static gdouble  inject_position_longitude = NAN;
 static gboolean noop_flag;
 
 #define DEFAULT_LOC_TIMEOUT_SECS 30
@@ -196,6 +200,16 @@ static GOptionEntry entries[] = {
       "[none|mi|mt|all]"
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_LOC_INJECT_POSITION
+    { "loc-inject-position-latitude", 0, 0, G_OPTION_ARG_DOUBLE, &inject_position_latitude,
+      "Inject latitude into GNSS engine",
+      "-90.0 to 90.0. Positive values indicate northern latitude."
+    },
+    { "loc-inject-position-longitude", 0, 0, G_OPTION_ARG_DOUBLE, &inject_position_longitude,
+      "Inject longitude into GNSS engine",
+      "-180.0 to 180.0. Positive values indicate eastern longitude."
+    },
+#endif
     { "loc-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a LOC client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -247,6 +261,7 @@ qmicli_loc_options_enabled (void)
                  !!set_operation_mode_str +
                  get_engine_lock_flag +
                  !!set_engine_lock_str +
+                 (!isnan (inject_position_latitude) || !isnan (inject_position_longitude)) +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -280,7 +295,9 @@ qmicli_loc_options_enabled (void)
         get_operation_mode_flag ||
         set_operation_mode_str ||
         get_engine_lock_flag ||
-        set_engine_lock_str)
+        set_engine_lock_str ||
+        !isnan (inject_position_latitude) ||
+        !isnan (inject_position_longitude))
         qmicli_expect_indications ();
 
     checked = TRUE;
@@ -1401,6 +1418,99 @@ start_ready (QmiClientLoc *client,
 
 #endif /* HAVE_QMI_MESSAGE_LOC_START */
 
+#if defined HAVE_QMI_MESSAGE_LOC_INJECT_POSITION
+static void
+inject_position_received (QmiClientLoc                         *client,
+                          QmiIndicationLocInjectPositionOutput *output)
+{
+    QmiLocIndicationStatus  status;
+    g_autoptr(GError)       error = NULL;
+
+    if (!qmi_indication_loc_inject_position_output_get_indication_status (output, &status, &error)) {
+        g_printerr ("error: couldn't inject position %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Successfully inject position\n");
+    operation_shutdown (TRUE);
+}
+
+
+static gboolean
+inject_position_timed_out (void)
+{
+    ctx->timeout_id = 0;
+    g_printerr ("error: inject position operation failed: timeout\n");
+    operation_shutdown (FALSE);
+    return G_SOURCE_REMOVE;
+}
+
+
+static void
+inject_position_ready (QmiClientLoc *client,
+                       GAsyncResult *res)
+{
+    g_autoptr(QmiMessageLocInjectPositionOutput) output = NULL;
+    g_autoptr(GError)                            error = NULL;
+
+    output = qmi_client_loc_inject_position_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_loc_inject_position_output_get_result (output, &error)) {
+        g_printerr ("error: could not inject position: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+}
+
+static void
+inject_position_create (void)
+{
+    g_autoptr(QmiMessageLocInjectPositionInput) input = NULL;
+    GError                                     *error = NULL;
+    guint64                                     utc_ms = 0;
+
+    input = qmi_message_loc_inject_position_input_new ();
+    if (!input) {
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_loc_inject_position_input_set_latitude (input, inject_position_latitude, &error);
+    qmi_message_loc_inject_position_input_set_longitude (input, inject_position_longitude, &error);
+    qmi_message_loc_inject_position_input_set_position_source (input, QMI_LOC_POSITION_SOURCE_OTHER, &error);
+
+    // it's not recommended to advertise accuracy better than 1000 meters to the modem
+    qmi_message_loc_inject_position_input_set_horizontal_uncertainty_circular (input, 1000, &error);
+    qmi_message_loc_inject_position_input_set_horizontal_confidence (input, 68, &error);
+
+    utc_ms = g_get_real_time () / 1000;
+    qmi_message_loc_inject_position_input_set_utc_timestamp (input, utc_ms, &error);
+
+    /* Wait for response asynchronously */
+    ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                             (GSourceFunc) inject_position_timed_out,
+                                             NULL);
+
+    ctx->inject_position_indication_id = g_signal_connect (ctx->client,
+                                                           "inject-position",
+                                                           G_CALLBACK (inject_position_received),
+                                                           NULL);
+
+    qmi_client_loc_inject_position (ctx->client,
+                                    input,
+                                    10,
+                                    ctx->cancellable,
+                                    (GAsyncReadyCallback) inject_position_ready,
+                                    NULL);
+}
+#endif /* HAVE_QMI_MESSAGE_LOC_INJECT_POSITION */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1577,6 +1687,26 @@ qmicli_loc_run (QmiDevice    *device,
         /* All the remaining actions require monitoring */
         ctx->monitoring_step = MONITORING_STEP_FIRST;
         monitoring_step_run ();
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_LOC_INJECT_POSITION
+    if (!isnan (inject_position_latitude) ||
+        !isnan (inject_position_longitude)) {
+
+        if (isnan(inject_position_latitude) ||
+            isnan(inject_position_longitude) ||
+            (inject_position_latitude < -90) ||
+            (inject_position_latitude > 90)  ||
+            (inject_position_longitude < -180) ||
+            (inject_position_longitude > 180)) {
+            g_printerr ("error: correct values for both latitude and longitude has to be set.\n"
+                        "`--loc-inject-position-latitude [-90.0 .. 90.0] --loc-inject-position-longitude [-180.0 .. 180.0]'\n");
+            exit (EXIT_FAILURE);
+        }
+        g_debug ("Asynchronously inject position...");
+        inject_position_create ();
         return;
     }
 #endif
