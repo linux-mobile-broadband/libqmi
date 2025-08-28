@@ -67,7 +67,7 @@ G_BEGIN_DECLS
  * QMI_MESSAGE_QRTR_MARKER:
  *
  * Fake header added by libqmi to re-use existing QMUX message parsers for QRTR messages.
- * QRTR QMI services with a service ID > 0xFF use this fake header where the service ID 
+ * QRTR QMI services with a service ID > 0xFF use this fake header where the service ID
  * is set to 16 bits instead of 8 bits. This header has no purpose outside of libqmi
  * and is never send to the actual device implementing these QMI services.
  *
