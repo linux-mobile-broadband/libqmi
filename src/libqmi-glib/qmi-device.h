@@ -1034,7 +1034,7 @@ void qmi_device_add_link_with_flags (QmiDevice             *self,
  * @mux_id: the mux ID for the link created.
  * @error: Return location for error or %NULL.
  *
- * Finishes an operation started with qmi_device_add_link_finish().
+ * Finishes an operation started with qmi_device_add_link_with_flags().
  *
  * Returns: The name of the net interface created, %NULL if @error is set.
  *
