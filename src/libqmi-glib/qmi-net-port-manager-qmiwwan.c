@@ -174,6 +174,7 @@ cmpuint (const guint *a,
 
 static guint
 get_first_free_mux_id (QmiNetPortManagerQmiwwan  *self,
+                       guint                      initial_mux_id,
                        GPtrArray                 *links,
                        GError                   **error)
 {
@@ -183,7 +184,7 @@ get_first_free_mux_id (QmiNetPortManagerQmiwwan  *self,
     static const guint max_mux_id_upper_threshold = QMI_DEVICE_MUX_ID_MAX + 1;
 
     if (!links)
-        return QMI_DEVICE_MUX_ID_MIN;
+        return initial_mux_id;
 
     existing_mux_ids = g_array_new (FALSE, FALSE, sizeof (guint));
 
@@ -223,7 +224,7 @@ get_first_free_mux_id (QmiNetPortManagerQmiwwan  *self,
     g_array_append_val (existing_mux_ids, max_mux_id_upper_threshold);
     g_array_sort (existing_mux_ids, (GCompareFunc)cmpuint);
 
-    for (next_mux_id = QMI_DEVICE_MUX_ID_MIN, i = 0; i < existing_mux_ids->len; next_mux_id++, i++) {
+    for (next_mux_id = initial_mux_id, i = 0; i < existing_mux_ids->len; next_mux_id++, i++) {
         guint existing;
 
         existing = g_array_index (existing_mux_ids, guint, i);
@@ -259,6 +260,7 @@ net_port_manager_add_link_finish (QmiNetPortManager  *self,
 static void
 net_port_manager_add_link (QmiNetPortManager     *_self,
                            guint                  mux_id,
+                           guint                  initial_mux_id,
                            const gchar           *base_ifname,
                            const gchar           *ifname_prefix,
                            QmiDeviceAddLinkFlags  flags,
@@ -302,7 +304,7 @@ net_port_manager_add_link (QmiNetPortManager     *_self,
     }
 
     if (mux_id == QMI_DEVICE_MUX_ID_AUTOMATIC) {
-        mux_id = get_first_free_mux_id (self, links_before, &error);
+        mux_id = get_first_free_mux_id (self, initial_mux_id, links_before, &error);
         if (mux_id == QMI_DEVICE_MUX_ID_UNBOUND) {
             g_prefix_error (&error, "Couldn't add link with automatic mux id: ");
             g_task_return_error (task, error);

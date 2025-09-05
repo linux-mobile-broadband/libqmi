@@ -54,6 +54,7 @@ struct _QmiNetPortManagerClass {
 
     void     (* add_link)        (QmiNetPortManager      *self,
                                   guint                   mux_id,
+                                  guint                   initial_mux_id,
                                   const gchar            *base_ifname,
                                   const gchar            *ifname_prefix,
                                   QmiDeviceAddLinkFlags   flags,
@@ -97,6 +98,7 @@ gboolean  qmi_net_port_manager_list_links      (QmiNetPortManager    *self,
 
 void      qmi_net_port_manager_add_link        (QmiNetPortManager      *self,
                                                 guint                   mux_id,
+                                                guint                   initial_mux_id,
                                                 const gchar            *base_ifname,
                                                 const gchar            *ifname_prefix,
                                                 QmiDeviceAddLinkFlags   flags,

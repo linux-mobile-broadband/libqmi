@@ -31,6 +31,7 @@ G_DEFINE_ABSTRACT_TYPE (QmiNetPortManager, qmi_net_port_manager, G_TYPE_OBJECT)
 void
 qmi_net_port_manager_add_link (QmiNetPortManager     *self,
                                guint                  mux_id,
+                               guint                  initial_mux_id,
                                const gchar           *base_ifname,
                                const gchar           *ifname_prefix,
                                QmiDeviceAddLinkFlags  flags,
@@ -41,6 +42,7 @@ qmi_net_port_manager_add_link (QmiNetPortManager     *self,
 {
     QMI_NET_PORT_MANAGER_GET_CLASS (self)->add_link (self,
                                                      mux_id,
+                                                     initial_mux_id,
                                                      base_ifname,
                                                      ifname_prefix,
                                                      flags,

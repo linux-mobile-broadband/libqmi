@@ -1965,6 +1965,15 @@ qmi_device_add_link_finish (QmiDevice     *self,
     return qmi_device_add_link_with_flags_finish (self, res, mux_id, error);
 }
 
+gchar *
+qmi_device_add_link_with_flags_and_initial_mux_id_finish (QmiDevice     *self,
+                                                          GAsyncResult  *res,
+                                                          guint         *mux_id,
+                                                          GError       **error)
+{
+    return qmi_device_add_link_with_flags_finish (self, res, mux_id, error);
+}
+
 static void
 device_add_link_ready (QmiNetPortManager *net_port_manager,
                        GAsyncResult      *res,
@@ -2015,6 +2024,44 @@ qmi_device_add_link_with_flags (QmiDevice             *self,
     g_assert (self->priv->net_port_manager);
     qmi_net_port_manager_add_link (self->priv->net_port_manager,
                                    mux_id,
+                                   QMI_DEVICE_MUX_ID_MIN,
+                                   base_ifname,
+                                   ifname_prefix,
+                                   flags,
+                                   5,
+                                   cancellable,
+                                   (GAsyncReadyCallback) device_add_link_ready,
+                                   task);
+}
+
+void qmi_device_add_link_with_flags_and_initial_mux_id (QmiDevice             *self,
+                                                        guint                  initial_mux_id,
+                                                        const gchar           *base_ifname,
+                                                        const gchar           *ifname_prefix,
+                                                        QmiDeviceAddLinkFlags  flags,
+                                                        GCancellable          *cancellable,
+                                                        GAsyncReadyCallback    callback,
+                                                        gpointer               user_data)
+{
+    GTask  *task;
+    GError *error = NULL;
+
+    g_return_if_fail (QMI_IS_DEVICE (self));
+    g_return_if_fail (base_ifname);
+    g_return_if_fail (initial_mux_id >= QMI_DEVICE_MUX_ID_MIN);
+
+    task = g_task_new (self, cancellable, callback, user_data);
+
+    if (!setup_net_port_manager (self, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_assert (self->priv->net_port_manager);
+    qmi_net_port_manager_add_link (self->priv->net_port_manager,
+                                   QMI_DEVICE_MUX_ID_AUTOMATIC,
+                                   initial_mux_id,
                                    base_ifname,
                                    ifname_prefix,
                                    flags,

@@ -417,7 +417,8 @@ netlink_message_cb (GSocket                *socket,
 
 static guint
 get_first_free_mux_id (QmiNetPortManagerRmnet *self,
-                       const gchar            *ifname_prefix)
+                       const gchar            *ifname_prefix,
+                       guint                   initial_value)
 {
     guint i;
 
@@ -426,7 +427,7 @@ get_first_free_mux_id (QmiNetPortManagerRmnet *self,
      * to inspect mux IDs of existing rmnet interfaces, so we will pass it
      * for now. */
 
-    for (i = QMI_DEVICE_MUX_ID_MIN; i <= QMI_DEVICE_MUX_ID_MAX; i++) {
+    for (i = initial_value; i <= QMI_DEVICE_MUX_ID_MAX; i++) {
         gchar   *ifname;
         gboolean mux_id_is_free;
 
@@ -476,6 +477,7 @@ net_port_manager_add_link_finish (QmiNetPortManager  *self,
 static void
 net_port_manager_add_link (QmiNetPortManager     *_self,
                            guint                  mux_id,
+                           guint                  initial_mux_id,
                            const gchar           *base_ifname,
                            const gchar           *ifname_prefix,
                            QmiDeviceAddLinkFlags  flags,
@@ -511,7 +513,7 @@ net_port_manager_add_link (QmiNetPortManager     *_self,
     }
 
     if (ctx->mux_id == QMI_DEVICE_MUX_ID_AUTOMATIC) {
-        ctx->mux_id = get_first_free_mux_id (self, ifname_prefix);
+        ctx->mux_id = get_first_free_mux_id (self, ifname_prefix, initial_mux_id);
 
         g_debug ("Using dynamic mux ID %u", ctx->mux_id);
         if (ctx->mux_id == QMI_DEVICE_MUX_ID_UNBOUND) {
