@@ -1046,6 +1046,66 @@ gchar *qmi_device_add_link_with_flags_finish (QmiDevice     *self,
                                               GError       **error);
 
 /**
+ * qmi_device_add_link_with_flags_and_initial_mux_id:
+ * @self: a #QmiDevice.
+ * @initial_mux_id: the initial mux id from which the first available mux id has
+ *   to be searched for in the [%QMI_DEVICE_MUX_ID_MIN,%QMI_DEVICE_MUX_ID_MAX]
+ *   range.
+ * @base_ifname: the interface which the new link will be created on.
+ * @ifname_prefix: the prefix suggested to be used for the name of the new link
+ *   created.
+ * @flags: bitmask of %QmiDeviceAddLinkFlags values to pass to the kernel when
+ *   creating the new link.
+ * @cancellable: a #GCancellable, or %NULL.
+ * @callback: a #GAsyncReadyCallback to call when the operation is finished.
+ * @user_data: the data to pass to callback function.
+ *
+ * Asynchronously creates a new virtual network device in the same way as
+ * qmi_device_add_link_with_flags() does, but passing the additional @initial_mux_id
+ * value from which the first available mux id interface should be looked for.
+ *
+ * Using %QMI_DEVICE_MUX_ID_MIN as @initial_mux_id is equivalent to calling
+ * qmi_device_add_link_with_flags() with %QMI_DEVICE_MUX_ID_AUTOMATIC.
+ *
+ * If the link creation with the given set of @flags is unsupported by the
+ * backend, the operation may fail.
+ *
+ * <note><para>
+ * None of the @flags supported are applicable when using the multiplexing
+ * support provided by the qmi_wwan kernel driver, they are only used if using
+ * the rmnet backend for link management support.
+ * </para></note>
+ *
+ * Since: 1.30
+ */
+void qmi_device_add_link_with_flags_and_initial_mux_id (QmiDevice             *self,
+                                                        guint                  initial_mux_id,
+                                                        const gchar           *base_ifname,
+                                                        const gchar           *ifname_prefix,
+                                                        QmiDeviceAddLinkFlags  flags,
+                                                        GCancellable          *cancellable,
+                                                        GAsyncReadyCallback    callback,
+                                                        gpointer               user_data);
+
+/**
+ * qmi_device_add_link_with_flags_and_initial_mux_id_finish:
+ * @self: a #QmiDevice.
+ * @res: a #GAsyncResult.
+ * @mux_id: the mux ID for the link created.
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with qmi_device_add_link_with_flags_and_initial_mux_id().
+ *
+ * Returns: The name of the net interface created, %NULL if @error is set.
+ *
+ * Since: 1.30
+ */
+gchar *qmi_device_add_link_with_flags_and_initial_mux_id_finish (QmiDevice     *self,
+                                                                 GAsyncResult  *res,
+                                                                 guint         *mux_id,
+                                                                 GError       **error);
+
+/**
  * qmi_device_delete_link:
  * @self: a #QmiDevice.
  * @ifname: the name of the link to remove.
