@@ -47,7 +47,7 @@ static GOptionEntry entries[] = {
     },
     { "link-add", 0, 0, G_OPTION_ARG_STRING, &link_add_str,
       "Create new network interface link",
-      "[iface=IFACE,prefix=PREFIX[,mux-id=N][,flags=FLAGS]]"
+      "[iface=IFACE,prefix=PREFIX[,mux-id=N[,initial-mux-id=M]][,flags=FLAGS]]"
     },
     { "link-delete", 0, 0, G_OPTION_ARG_STRING, &link_delete_str,
       "Delete a given network interface link",
@@ -219,6 +219,7 @@ device_link_delete (QmiDevice    *dev,
 
 typedef struct {
     guint                  mux_id;
+    guint                  initial_mux_id;
     gchar                 *iface;
     gchar                 *prefix;
     QmiDeviceAddLinkFlags  flags;
@@ -247,6 +248,29 @@ link_add_ready (QmiDevice    *dev,
     qmicli_async_operation_done (!error, FALSE);
 }
 
+static void
+link_add_with_initial_mux_id_ready (QmiDevice    *dev,
+                                    GAsyncResult *res)
+{
+    g_autoptr(GError)  error = NULL;
+    g_autofree gchar  *link_iface = NULL;
+    guint              mux_id;
+
+    link_iface = qmi_device_add_link_with_flags_and_initial_mux_id_finish (dev, res, &mux_id, &error);
+    if (!link_iface)
+        g_printerr ("error: couldn't add link: %s\n",
+                    error->message);
+    else
+        g_print ("[%s] link successfully added:\n"
+                 "  iface name: %s\n"
+                 "  mux-id:     %u\n",
+                 qmi_device_get_path_display (dev),
+                 link_iface,
+                 mux_id);
+
+    qmicli_async_operation_done (!error, FALSE);
+}
+
 static gboolean
 add_link_properties_handle (const gchar        *key,
                             const gchar        *value,
@@ -257,6 +281,15 @@ add_link_properties_handle (const gchar        *key,
         if (!qmicli_read_uint_from_string (value, &props->mux_id)) {
             g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
                          "invalid mux-id given: '%s'", value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "initial-mux-id") == 0 && props->mux_id == QMI_DEVICE_MUX_ID_AUTOMATIC) {
+        if (!qmicli_read_uint_from_string (value, &props->initial_mux_id)) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "invalid initial-mux-id given: '%s'", value);
             return FALSE;
         }
         return TRUE;
@@ -294,6 +327,7 @@ device_link_add (QmiDevice    *dev,
     g_autoptr(GError) error = NULL;
     AddLinkProperties props = {
         .mux_id = QMI_DEVICE_MUX_ID_AUTOMATIC,
+        .initial_mux_id = QMI_DEVICE_MUX_ID_MIN,
         .iface = NULL,
         .prefix = NULL,
         .flags = QMI_DEVICE_ADD_LINK_FLAGS_NONE,
@@ -326,14 +360,32 @@ device_link_add (QmiDevice    *dev,
         return;
     }
 
-    qmi_device_add_link_with_flags (dev,
-                                    props.mux_id,
-                                    props.iface,
-                                    props.prefix,
-                                    props.flags,
-                                    cancellable,
-                                    (GAsyncReadyCallback)link_add_ready,
-                                    NULL);
+    if ((props.mux_id == QMI_DEVICE_MUX_ID_AUTOMATIC) &&
+        (props.initial_mux_id < QMI_DEVICE_MUX_ID_MIN || props.initial_mux_id > QMI_DEVICE_MUX_ID_MAX)) {
+        g_printerr ("error: initial mux id %u out of range [%u,%u]\n",
+                    props.initial_mux_id, QMI_DEVICE_MUX_ID_MIN, QMI_DEVICE_MUX_ID_MAX);
+        qmicli_async_operation_done (FALSE, FALSE);
+        return;
+    }
+
+    if (props.mux_id != QMI_DEVICE_MUX_ID_AUTOMATIC)
+        qmi_device_add_link_with_flags (dev,
+                                        props.mux_id,
+                                        props.iface,
+                                        props.prefix,
+                                        props.flags,
+                                        cancellable,
+                                        (GAsyncReadyCallback)link_add_ready,
+                                        NULL);
+    else
+        qmi_device_add_link_with_flags_and_initial_mux_id (dev,
+                                                           props.initial_mux_id,
+                                                           props.iface,
+                                                           props.prefix,
+                                                           props.flags,
+                                                           cancellable,
+                                                           (GAsyncReadyCallback)link_add_with_initial_mux_id_ready,
+                                                           NULL);
 
     g_free (props.iface);
     g_free (props.prefix);
