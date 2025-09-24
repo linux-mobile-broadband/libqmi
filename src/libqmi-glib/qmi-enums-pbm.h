@@ -117,4 +117,30 @@ typedef enum { /*< since=1.6 >*/
     QMI_PBM_SESSION_TYPE_GLOBAL_PHONEBOOK_SLOT_2 = 7,
 } QmiPbmSessionType;
 
+/**
+ * QmiPbmEmergencyNumberFlags:
+ * @QMI_PBM_EMERGENCY_NUMBER_FLAG_POLICE: The number may be used to reach police.
+ * @QMI_PBM_EMERGENCY_NUMBER_FLAG_AMBULANCE: The number may be used to reach ambulance services.
+ * @QMI_PBM_EMERGENCY_NUMBER_FLAG_FIRE_BRIGADE: The number may be used to reach the fire brigade.
+ * @QMI_PBM_EMERGENCY_NUMBER_FLAG_MARINE_GUARD: The number may be used to reach marine guard.
+ * @QMI_PBM_EMERGENCY_NUMBER_FLAG_MOUNTAIN_RESCUE: The number may be used to reach mountain rescue.
+ * @QMI_PBM_EMERGENCY_NUMBER_FLAG_MANUAL_ECALL: The number may be used for manual emergency calls.
+ * @QMI_PBM_EMERGENCY_NUMBER_FLAG_AUTOMATIC_ECALL: The number may be used for automatic emergency calls.
+ * @QMI_PBM_EMERGENCY_NUMBER_FLAG_SPARE: The number is a spare.
+ *
+ * Flags for emergency numbers.
+ *
+ * Since: 1.38
+ */
+typedef enum { /*< since=1.38 >*/
+    QMI_PBM_EMERGENCY_NUMBER_FLAG_POLICE          = 1 << 0,
+    QMI_PBM_EMERGENCY_NUMBER_FLAG_AMBULANCE       = 1 << 1,
+    QMI_PBM_EMERGENCY_NUMBER_FLAG_FIRE_BRIGADE    = 1 << 2,
+    QMI_PBM_EMERGENCY_NUMBER_FLAG_MARINE_GUARD    = 1 << 3,
+    QMI_PBM_EMERGENCY_NUMBER_FLAG_MOUNTAIN_RESCUE = 1 << 4,
+    QMI_PBM_EMERGENCY_NUMBER_FLAG_MANUAL_ECALL    = 1 << 5,
+    QMI_PBM_EMERGENCY_NUMBER_FLAG_AUTOMATIC_ECALL = 1 << 6,
+    QMI_PBM_EMERGENCY_NUMBER_FLAG_SPARE           = 1 << 7,
+} QmiPbmEmergencyNumberFlags;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_PBM_H_ */

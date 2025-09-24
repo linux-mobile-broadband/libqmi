@@ -47,12 +47,19 @@ static Context *ctx;
 
 /* Options */
 static gboolean get_all_capabilities_flag;
+static gboolean get_emergency_list_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_PBM_GET_ALL_CAPABILITIES
     { "pbm-get-all-capabilities", 0, 0, G_OPTION_ARG_NONE, &get_all_capabilities_flag,
       "Get all phonebook capabilities",
+      NULL
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_PBM_GET_EMERGENCY_LIST
+    { "pbm-get-emergency-list", 0, 0, G_OPTION_ARG_NONE, &get_emergency_list_flag,
+      "Get list of emergency numbers",
       NULL
     },
 #endif
@@ -88,6 +95,7 @@ qmicli_pbm_options_enabled (void)
         return !!n_actions;
 
     n_actions = (get_all_capabilities_flag +
+                 get_emergency_list_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -306,6 +314,121 @@ get_all_capabilities_ready (QmiClientPbm *client,
 
 #endif /* HAVE_QMI_MESSAGE_PBM_GET_ALL_CAPABILITIES */
 
+#if defined HAVE_QMI_MESSAGE_PBM_GET_EMERGENCY_LIST
+
+static void
+get_emergency_list_ready (QmiClientPbm *client,
+                          GAsyncResult *res)
+{
+    GError *error = NULL;
+    QmiMessagePbmGetEmergencyListOutput *output;
+    GArray *hardcoded_numbers = NULL;
+    GArray *nv_numbers = NULL;
+    GArray *card_numbers = NULL;
+    GArray *network_numbers = NULL;
+    guint i, j;
+
+    output = qmi_client_pbm_get_emergency_list_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n",
+                    error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_pbm_get_emergency_list_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get emergency list: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_pbm_get_emergency_list_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_pbm_get_emergency_list_output_get_hardcoded_numbers (output, &hardcoded_numbers, NULL);
+    qmi_message_pbm_get_emergency_list_output_get_nv_numbers (output, &nv_numbers, NULL);
+    qmi_message_pbm_get_emergency_list_output_get_card_numbers (output, &card_numbers, NULL);
+    qmi_message_pbm_get_emergency_list_output_get_network_numbers (output, &network_numbers, NULL);
+
+    g_print ("[%s] Emergency List:%s\n",
+             qmi_device_get_path_display (ctx->device),
+             (hardcoded_numbers ||
+              nv_numbers ||
+              card_numbers ||
+              network_numbers) ? "" : " none");
+
+    if (hardcoded_numbers) {
+        g_print ("Hardcoded Numbers:\n");
+        for (i = 0; i < hardcoded_numbers->len; i++) {
+            g_print ("\t%s\n", g_array_index (hardcoded_numbers, const gchar *, i));
+        }
+    }
+
+    if (nv_numbers) {
+        g_print ("NV Numbers:\n");
+        for (i = 0; i < nv_numbers->len; i++) {
+            g_print ("\t%s\n", g_array_index (nv_numbers, const gchar *, i));
+        }
+    }
+
+    if (card_numbers) {
+        g_print ("Card Numbers:\n");
+        for (i = 0; i < card_numbers->len; i++) {
+            QmiMessagePbmGetEmergencyListOutputCardNumbersElement *session;
+
+            session = &g_array_index (card_numbers,
+                                      QmiMessagePbmGetEmergencyListOutputCardNumbersElement,
+                                      i);
+            g_print ("\t[%s]:\n", qmi_pbm_session_type_get_string (session->session_type));
+            for (j = 0; j < session->emergency_numbers->len; j++) {
+                QmiMessagePbmGetEmergencyListOutputCardNumbersElementEmergencyNumbersElement *numbers;
+                g_autofree gchar *flags_str = NULL;
+
+                numbers = &g_array_index (session->emergency_numbers,
+                                            QmiMessagePbmGetEmergencyListOutputCardNumbersElementEmergencyNumbersElement,
+                                            j);
+                flags_str = qmi_pbm_emergency_number_flags_build_string_from_mask (numbers->flags);
+                g_print ("\t\t%s%s%s%s\n",
+                         numbers->emergency_number,
+                         numbers->flags ? " [" : "",
+                         numbers->flags ? VALIDATE_MASK_NONE (flags_str) : "",
+                         numbers->flags ? "]" : "");
+            }
+        }
+    }
+
+    if (network_numbers) {
+        g_print ("Network Numbers:\n");
+        for (i = 0; i < network_numbers->len; i++) {
+            QmiMessagePbmGetEmergencyListOutputNetworkNumbersElement *session;
+
+            session = &g_array_index (network_numbers,
+                                      QmiMessagePbmGetEmergencyListOutputNetworkNumbersElement,
+                                      i);
+            g_print ("\t[%s]:\n", qmi_pbm_session_type_get_string (session->session_type));
+            for (j = 0; j < session->emergency_numbers->len; j++) {
+                QmiMessagePbmGetEmergencyListOutputNetworkNumbersElementEmergencyNumbersElement *numbers;
+                g_autofree gchar *flags_str = NULL;
+
+                numbers = &g_array_index (session->emergency_numbers,
+                                            QmiMessagePbmGetEmergencyListOutputNetworkNumbersElementEmergencyNumbersElement,
+                                            j);
+                flags_str = qmi_pbm_emergency_number_flags_build_string_from_mask (numbers->flags);
+                g_print ("\t\t%s%s%s%s\n",
+                         numbers->emergency_number,
+                         numbers->flags ? " [" : "",
+                         numbers->flags ? VALIDATE_MASK_NONE (flags_str) : "",
+                         numbers->flags ? "]" : "");
+            }
+        }
+    }
+
+    qmi_message_pbm_get_emergency_list_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_PBM_GET_EMERGENCY_LIST */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -333,6 +456,19 @@ qmicli_pbm_run (QmiDevice *device,
                                              ctx->cancellable,
                                              (GAsyncReadyCallback)get_all_capabilities_ready,
                                              NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_PBM_GET_EMERGENCY_LIST
+    if (get_emergency_list_flag) {
+        g_debug ("Asynchronously getting phonebook emergency list...");
+        qmi_client_pbm_get_emergency_list (ctx->client,
+                                           NULL,
+                                           10,
+                                           ctx->cancellable,
+                                           (GAsyncReadyCallback)get_emergency_list_ready,
+                                           NULL);
         return;
     }
 #endif
