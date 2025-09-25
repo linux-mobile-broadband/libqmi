@@ -68,7 +68,7 @@ gen_headers += custom_target(
     python,
     qmi_mkenums,
     '--enums-only',
-    '--fhead', '#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include "qmi-enums.h"\n#include "qmi-enums-wds.h"\n#include "qmi-enums-dms.h"\n#include "qmi-enums-nas.h"\n#include "qmi-enums-wms.h"\n#include "qmi-enums-pds.h"\n#include "qmi-enums-pdc.h"\n#include "qmi-enums-pbm.h"\n#include "qmi-enums-uim.h"\n#include "qmi-enums-sar.h"\n#include "qmi-enums-oma.h"\n#include "qmi-enums-wda.h"\n#include "qmi-enums-voice.h"\n#include "qmi-enums-loc.h"\n#include "qmi-enums-qos.h"\n#include "qmi-enums-gas.h"\n#include "qmi-enums-dsd.h"\n#include "qmi-enums-fox.h"\n#include "qmi-enums-imsp.h"\n#include "qmi-enums-imsa.h"\n#include "qmi-enums-ssc.h"\n#include "qmi-device.h"\n',
+    '--fhead', '#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include "qmi-enums.h"\n#include "qmi-enums-wds.h"\n#include "qmi-enums-dms.h"\n#include "qmi-enums-nas.h"\n#include "qmi-enums-wms.h"\n#include "qmi-enums-pds.h"\n#include "qmi-enums-pdc.h"\n#include "qmi-enums-pbm.h"\n#include "qmi-enums-uim.h"\n#include "qmi-enums-sar.h"\n#include "qmi-enums-oma.h"\n#include "qmi-enums-wda.h"\n#include "qmi-enums-voice.h"\n#include "qmi-enums-loc.h"\n#include "qmi-enums-qos.h"\n#include "qmi-enums-gas.h"\n#include "qmi-enums-dsd.h"\n#include "qmi-enums-fox.h"\n#include "qmi-enums-ims.h"\n#include "qmi-enums-imsp.h"\n#include "qmi-enums-imsa.h"\n#include "qmi-enums-ssc.h"\n#include "qmi-device.h"\n',
     '--template', files(templates_dir / enum_types + '.h.template'),
     '--ftail', '#endif /* __LIBQMI_GLIB_ENUM_TYPES_H__ */\n',
     '@INPUT@'],

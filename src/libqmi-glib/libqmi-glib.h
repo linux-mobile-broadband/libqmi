@@ -107,6 +107,7 @@
 #include "qmi-enums-imsa.h"
 #include "qmi-imsa.h"
 
+#include "qmi-enums-ims.h"
 #include "qmi-ims.h"
 
 #include "qmi-enums-ssc.h"
