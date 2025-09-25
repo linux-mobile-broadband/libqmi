@@ -1369,6 +1369,7 @@ qmi_device_allocate_client (QmiDevice           *self,
     case QMI_SERVICE_STX:
     case QMI_SERVICE_BIT:
     case QMI_SERVICE_IMSRTP:
+    case QMI_SERVICE_IMSDCM:
     case QMI_SERVICE_RFRPE:
     case QMI_SERVICE_SSCTL:
     case QMI_SERVICE_CAT:

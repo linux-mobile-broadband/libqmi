@@ -101,6 +101,9 @@
 
 #include "qmi-atr.h"
 
+#include "qmi-enums-imsdcm.h"
+#include "qmi-imsdcm.h"
+
 #include "qmi-enums-imsp.h"
 #include "qmi-imsp.h"
 

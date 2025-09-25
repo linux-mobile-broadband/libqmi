@@ -15,6 +15,7 @@ qmi_enums_headers = files(
   'qmi-enums-ims.h',
   'qmi-enums-imsa.h',
   'qmi-enums-imsp.h',
+  'qmi-enums-imsdcm.h',
   'qmi-enums-loc.h',
   'qmi-enums-nas.h',
   'qmi-enums-oma.h',
