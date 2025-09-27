@@ -91,6 +91,7 @@
  * @QMI_SERVICE_GMS: Telit General Modem Service. Since 1.24.
  * @QMI_SERVICE_GAS: Telit General Application Service. Since 1.24.
  * @QMI_SERVICE_ATR: Telit AT Relay Service. Since 1.34.
+ * @QMI_SERVICE_IMSDCM: IMS dcm. Since 1.37.
  *
  * QMI services.
  *
@@ -152,6 +153,7 @@ typedef enum { /*< since=1.0 >*/
     QMI_SERVICE_GAS     = 0xE8,
     QMI_SERVICE_ATR     = 0xED,
     QMI_SERVICE_SSC     = 0x190,
+    QMI_SERVICE_IMSDCM  = 0x302,
 } QmiService;
 
 /**

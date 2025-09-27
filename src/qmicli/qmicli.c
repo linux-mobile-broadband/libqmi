@@ -540,6 +540,7 @@ allocate_client_ready (QmiDevice *dev,
     case QMI_SERVICE_PDS:
     case QMI_SERVICE_OMA:
     case QMI_SERVICE_SSC:
+    case QMI_SERVICE_IMSDCM:
     default:
         break;
     }

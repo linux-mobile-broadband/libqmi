@@ -1847,6 +1847,11 @@ qmi_message_get_printable_full (QmiMessage        *self,
         contents = __qmi_message_imsa_get_printable (self, context, line_prefix);
 #endif
         break;
+    case QMI_SERVICE_IMSDCM:
+#if defined HAVE_QMI_SERVICE_IMSDCM
+        contents = __qmi_message_imsdcm_get_printable (self, context, line_prefix);
+#endif
+        break;
     case QMI_SERVICE_IMS:
 #if defined HAVE_QMI_SERVICE_IMS
         contents = __qmi_message_ims_get_printable (self, context, line_prefix);
@@ -1972,6 +1977,7 @@ __qmi_message_is_abortable (QmiMessage        *self,
     case QMI_SERVICE_FOX:
     case QMI_SERVICE_ATR:
     case QMI_SERVICE_SSC:
+    case QMI_SERVICE_IMSDCM:
     default:
         return FALSE;
     }

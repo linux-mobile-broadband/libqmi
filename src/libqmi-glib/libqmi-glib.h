@@ -101,12 +101,16 @@
 
 #include "qmi-atr.h"
 
+#include "qmi-enums-imsdcm.h"
+#include "qmi-imsdcm.h"
+
 #include "qmi-enums-imsp.h"
 #include "qmi-imsp.h"
 
 #include "qmi-enums-imsa.h"
 #include "qmi-imsa.h"
 
+#include "qmi-enums-ims.h"
 #include "qmi-ims.h"
 
 #include "qmi-enums-ssc.h"
