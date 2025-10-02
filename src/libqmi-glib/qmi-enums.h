@@ -224,4 +224,24 @@ typedef enum { /*< since=1.28 >*/
     QMI_SIO_PORT_A2_MUX_RMNET7 = 0x0e0b,
 } QmiSioPort;
 
+/**
+ * QmiSubscriptionType:
+ * @QMI_SUBSCRIPTION_TYPE_DEFAULT: Default.
+ * @QMI_SUBSCRIPTION_TYPE_PRIMARY: Primary
+ * @QMI_SUBSCRIPTION_TYPE_SECONDARY: Secondary.
+ * @QMI_SUBSCRIPTION_TYPE_TERITIARY: Teritiary.
+ * @QMI_SUBSCRIPTION_TYPE_ANY: Any.
+ *
+ * Subscription Type
+ *
+ * Since: 1.37
+ */
+typedef enum { /*< since=1.37 >*/
+    QMI_SUBSCRIPTION_TYPE_DEFAULT     = 0x00,
+    QMI_SUBSCRIPTION_TYPE_PRIMARY     = 0x01,
+    QMI_SUBSCRIPTION_TYPE_SECONDARY   = 0x02,
+    QMI_SUBSCRIPTION_TYPE_TERITIARY   = 0x03,
+    QMI_SUBSCRIPTION_TYPE_ANY         = 0xff,
+} QmiSubscriptionType;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_H_ */
