@@ -399,6 +399,34 @@
 
   // *********************************************************************************
 
+  {  "name"    : "Inject Position Request",
+     "type"    : "Indication",
+     "service" : "LOC",
+     "id"      : "0x002A",
+     "since"   : "1.37",
+     "output"  : [ { "name"               : "Latitude",
+                     "id"                 : "0x01",
+                     "type"               : "TLV",
+                     "since"              : "1.37",
+                     "format"             : "gdouble" },
+                   { "name"               : "Longitude",
+                     "id"                 : "0x02",
+                     "type"               : "TLV",
+                     "since"              : "1.37",
+                     "format"             : "gdouble" },
+                   { "name"               : "Horizontal Uncertainty Circular",
+                     "id"                 : "0x03",
+                     "type"               : "TLV",
+                     "since"              : "1.37",
+                     "format"             : "gfloat" },
+                   { "name"               : "UTC Timestamp",
+                     "id"                 : "0x04",
+                     "type"               : "TLV",
+                     "since"              : "1.37",
+                     "format"             : "guint64" } ] },
+
+  // *********************************************************************************
+
   {  "name"    : "Engine State",
      "type"    : "Indication",
      "service" : "LOC",
