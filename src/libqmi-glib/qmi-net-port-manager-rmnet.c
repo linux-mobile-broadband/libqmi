@@ -89,10 +89,20 @@ typedef struct {
     struct ifinfomsg ifreq;
 } NetlinkHeader;
 
+/* Work around 'cast-align' warnings on some architectures */
+#define CAST_ALIGN(Type, ptr)                                         \
+    ({                                                                \
+        gconstpointer const _ptr = (ptr);                             \
+                                                                      \
+        g_assert (((gsize) (gpointer) _ptr % __alignof (Type)) == 0); \
+                                                                      \
+        ((Type *) _ptr);                                              \
+    })
+
 static NetlinkHeader *
 netlink_message_header (NetlinkMessage *msg)
 {
-    return (NetlinkHeader *) (msg->data);
+    return CAST_ALIGN (NetlinkHeader, msg->data);
 }
 
 static guint
@@ -394,7 +404,7 @@ netlink_message_cb (GSocket                *socket,
     }
 
     buffer_len = (unsigned int ) bytes_received;
-    for (hdr = (struct nlmsghdr *) buf; NLMSG_OK (hdr, buffer_len);
+    for (hdr = CAST_ALIGN (struct nlmsghdr, buf); NLMSG_OK (hdr, buffer_len);
          NLMSG_NEXT (hdr, buffer_len)) {
         Transaction     *tr;
         struct nlmsgerr *err;
