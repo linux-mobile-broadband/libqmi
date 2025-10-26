@@ -670,4 +670,23 @@ typedef enum { /*< since=1.37 >*/
     QMI_LOC_INJECTED_ORBIT_FILE_NAVIC = 2,
 } QmiLocInjectedOrbitFileType;
 
+
+/**
+ * QmiLocInjectedTimeSource:
+ * QMI_LOC_INJECTED_TIME_SOURCE_UNKNOWN: unknown origin
+ * QMI_LOC_INJECTED_TIME_SOURCE_AP:  AP-based time injection
+ * QMI_LOC_INJECTED_TIME_SOURCE_NTP: Network time protocol
+ * QMI_LOC_INJECTED_TIME_SOURCE_NTS: Network time security
+ *
+ * Specifies source of the coarse time
+ *
+ * Since: 1.37
+ */
+typedef enum { /*< since=1.37 >*/
+    QMI_LOC_INJECTED_TIME_SOURCE_UNKNOWN = 0,
+    QMI_LOC_INJECTED_TIME_SOURCE_AP = 1,
+    QMI_LOC_INJECTED_TIME_SOURCE_NTP = 2,
+    QMI_LOC_INJECTED_TIME_SOURCE_NTS = 3,
+ } QmiLocInjectedTimeSource;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_LOC_H_ */

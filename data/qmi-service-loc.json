@@ -578,6 +578,38 @@
 
   // *********************************************************************************
 
+  {  "name"    : "Inject UTC Time",
+     "type"    : "Message",
+     "service" : "LOC",
+     "id"      : "0x0038",
+     "since"   : "1.37",
+     "input"   : [ { "name"               : "UTC Time",
+                     "id"                 : "0x01",
+                     "type"               : "TLV",
+                     "since"              : "1.37",
+                     "format"             : "guint64" },
+                   { "name"               : "Time Uncertainty",
+                     "id"                 : "0x02",
+                     "type"               : "TLV",
+                     "since"              : "1.37",
+                     "format"             : "guint32" },
+                   { "name"               : "Time Source",
+                     "id"                 : "0x10",
+                     "type"               : "TLV",
+                     "since"              : "1.37",
+                     "format"             : "gint32",
+                     "public-format"      : "QmiLocInjectedTimeSource" } ],
+     "output"  : [ { "common-ref"         : "Operation Result" } ] },
+
+    {  "name"    : "Inject UTC Time",
+       "type"    : "Indication",
+       "service" : "LOC",
+       "id"      : "0x0038",
+       "since"   : "1.37",
+       "output"  : [ { "common-ref" : "LOC Indication Status" } ] },
+
+  // *********************************************************************************
+
   {  "name"    : "Inject Position",
      "type"    : "Message",
      "service" : "LOC",
