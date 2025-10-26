@@ -327,6 +327,26 @@
 
   // *********************************************************************************
 
+  {  "name"    : "Inject Time Request",
+     "type"    : "Indication",
+     "service" : "LOC",
+     "id"      : "0x0028",
+     "since"   : "1.37",
+     "output"  : [ { "name"               : "Time Server Info",
+                     "id"                 : "0x10",
+                     "type"               : "TLV",
+                     "since"              : "1.37",
+                     "format"             : "sequence",
+                     "contents"           : [ { "name"               : "Delay Threshold",
+                                                "format"             : "guint32" },
+                                              { "name"               : "Time Server List",
+                                                "format"             : "array",
+                                                "size-prefix-format" : "guint8",
+                                                "array-element"      : { "format"             : "string",
+                                                                         "size-prefix-format" : "guint8" } } ] } ] },
+
+  // *********************************************************************************
+
   {  "name"    : "Engine State",
      "type"    : "Indication",
      "service" : "LOC",
