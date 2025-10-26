@@ -625,4 +625,49 @@ typedef enum { /*< since=1.37 >*/
     QMI_LOC_POSITION_SOURCE_PROVIDER_INTERNAL = 1,
 } QmiLocPositionSourceProvider;
 
+
+/**
+ * QmiLocInjectedOrbitServerParamUpdate:
+ * @QMI_LOC_PREDICTED_ORBITS_INJECT_REQUEST: Request for injection of predicted orbits.
+ * @QMI_LOC_PREDICTED_ORBITS_SERVER_UPDATE: Update server list.
+ * @QMI_LOC_PREDICTED_ORBITS_REFRESH_UPDATE_RATE: Refresh periodicity of injection.
+ *
+ * Bits indicating parameters updated in server request of predicted orbits data.
+ *
+ * Since: 1.37
+ */
+typedef enum { /*< since=1.37 >*/
+    QMI_LOC_PREDICTED_ORBITS_INJECT_REQUEST = 1 << 0,
+    QMI_LOC_PREDICTED_ORBITS_SERVER_UPDATE = 1 << 1,
+    QMI_LOC_PREDICTED_ORBITS_REFRESH_UPDATE_RATE = 1 << 2,
+} QmiLocInjectedOrbitServerParamUpdate;
+
+/**
+ * QmiLocInjectedOrbitUpdateType:
+ * @QMI_LOC_INJECTED_ORBIT_RATE_UPDATE: Injected orbit rate update.
+ * @QMI_LOC_INTEGRITY_RATE_UPDATE: Integrity rate update.
+ *
+ * Data type for which rate is being updated.
+ *
+ * Since: 1.37
+ */
+typedef enum { /*< since=1.37 >*/
+    QMI_LOC_INJECTED_ORBIT_RATE_UPDATE = 1,
+    QMI_LOC_INTEGRITY_RATE_UPDATE = 2,
+} QmiLocInjectedOrbitUpdateType;
+
+/**
+ * QmiLocInjectedOrbitFileType:
+ * @QMI_LOC_INJECTED_ORBIT_FILE_XTRA: xtra assistance file.
+ * @QMI_LOC_INJECTED_ORBIT_FILE_NAVIC: Navic xtra assistance file
+ *
+ * Assistance file type
+ *
+ * Since: 1.37
+ */
+typedef enum { /*< since=1.37 >*/
+    QMI_LOC_INJECTED_ORBIT_FILE_XTRA = 1,
+    QMI_LOC_INJECTED_ORBIT_FILE_NAVIC = 2,
+} QmiLocInjectedOrbitFileType;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_LOC_H_ */
