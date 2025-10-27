@@ -343,6 +343,9 @@ context_free (Context *context)
     if (context->set_engine_lock_indication_id)
         g_signal_handler_disconnect (context->client, context->set_engine_lock_indication_id);
 
+    if (context->inject_position_indication_id)
+        g_signal_handler_disconnect (context->client, context->inject_position_indication_id);
+
     g_clear_object (&context->cancellable);
     g_clear_object (&context->client);
     g_clear_object (&context->device);
