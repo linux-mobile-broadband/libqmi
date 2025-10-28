@@ -891,17 +891,6 @@ delete_assistance_data_ready (QmiClientLoc *client,
         operation_shutdown (FALSE);
         return;
     }
-
-    /* Wait for response asynchronously */
-    ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
-                                             (GSourceFunc) delete_assistance_data_timed_out,
-                                             NULL);
-
-    ctx->delete_assistance_data_indication_id = g_signal_connect (ctx->client,
-                                                                  "delete-assistance-data",
-                                                                  G_CALLBACK (delete_assistance_data_received),
-                                                                  NULL);
-
     qmi_message_loc_delete_assistance_data_output_unref (output);
 }
 
@@ -963,16 +952,6 @@ get_nmea_types_ready (QmiClientLoc *client,
         operation_shutdown (FALSE);
         return;
     }
-
-    /* Wait for response asynchronously */
-    ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
-                                             (GSourceFunc) get_nmea_types_timed_out,
-                                             NULL);
-
-    ctx->get_nmea_types_indication_id = g_signal_connect (ctx->client,
-                                                          "get-nmea-types",
-                                                          G_CALLBACK (get_nmea_types_received),
-                                                          NULL);
 }
 
 #endif /* HAVE_QMI_MESSAGE_LOC_GET_NMEA_TYPES */
@@ -1024,16 +1003,6 @@ set_nmea_types_ready (QmiClientLoc *client,
         operation_shutdown (FALSE);
         return;
     }
-
-    /* Wait for response asynchronously */
-    ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
-                                             (GSourceFunc) set_nmea_types_timed_out,
-                                             NULL);
-
-    ctx->set_nmea_types_indication_id = g_signal_connect (ctx->client,
-                                                          "set-nmea-types",
-                                                          G_CALLBACK (set_nmea_types_received),
-                                                          NULL);
 }
 
 static QmiMessageLocSetNmeaTypesInput *
@@ -1113,16 +1082,6 @@ get_operation_mode_ready (QmiClientLoc *client,
         operation_shutdown (FALSE);
         return;
     }
-
-    /* Wait for response asynchronously */
-    ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
-                                             (GSourceFunc) get_operation_mode_timed_out,
-                                             NULL);
-
-    ctx->get_operation_mode_indication_id = g_signal_connect (ctx->client,
-                                                              "get-operation-mode",
-                                                              G_CALLBACK (get_operation_mode_received),
-                                                              NULL);
 }
 #endif /* HAVE_QMI_MESSAGE_LOC_GET_OPERATION_MODE */
 
@@ -1173,16 +1132,6 @@ set_operation_mode_ready (QmiClientLoc *client,
         operation_shutdown (FALSE);
         return;
     }
-
-    /* Wait for response asynchronously */
-    ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
-                                             (GSourceFunc) set_operation_mode_timed_out,
-                                             NULL);
-
-    ctx->set_operation_mode_indication_id = g_signal_connect (ctx->client,
-                                                              "set-operation-mode",
-                                                              G_CALLBACK (set_operation_mode_received),
-                                                              NULL);
 }
 
 static QmiMessageLocSetOperationModeInput *
@@ -1260,16 +1209,6 @@ get_engine_lock_ready (QmiClientLoc *client,
         operation_shutdown (FALSE);
         return;
     }
-
-    /* Wait for response asynchronously */
-    ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
-                                             (GSourceFunc) get_engine_lock_timed_out,
-                                             NULL);
-
-    ctx->get_engine_lock_indication_id = g_signal_connect (ctx->client,
-                                                           "get-engine-lock",
-                                                           G_CALLBACK (get_engine_lock_received),
-                                                           NULL);
 }
 #endif /* HAVE_QMI_MESSAGE_LOC_GET_ENGINE_LOCK */
 
@@ -1320,16 +1259,6 @@ set_engine_lock_ready (QmiClientLoc *client,
         operation_shutdown (FALSE);
         return;
     }
-
-    /* Wait for response asynchronously */
-    ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
-                                             (GSourceFunc) set_engine_lock_timed_out,
-                                             NULL);
-
-    ctx->set_engine_lock_indication_id = g_signal_connect (ctx->client,
-                                                           "set-engine-lock",
-                                                           G_CALLBACK (set_engine_lock_received),
-                                                           NULL);
 }
 
 static QmiMessageLocSetEngineLockInput *
@@ -1575,6 +1504,17 @@ qmicli_loc_run (QmiDevice    *device,
 
         input = qmi_message_loc_delete_assistance_data_input_new ();
         qmi_message_loc_delete_assistance_data_input_set_delete_all (input, TRUE, NULL);
+
+        /* Wait for response asynchronously */
+        ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                                 (GSourceFunc) delete_assistance_data_timed_out,
+                                                 NULL);
+
+        ctx->delete_assistance_data_indication_id = g_signal_connect (ctx->client,
+                                                                      "delete-assistance-data",
+                                                                      G_CALLBACK (delete_assistance_data_received),
+                                                                      NULL);
+
         qmi_client_loc_delete_assistance_data (ctx->client,
                                                input,
                                                10,
@@ -1588,6 +1528,15 @@ qmicli_loc_run (QmiDevice    *device,
 
 #if defined HAVE_QMI_MESSAGE_LOC_GET_NMEA_TYPES
     if (get_nmea_types_flag) {
+        /* Wait for response asynchronously */
+        ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                                 (GSourceFunc) get_nmea_types_timed_out,
+                                                 NULL);
+
+        ctx->get_nmea_types_indication_id = g_signal_connect (ctx->client,
+                                                              "get-nmea-types",
+                                                              G_CALLBACK (get_nmea_types_received),
+                                                              NULL);
         qmi_client_loc_get_nmea_types (ctx->client,
                                        NULL,
                                        10,
@@ -1608,6 +1557,16 @@ qmicli_loc_run (QmiDevice    *device,
             operation_shutdown (FALSE);
             return;
         }
+
+        /* Wait for response asynchronously */
+        ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                                 (GSourceFunc) set_nmea_types_timed_out,
+                                                 NULL);
+
+        ctx->set_nmea_types_indication_id = g_signal_connect (ctx->client,
+                                                              "set-nmea-types",
+                                                              G_CALLBACK (set_nmea_types_received),
+                                                              NULL);
         qmi_client_loc_set_nmea_types (ctx->client,
                                        input,
                                        10,
@@ -1620,6 +1579,15 @@ qmicli_loc_run (QmiDevice    *device,
 
 #if defined HAVE_QMI_MESSAGE_LOC_GET_OPERATION_MODE
     if (get_operation_mode_flag) {
+        /* Wait for response asynchronously */
+        ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                                 (GSourceFunc) get_operation_mode_timed_out,
+                                                 NULL);
+
+        ctx->get_operation_mode_indication_id = g_signal_connect (ctx->client,
+                                                                  "get-operation-mode",
+                                                                  G_CALLBACK (get_operation_mode_received),
+                                                                  NULL);
         qmi_client_loc_get_operation_mode (ctx->client,
                                            NULL,
                                            10,
@@ -1640,6 +1608,16 @@ qmicli_loc_run (QmiDevice    *device,
             operation_shutdown (FALSE);
             return;
         }
+
+        /* Wait for response asynchronously */
+        ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                                 (GSourceFunc) set_operation_mode_timed_out,
+                                                 NULL);
+
+        ctx->set_operation_mode_indication_id = g_signal_connect (ctx->client,
+                                                                  "set-operation-mode",
+                                                                  G_CALLBACK (set_operation_mode_received),
+                                                                  NULL);
         qmi_client_loc_set_operation_mode (ctx->client,
                                            input,
                                            10,
@@ -1652,6 +1630,15 @@ qmicli_loc_run (QmiDevice    *device,
 
 #if defined HAVE_QMI_MESSAGE_LOC_GET_ENGINE_LOCK
     if (get_engine_lock_flag) {
+        /* Wait for response asynchronously */
+        ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                                 (GSourceFunc) get_engine_lock_timed_out,
+                                                 NULL);
+
+        ctx->get_engine_lock_indication_id = g_signal_connect (ctx->client,
+                                                               "get-engine-lock",
+                                                               G_CALLBACK (get_engine_lock_received),
+                                                               NULL);
         qmi_client_loc_get_engine_lock (ctx->client,
                                         NULL,
                                         10,
@@ -1672,6 +1659,16 @@ qmicli_loc_run (QmiDevice    *device,
             operation_shutdown (FALSE);
             return;
         }
+
+        /* Wait for response asynchronously */
+        ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                                 (GSourceFunc) set_engine_lock_timed_out,
+                                                 NULL);
+
+        ctx->set_engine_lock_indication_id = g_signal_connect (ctx->client,
+                                                               "set-engine-lock",
+                                                               G_CALLBACK (set_engine_lock_received),
+                                                               NULL);
         qmi_client_loc_set_engine_lock (ctx->client,
                                         input,
                                         10,
