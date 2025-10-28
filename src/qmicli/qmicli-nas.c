@@ -68,6 +68,7 @@ static gboolean get_lte_cphy_ca_info_flag;
 static gboolean get_rf_band_info_flag;
 static gboolean get_network_time_flag;
 static gboolean get_drx_flag;
+static gboolean get_endc_config_flag;
 static gboolean get_supported_messages_flag;
 static gboolean swi_get_status_flag;
 static gboolean reset_flag;
@@ -194,6 +195,12 @@ static GOptionEntry entries[] = {
       NULL
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_ENDC_CONFIG
+    { "nas-get-endc-config", 0, 0, G_OPTION_ARG_NONE, &get_endc_config_flag,
+      "Get EN-DC Config",
+      NULL
+    },
+#endif
 #if defined HAVE_QMI_MESSAGE_NAS_GET_SUPPORTED_MESSAGES
     { "nas-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
       "Get supported messages",
@@ -263,6 +270,7 @@ qmicli_nas_options_enabled (void)
                  get_rf_band_info_flag +
                  get_network_time_flag +
                  get_drx_flag +
+                 get_endc_config_flag +
                  get_supported_messages_flag +
                  swi_get_status_flag +
                  reset_flag +
@@ -4387,6 +4395,53 @@ get_drx_ready (QmiClientNas *client,
 
 #endif /* HAVE_QMI_MESSAGE_NAS_GET_DRX */
 
+#if defined HAVE_QMI_MESSAGE_NAS_GET_ENDC_CONFIG
+
+static void
+get_endc_config_ready (QmiClientNas *client,
+                       GAsyncResult *res)
+{
+    g_autoptr(QmiMessageNasGetEndcConfigOutput) output = NULL;
+    g_autoptr(GError)                           error = NULL;
+    gboolean                                    enabled = FALSE;
+    gboolean                                    scg_release = FALSE;
+
+    output = qmi_client_nas_get_endc_config_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_endc_config_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get EN-DC config: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_endc_config_output_get_enabled (output, &enabled, NULL)) {
+        g_printerr ("error: EN-DC config not provided\n");
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_endc_config_output_get_immediate_scg_release (output, &scg_release, NULL)) {
+        g_printerr ("error: EN-DC SCG release info not provided\n");
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got EN-DC Config:\n"
+             "\tEnabled:               %s\n"
+             "\tImmediate SCG Release: %s\n",
+             qmi_device_get_path_display (ctx->device),
+             enabled ? "true" : "false",
+             scg_release ? "true" : "false");
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_ENDC_CONFIG */
+
 #if defined HAVE_QMI_MESSAGE_NAS_GET_SUPPORTED_MESSAGES
 
 static void
@@ -4871,6 +4926,19 @@ qmicli_nas_run (QmiDevice *device,
                                 ctx->cancellable,
                                 (GAsyncReadyCallback)get_drx_ready,
                                 NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_ENDC_CONFIG
+    if (get_endc_config_flag) {
+        g_debug ("Asynchronously getting EN-DC Config ...");
+        qmi_client_nas_get_endc_config (ctx->client,
+                                        NULL,
+                                        10,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback)get_endc_config_ready,
+                                        NULL);
         return;
     }
 #endif

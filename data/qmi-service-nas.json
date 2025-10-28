@@ -4644,6 +4644,28 @@
                      "prerequisites"      : [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Get ENDC Config",
+     "type"    : "Message",
+     "service" : "NAS",
+     "id"      : "0x00E8",
+     "since"   : "1.38",
+     "output"  : [ { "common-ref"   : "Operation Result" },
+                   { "name"         : "Enabled",
+                     "id"           : "0x10",
+                     "type"         : "TLV",
+                     "since"        : "1.38",
+                     "format"       : "guint8",
+                     "public-format": "gboolean",
+                     "prerequisites": [ { "common-ref" : "Success" } ] },
+                   { "name"         : "Immediate SCG Release",
+                     "id"           : "0x11",
+                     "type"         : "TLV",
+                     "since"        : "1.38",
+                     "format"       : "guint8",
+                     "public-format": "gboolean",
+                     "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
   {  "name"    : "Swi Get Status",
      "type"    : "Message",
      "service" : "NAS",
