@@ -44,6 +44,9 @@ typedef struct {
     QmiDevice *device;
     QmiClientNas *client;
     GCancellable *cancellable;
+
+    /* For Incremental Network Scan indication */
+    guint network_scan_indication_id;
 } Context;
 static Context *ctx;
 
@@ -64,6 +67,10 @@ static gchar *get_plmn_name_str;
 static gchar *network_scan_str;
 #endif
 static gboolean network_scan_flag;
+#if defined HAVE_QMI_MESSAGE_NAS_INCREMENTAL_NETWORK_SCAN
+static gchar *incremental_network_scan_str;
+#endif
+static gboolean incremental_network_scan_flag;
 static gboolean get_cell_location_info_flag;
 static gboolean force_network_search_flag;
 static gboolean get_operator_name_flag;
@@ -87,6 +94,20 @@ parse_network_scan (const gchar  *option_name,
     network_scan_flag = TRUE;
     if (value && value[0])
         network_scan_str = g_strdup (value);
+    return TRUE;
+}
+#endif
+
+#if defined HAVE_QMI_MESSAGE_NAS_INCREMENTAL_NETWORK_SCAN
+static gboolean
+parse_incremental_network_scan (const gchar  *option_name,
+                                const gchar  *value,
+                                gpointer      data,
+                                GError      **error)
+{
+    incremental_network_scan_flag = TRUE;
+    if (value && value[0])
+        incremental_network_scan_str = g_strdup (value);
     return TRUE;
 }
 #endif
@@ -161,6 +182,12 @@ static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_NAS_NETWORK_SCAN
     { "nas-network-scan", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, parse_network_scan,
       "Scan all networks (no argument) or scan one specific network type",
+      "[gsm|umts|lte|td-scdma|5gnr]",
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_INCREMENTAL_NETWORK_SCAN
+    { "nas-incremental-network-scan", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, parse_incremental_network_scan,
+      "Incrementally scan all networks (no argument) or scan one specific network type",
       "[gsm|umts|lte|td-scdma|5gnr]",
     },
 #endif
@@ -280,6 +307,7 @@ qmicli_nas_options_enabled (void)
                  !!set_system_selection_preference_str +
                  !!get_plmn_name_str +
                  network_scan_flag +
+                 incremental_network_scan_flag +
                  get_cell_location_info_flag +
                  force_network_search_flag +
                  get_operator_name_flag +
@@ -298,6 +326,11 @@ qmicli_nas_options_enabled (void)
         exit (EXIT_FAILURE);
     }
 
+    /* Actions that require receiving QMI indication messages must specify that
+     * indications are expected. */
+    if (incremental_network_scan_flag)
+        qmicli_expect_indications ();
+
     checked = TRUE;
     return !!n_actions;
 }
@@ -307,6 +340,10 @@ context_free (Context *context)
 {
     if (!context)
         return;
+
+    if (context->network_scan_indication_id)
+        g_signal_handler_disconnect (context->client,
+                                     context->network_scan_indication_id);
 
     if (context->cancellable)
         g_object_unref (context->cancellable);
@@ -3197,6 +3234,150 @@ network_scan_ready (QmiClientNas *client,
 
 #endif /* HAVE_QMI_MESSAGE_NAS_NETWORK_SCAN */
 
+#if defined HAVE_QMI_MESSAGE_NAS_INCREMENTAL_NETWORK_SCAN
+
+static QmiMessageNasIncrementalNetworkScanInput *
+incremental_network_scan_input_create (const gchar *str)
+{
+    g_autoptr(QmiMessageNasIncrementalNetworkScanInput) input = NULL;
+    g_autoptr(GError) error = NULL;
+    QmiNasNetworkScanType scan_type = 0;
+
+    input = qmi_message_nas_incremental_network_scan_input_new ();
+
+    if (!qmicli_read_nas_network_scan_type_from_string (str, &scan_type)) {
+        g_printerr ("error: could not parse input string '%s': %s\n",
+                    str, error->message);
+        return NULL;
+    }
+
+    if (!qmi_message_nas_incremental_network_scan_input_set_network_type (
+            input,
+            scan_type,
+            &error)) {
+        g_printerr ("error: could not set network scan type '%s': %s\n",
+                    str, error->message);
+        return NULL;
+    }
+
+    return g_steal_pointer (&input);
+}
+
+static void
+network_scan_cancelled (GCancellable *cancellable)
+{
+    operation_shutdown (TRUE);
+}
+
+static gboolean
+network_scan_timeout (gpointer user_data)
+{
+    g_print ("\nIncremental network scan timed out\n");
+    operation_shutdown (TRUE);
+    return TRUE;
+}
+
+static void
+incremental_network_scan_received (QmiClientNas *client,
+                                   QmiIndicationNasIncrementalNetworkScanOutput *output)
+{
+    g_autoptr(GError)                   error = NULL;
+    QmiNasIncrementalNetworkScanStatus  status = 0;
+    GArray                             *array = NULL;
+
+    g_print ("[%s] Received incremental network scan indication:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (!qmi_indication_nas_incremental_network_scan_output_get_status (
+          output, &status, &error)) {
+        g_printerr ("error: could not parse incremental network scan status: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (qmi_indication_nas_incremental_network_scan_output_get_network_information (output, &array, NULL)) {
+        guint i;
+
+        for (i = 0; i < array->len; i++) {
+            QmiIndicationNasIncrementalNetworkScanOutputNetworkInformationElement *element;
+            g_autofree gchar *status_str = NULL;
+
+            element = &g_array_index (array, QmiIndicationNasIncrementalNetworkScanOutputNetworkInformationElement, i);
+            status_str = qmi_nas_network_status_build_string_from_mask (element->network_status);
+            g_print ("Network [%u]:\n"
+                     "\tMCC: '%" G_GUINT16_FORMAT"'\n"
+                     "\tMNC: '%" G_GUINT16_FORMAT"'\n"
+                     "\tMCC with PCS digit: '%s'\n"
+                     "\tStatus: '%s'\n"
+                     "\tRAT: '%s'\n"
+                     "\tDescription: '%s'\n",
+                     i,
+                     element->mcc,
+                     element->mnc,
+                     element->includes_pcs_digit ? "yes" : "no",
+                     VALIDATE_MASK_NONE (status_str),
+                     qmi_nas_radio_interface_get_string (element->radio_interface),
+                     element->description);
+        }
+    }
+
+    switch (status) {
+    case QMI_NAS_INCREMENTAL_NETWORK_SCAN_STATUS_PARTIAL:
+        /* Continue waiting for more results */
+        return;
+    case QMI_NAS_INCREMENTAL_NETWORK_SCAN_STATUS_COMPLETE:
+        g_print ("\nIncremental network scan complete\n");
+        break;
+    case QMI_NAS_INCREMENTAL_NETWORK_SCAN_STATUS_ABORTED:
+        g_print ("\nIncremental network scan aborted\n");
+        break;
+    default:
+        g_print ("\nUnknown incremental network scan status %d\n", status);
+        break;
+    }
+
+    operation_shutdown (TRUE);
+}
+
+static void
+incremental_network_scan_ready (QmiClientNas *client,
+                                GAsyncResult *res)
+{
+    g_autoptr(QmiMessageNasIncrementalNetworkScanOutput) output = NULL;
+    g_autoptr(GError)                                    error = NULL;
+
+    output = qmi_client_nas_incremental_network_scan_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_incremental_network_scan_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't scan networks: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Registered incremental network scan events...\n");
+
+    ctx->network_scan_indication_id =
+        g_signal_connect (ctx->client,
+                          "incremental-network-scan",
+                          G_CALLBACK (incremental_network_scan_received),
+                          NULL);
+
+    /* User can use Ctrl+C to cancel the scan at any time */
+    g_cancellable_connect (ctx->cancellable,
+                           G_CALLBACK (network_scan_cancelled),
+                           NULL,
+                           NULL);
+
+    g_timeout_add_seconds (300, network_scan_timeout, NULL);
+}
+
+#endif /* HAVE_QMI_MESSAGE_NAS_INCREMENTAL_NETWORK_SCAN */
+
 #if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
 
 static gchar *
@@ -4671,7 +4852,7 @@ qmicli_nas_run (QmiDevice *device,
                 GCancellable *cancellable)
 {
     /* Initialize context */
-    ctx = g_slice_new (Context);
+    ctx = g_slice_new0 (Context);
     ctx->device = g_object_ref (device);
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
@@ -4872,6 +5053,29 @@ qmicli_nas_run (QmiDevice *device,
                                      ctx->cancellable,
                                      (GAsyncReadyCallback)network_scan_ready,
                                      NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_NAS_INCREMENTAL_NETWORK_SCAN
+    if (incremental_network_scan_flag) {
+        g_autoptr(QmiMessageNasIncrementalNetworkScanInput) input = NULL;
+
+        if (incremental_network_scan_str) {
+            input = incremental_network_scan_input_create (incremental_network_scan_str);
+            if (!input) {
+                operation_shutdown (FALSE);
+                return;
+            }
+        }
+
+        g_debug ("Incrementally scanning networks...");
+        qmi_client_nas_incremental_network_scan (ctx->client,
+                                                 input,
+                                                 10,
+                                                 ctx->cancellable,
+                                                 (GAsyncReadyCallback)incremental_network_scan_ready,
+                                                 NULL);
         return;
     }
 #endif
