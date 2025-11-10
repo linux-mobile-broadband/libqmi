@@ -496,6 +496,22 @@ typedef enum { /*< since=1.24 >*/
 } QmiNasNetworkScanResult;
 
 /**
+ * QmiNasIncrementalNetworkScanStatus:
+ * @QMI_NAS_INCREMENTAL_NETWORK_SCAN_STATUS_COMPLETE: Scan complete.
+ * @QMI_NAS_INCREMENTAL_NETWORK_SCAN_STATUS_PARTIAL: Partial results.
+ * @QMI_NAS_INCREMENTAL_NETWORK_SCAN_STATUS_ABORTED: Scan aborted.
+ *
+ * Incremental network scan status.
+ *
+ * Since: 1.38
+ */
+typedef enum { /*< since=1.38 >*/
+    QMI_NAS_INCREMENTAL_NETWORK_SCAN_STATUS_COMPLETE          = 0,
+    QMI_NAS_INCREMENTAL_NETWORK_SCAN_STATUS_PARTIAL           = 1,
+    QMI_NAS_INCREMENTAL_NETWORK_SCAN_STATUS_ABORTED           = 2,
+} QmiNasIncrementalNetworkScanStatus;
+
+/**
  * QmiNasNetworkStatus:
  * @QMI_NAS_NETWORK_STATUS_CURRENT_SERVING: Network is in use, current serving.
  * @QMI_NAS_NETWORK_STATUS_AVAILABLE: Network is vailable.
