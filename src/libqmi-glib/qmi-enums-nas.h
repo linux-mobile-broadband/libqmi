@@ -465,6 +465,7 @@ typedef enum { /*< since=1.0 >*/
  * @QMI_NAS_NETWORK_SCAN_TYPE_UMTS: UMTS network.
  * @QMI_NAS_NETWORK_SCAN_TYPE_LTE: LTE network.
  * @QMI_NAS_NETWORK_SCAN_TYPE_TD_SCDMA: TD-SCDMA network.
+ * @QMI_NAS_NETWORK_SCAN_TYPE_5GNR: 5G NR network. Since 1.38.
  *
  * Flags to use when specifying which networks to scan.
  *
@@ -474,7 +475,8 @@ typedef enum { /*< since=1.0 >*/
     QMI_NAS_NETWORK_SCAN_TYPE_GSM      = 1 << 0,
     QMI_NAS_NETWORK_SCAN_TYPE_UMTS     = 1 << 1,
     QMI_NAS_NETWORK_SCAN_TYPE_LTE      = 1 << 2,
-    QMI_NAS_NETWORK_SCAN_TYPE_TD_SCDMA = 1 << 3
+    QMI_NAS_NETWORK_SCAN_TYPE_TD_SCDMA = 1 << 3,
+    QMI_NAS_NETWORK_SCAN_TYPE_5GNR     = 1 << 4,
 } QmiNasNetworkScanType;
 
 /**

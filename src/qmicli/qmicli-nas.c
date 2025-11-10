@@ -60,6 +60,9 @@ static gchar *set_preferred_networks_str;
 static gboolean get_system_selection_preference_flag;
 static gchar *set_system_selection_preference_str;
 static gchar *get_plmn_name_str;
+#if defined HAVE_QMI_MESSAGE_NAS_NETWORK_SCAN
+static gchar *network_scan_str;
+#endif
 static gboolean network_scan_flag;
 static gboolean get_cell_location_info_flag;
 static gboolean force_network_search_flag;
@@ -73,6 +76,20 @@ static gboolean get_supported_messages_flag;
 static gboolean swi_get_status_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
+
+#if defined HAVE_QMI_MESSAGE_NAS_NETWORK_SCAN
+static gboolean
+parse_network_scan (const gchar  *option_name,
+                    const gchar  *value,
+                    gpointer      data,
+                    GError      **error)
+{
+    network_scan_flag = TRUE;
+    if (value && value[0])
+        network_scan_str = g_strdup (value);
+    return TRUE;
+}
+#endif
 
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_NAS_GET_SIGNAL_STRENGTH
@@ -142,9 +159,9 @@ static GOptionEntry entries[] = {
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_NAS_NETWORK_SCAN
-    { "nas-network-scan", 0, 0, G_OPTION_ARG_NONE, &network_scan_flag,
-      "Scan networks",
-      NULL
+    { "nas-network-scan", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, parse_network_scan,
+      "Scan all networks (no argument) or scan one specific network type",
+      "[gsm|umts|lte|td-scdma|5gnr]",
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
@@ -3051,6 +3068,33 @@ set_system_selection_preference_ready (QmiClientNas *client,
 
 #if defined HAVE_QMI_MESSAGE_NAS_NETWORK_SCAN
 
+static QmiMessageNasNetworkScanInput *
+network_scan_input_create (const gchar *str)
+{
+    g_autoptr(QmiMessageNasNetworkScanInput) input = NULL;
+    g_autoptr(GError) error = NULL;
+    QmiNasNetworkScanType scan_type = 0;
+
+    input = qmi_message_nas_network_scan_input_new ();
+
+    if (!qmicli_read_nas_network_scan_type_from_string (str, &scan_type)) {
+        g_printerr ("error: could not parse input string '%s': %s\n",
+                    str, error->message);
+        return NULL;
+    }
+
+    if (!qmi_message_nas_network_scan_input_set_network_type (
+            input,
+            scan_type,
+            &error)) {
+        g_printerr ("error: could not set network scan type '%s': %s\n",
+                    str, error->message);
+        return NULL;
+    }
+
+    return g_steal_pointer (&input);
+}
+
 static void
 network_scan_ready (QmiClientNas *client,
                     GAsyncResult *res)
@@ -4811,9 +4855,19 @@ qmicli_nas_run (QmiDevice *device,
 
 #if defined HAVE_QMI_MESSAGE_NAS_NETWORK_SCAN
     if (network_scan_flag) {
+        g_autoptr(QmiMessageNasNetworkScanInput) input = NULL;
+
+        if (network_scan_str) {
+            input = network_scan_input_create (network_scan_str);
+            if (!input) {
+                operation_shutdown (FALSE);
+                return;
+            }
+        }
+
         g_debug ("Asynchronously scanning networks...");
         qmi_client_nas_network_scan (ctx->client,
-                                     NULL,
+                                     input,
                                      300, /* this operation takes a lot of time! */
                                      ctx->cancellable,
                                      (GAsyncReadyCallback)network_scan_ready,
