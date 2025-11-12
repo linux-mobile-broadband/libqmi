@@ -67,6 +67,7 @@ typedef struct {
     guint           set_engine_lock_indication_id;
     guint           inject_position_indication_id;
     guint           inject_time_indication_id;
+    guint           get_predicted_orbits_data_source_indication_id;
 } Context;
 static Context *ctx;
 
@@ -90,6 +91,7 @@ static gchar   *set_engine_lock_str;
 static gdouble  inject_position_latitude = NAN;
 static gdouble  inject_position_longitude = NAN;
 static gboolean inject_time_flag;
+static gboolean get_predicted_orbits_data_source_flag;
 static gboolean noop_flag;
 
 #define DEFAULT_LOC_TIMEOUT_SECS 30
@@ -218,6 +220,12 @@ static GOptionEntry entries[] = {
       NULL
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_LOC_GET_PREDICTED_ORBITS_DATA_SOURCE
+    { "loc-get-predicted-orbits-data-source", 0, 0, G_OPTION_ARG_NONE, &get_predicted_orbits_data_source_flag,
+      "Get predicted orbits data source",
+      NULL
+    },
+#endif
     { "loc-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a LOC client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -271,6 +279,7 @@ qmicli_loc_options_enabled (void)
                  !!set_engine_lock_str +
                  (!isnan (inject_position_latitude) || !isnan (inject_position_longitude)) +
                  inject_time_flag +
+                 get_predicted_orbits_data_source_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -307,7 +316,8 @@ qmicli_loc_options_enabled (void)
         set_engine_lock_str ||
         !isnan (inject_position_latitude) ||
         !isnan (inject_position_longitude) ||
-        inject_time_flag)
+        inject_time_flag ||
+        get_predicted_orbits_data_source_flag)
         qmicli_expect_indications ();
 
     checked = TRUE;
@@ -358,6 +368,9 @@ context_free (Context *context)
 
     if (context->inject_time_indication_id)
         g_signal_handler_disconnect (context->client, context->inject_time_indication_id);
+
+    if (context->get_predicted_orbits_data_source_indication_id)
+        g_signal_handler_disconnect (context->client, context->get_predicted_orbits_data_source_indication_id);
 
     g_clear_object (&context->cancellable);
     g_clear_object (&context->client);
@@ -1542,6 +1555,87 @@ inject_time_create (void)
 }
 #endif /* HAVE_QMI_MESSAGE_LOC_INJECT_UTC_TIME */
 
+#if defined HAVE_QMI_MESSAGE_LOC_GET_PREDICTED_ORBITS_DATA_SOURCE
+
+static gboolean
+get_predicted_orbits_data_source_timed_out (void)
+{
+    ctx->timeout_id = 0;
+    g_printerr ("error: operation failed: timeout\n");
+    operation_shutdown (FALSE);
+    return G_SOURCE_REMOVE;
+}
+
+static void
+get_predicted_orbits_data_source_received (QmiClientLoc                                       *client,
+                                           QmiIndicationLocGetPredictedOrbitsDataSourceOutput *output)
+{
+    QmiLocIndicationStatus  status;
+    g_autoptr(GError)       error = NULL;
+    GArray                 *servers = NULL;
+    guint32                 max_file_size = 0;
+    guint32                 max_part_size = 0;
+    guint                   i;
+
+    if (!qmi_indication_loc_get_predicted_orbits_data_source_output_get_indication_status (output, &status, &error)) {
+        g_printerr ("error: couldn't get predicted orbits data source: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Predicted orbits data source received:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_indication_loc_get_predicted_orbits_data_source_output_get_allowed_sizes (
+            output,
+            &max_file_size,
+            &max_part_size,
+            NULL)) {
+        g_print (
+             "\t   Allowed max file size: '%u'\n"
+             "\t   Allowed max part size: '%u'\n",
+             max_file_size,
+             max_part_size);
+    }
+
+    if (!qmi_indication_loc_get_predicted_orbits_data_source_output_get_server_list (
+            output,
+            &servers,
+            &error)) {
+        g_printerr ("error: couldn't get predicted orbits data source server list: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    for (i = 0; i < servers->len; i++)
+        g_print ("\t   Server %u: '%s'\n", i + 1, g_array_index (servers, const gchar *, i));
+
+    g_print ("\nSuccessfully retrieved predicted orbits data source\n");
+    operation_shutdown (TRUE);
+}
+
+static void
+get_predicted_orbits_data_source_ready (QmiClientLoc *client,
+                                        GAsyncResult *res)
+{
+    g_autoptr(QmiMessageLocGetPredictedOrbitsDataSourceOutput) output = NULL;
+    g_autoptr(GError)                                          error = NULL;
+
+    output = qmi_client_loc_get_predicted_orbits_data_source_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_loc_get_predicted_orbits_data_source_output_get_result (output, &error)) {
+        g_printerr ("error: could not get predicted orbits data source: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+}
+#endif /* HAVE_QMI_MESSAGE_LOC_GET_PREDICTED_ORBITS_DATA_SOURCE */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1813,6 +1907,27 @@ qmicli_loc_run (QmiDevice    *device,
     if (inject_time_flag) {
         g_debug ("Asynchronously inject time...");
         inject_time_create ();
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_LOC_GET_PREDICTED_ORBITS_DATA_SOURCE
+    if (get_predicted_orbits_data_source_flag) {
+        /* Wait for response asynchronously */
+        ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                                 (GSourceFunc) get_predicted_orbits_data_source_timed_out,
+                                                 NULL);
+
+        ctx->get_predicted_orbits_data_source_indication_id = g_signal_connect (ctx->client,
+                                                                                "get-predicted-orbits-data-source",
+                                                                                G_CALLBACK (get_predicted_orbits_data_source_received),
+                                                                                NULL);
+        qmi_client_loc_get_predicted_orbits_data_source (ctx->client,
+                                                         NULL,
+                                                         10,
+                                                         ctx->cancellable,
+                                                         (GAsyncReadyCallback) get_predicted_orbits_data_source_ready,
+                                                         ctx);
         return;
     }
 #endif
