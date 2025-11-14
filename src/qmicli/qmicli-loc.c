@@ -66,6 +66,7 @@ typedef struct {
     guint           get_engine_lock_indication_id;
     guint           set_engine_lock_indication_id;
     guint           inject_position_indication_id;
+    guint           inject_time_indication_id;
 } Context;
 static Context *ctx;
 
@@ -88,6 +89,7 @@ static gboolean get_engine_lock_flag;
 static gchar   *set_engine_lock_str;
 static gdouble  inject_position_latitude = NAN;
 static gdouble  inject_position_longitude = NAN;
+static gboolean inject_time_flag;
 static gboolean noop_flag;
 
 #define DEFAULT_LOC_TIMEOUT_SECS 30
@@ -210,6 +212,12 @@ static GOptionEntry entries[] = {
       "-180.0 to 180.0. Positive values indicate eastern longitude."
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_LOC_INJECT_UTC_TIME
+    { "loc-inject-time", 0, 0, G_OPTION_ARG_NONE, &inject_time_flag,
+      "Inject UTC time into GNSS engine",
+      NULL
+    },
+#endif
     { "loc-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a LOC client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -262,6 +270,7 @@ qmicli_loc_options_enabled (void)
                  get_engine_lock_flag +
                  !!set_engine_lock_str +
                  (!isnan (inject_position_latitude) || !isnan (inject_position_longitude)) +
+                 inject_time_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -297,7 +306,8 @@ qmicli_loc_options_enabled (void)
         get_engine_lock_flag ||
         set_engine_lock_str ||
         !isnan (inject_position_latitude) ||
-        !isnan (inject_position_longitude))
+        !isnan (inject_position_longitude) ||
+        inject_time_flag)
         qmicli_expect_indications ();
 
     checked = TRUE;
@@ -345,6 +355,9 @@ context_free (Context *context)
 
     if (context->inject_position_indication_id)
         g_signal_handler_disconnect (context->client, context->inject_position_indication_id);
+
+    if (context->inject_time_indication_id)
+        g_signal_handler_disconnect (context->client, context->inject_time_indication_id);
 
     g_clear_object (&context->cancellable);
     g_clear_object (&context->client);
@@ -1443,6 +1456,92 @@ inject_position_create (void)
 }
 #endif /* HAVE_QMI_MESSAGE_LOC_INJECT_POSITION */
 
+#if defined HAVE_QMI_MESSAGE_LOC_INJECT_UTC_TIME
+
+static gboolean
+inject_time_timed_out (void)
+{
+    ctx->timeout_id = 0;
+    g_printerr ("error: operation failed: timeout\n");
+    operation_shutdown (FALSE);
+    return G_SOURCE_REMOVE;
+}
+
+static void
+inject_time_received (QmiClientLoc                        *client,
+                      QmiIndicationLocInjectUtcTimeOutput *output)
+{
+    QmiLocIndicationStatus  status;
+    g_autoptr(GError)       error = NULL;
+
+    if (!qmi_indication_loc_inject_utc_time_output_get_indication_status (output, &status, &error)) {
+        g_printerr ("error: couldn't inject time %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Successfully injected time\n");
+    operation_shutdown (TRUE);
+}
+
+static void
+inject_time_ready (QmiClientLoc *client,
+                   GAsyncResult *res)
+{
+    g_autoptr(QmiMessageLocInjectUtcTimeOutput) output = NULL;
+    g_autoptr(GError)                           error = NULL;
+
+    output = qmi_client_loc_inject_utc_time_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_loc_inject_utc_time_output_get_result (output, &error)) {
+         g_printerr ("error: could not inject time: %s\n", error->message);
+         operation_shutdown (FALSE);
+         return;
+    }
+}
+
+static void
+inject_time_create (void)
+{
+    g_autoptr(QmiMessageLocInjectUtcTimeInput) input = NULL;
+    GError                                    *error = NULL;
+    guint64                                    utc_ms = 0;
+
+    input = qmi_message_loc_inject_utc_time_input_new ();
+    if (!input) {
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    utc_ms = g_get_real_time () / 1000;
+    qmi_message_loc_inject_utc_time_input_set_utc_time (input, utc_ms, &error);
+    qmi_message_loc_inject_utc_time_input_set_time_uncertainty (input, 1000, &error);
+    qmi_message_loc_inject_utc_time_input_set_time_source (input, QMI_LOC_INJECTED_TIME_SOURCE_UNKNOWN, &error);
+
+    /* Wait for response asynchronously */
+    ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                             (GSourceFunc) inject_time_timed_out,
+                                             NULL);
+
+    ctx->inject_time_indication_id = g_signal_connect (ctx->client,
+                                                       "inject-utc-time",
+                                                       G_CALLBACK (inject_time_received),
+                                                       NULL);
+
+    qmi_client_loc_inject_utc_time (ctx->client,
+                                    input,
+                                    10,
+                                    ctx->cancellable,
+                                    (GAsyncReadyCallback) inject_time_ready,
+                                    NULL);
+}
+#endif /* HAVE_QMI_MESSAGE_LOC_INJECT_UTC_TIME */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1707,6 +1806,13 @@ qmicli_loc_run (QmiDevice    *device,
         }
         g_debug ("Asynchronously inject position...");
         inject_position_create ();
+        return;
+    }
+#endif
+#if defined HAVE_QMI_MESSAGE_LOC_INJECT_UTC_TIME
+    if (inject_time_flag) {
+        g_debug ("Asynchronously inject time...");
+        inject_time_create ();
         return;
     }
 #endif
