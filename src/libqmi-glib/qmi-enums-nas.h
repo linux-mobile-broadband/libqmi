@@ -465,6 +465,7 @@ typedef enum { /*< since=1.0 >*/
  * @QMI_NAS_NETWORK_SCAN_TYPE_UMTS: UMTS network.
  * @QMI_NAS_NETWORK_SCAN_TYPE_LTE: LTE network.
  * @QMI_NAS_NETWORK_SCAN_TYPE_TD_SCDMA: TD-SCDMA network.
+ * @QMI_NAS_NETWORK_SCAN_TYPE_5GNR: 5G NR network. Since 1.38.
  *
  * Flags to use when specifying which networks to scan.
  *
@@ -474,7 +475,8 @@ typedef enum { /*< since=1.0 >*/
     QMI_NAS_NETWORK_SCAN_TYPE_GSM      = 1 << 0,
     QMI_NAS_NETWORK_SCAN_TYPE_UMTS     = 1 << 1,
     QMI_NAS_NETWORK_SCAN_TYPE_LTE      = 1 << 2,
-    QMI_NAS_NETWORK_SCAN_TYPE_TD_SCDMA = 1 << 3
+    QMI_NAS_NETWORK_SCAN_TYPE_TD_SCDMA = 1 << 3,
+    QMI_NAS_NETWORK_SCAN_TYPE_5GNR     = 1 << 4,
 } QmiNasNetworkScanType;
 
 /**
@@ -492,6 +494,22 @@ typedef enum { /*< since=1.24 >*/
     QMI_NAS_NETWORK_SCAN_RESULT_ABORT              = 1,
     QMI_NAS_NETWORK_SCAN_RESULT_RADIO_LINK_FAILURE = 2,
 } QmiNasNetworkScanResult;
+
+/**
+ * QmiNasIncrementalNetworkScanStatus:
+ * @QMI_NAS_INCREMENTAL_NETWORK_SCAN_STATUS_COMPLETE: Scan complete.
+ * @QMI_NAS_INCREMENTAL_NETWORK_SCAN_STATUS_PARTIAL: Partial results.
+ * @QMI_NAS_INCREMENTAL_NETWORK_SCAN_STATUS_ABORTED: Scan aborted.
+ *
+ * Incremental network scan status.
+ *
+ * Since: 1.38
+ */
+typedef enum { /*< since=1.38 >*/
+    QMI_NAS_INCREMENTAL_NETWORK_SCAN_STATUS_COMPLETE          = 0,
+    QMI_NAS_INCREMENTAL_NETWORK_SCAN_STATUS_PARTIAL           = 1,
+    QMI_NAS_INCREMENTAL_NETWORK_SCAN_STATUS_ABORTED           = 2,
+} QmiNasIncrementalNetworkScanStatus;
 
 /**
  * QmiNasNetworkStatus:
