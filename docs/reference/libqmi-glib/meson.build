@@ -1,16 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2019 - 2021 Iñigo Martinez <inigomartinez@gmail.com>
 
-src_dirs = [
-  generated_inc,
-  libqmi_glib_inc,
-]
-
-scan_args = [
-  '--rebuild-types',
-  '--deprecated-guards="QMI_DISABLE_DEPRECATED"',
-]
-
 md_files = []
 foreach md_src : gen_sections
   md_files += fs.name(md_src)
