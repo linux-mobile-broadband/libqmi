@@ -576,6 +576,31 @@
                      "array-element"      : { "format"             : "string",
                                               "size-prefix-format" : "guint8" } } ] },
 
+    // *********************************************************************************
+
+    {  "name"    : "Get Predicted Orbits Data Validity",
+       "type"    : "Message",
+       "service" : "LOC",
+       "id"      : "0x0037",
+       "since"   : "1.37",
+       "output"  : [ { "common-ref"         : "Operation Result" } ] },
+
+    {  "name"    : "Get Predicted Orbits Data Validity",
+       "type"    : "Indication",
+       "service" : "LOC",
+       "id"      : "0x0037",
+       "since"   : "1.37",
+       "output"  : [ { "common-ref" : "LOC Indication Status" },
+		     { "name"       : "Validity Info",
+                       "id"         : "0x10",
+		       "type"       : "TLV",
+                       "since"      : "1.37",
+		       "format"     : "sequence",
+		       "contents"   : [ { "name"   : "Start UTC Timestamp",
+					  "format" : "guint64" },
+					{ "name"   : "Duration Hours",
+					  "format" : "guint16" } ] } ] },
+
   // *********************************************************************************
 
   {  "name"    : "Inject UTC Time",

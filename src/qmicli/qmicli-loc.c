@@ -68,6 +68,7 @@ typedef struct {
     guint           inject_position_indication_id;
     guint           inject_time_indication_id;
     guint           get_predicted_orbits_data_source_indication_id;
+    guint           get_predicted_orbits_data_validity_indication_id;
 } Context;
 static Context *ctx;
 
@@ -92,6 +93,7 @@ static gdouble  inject_position_latitude = NAN;
 static gdouble  inject_position_longitude = NAN;
 static gboolean inject_time_flag;
 static gboolean get_predicted_orbits_data_source_flag;
+static gboolean get_predicted_orbits_data_validity_flag;
 static gboolean noop_flag;
 
 #define DEFAULT_LOC_TIMEOUT_SECS 30
@@ -226,6 +228,12 @@ static GOptionEntry entries[] = {
       NULL
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_LOC_GET_PREDICTED_ORBITS_DATA_VALIDITY
+    { "loc-get-predicted-orbits-data-validity", 0, 0, G_OPTION_ARG_NONE, &get_predicted_orbits_data_validity_flag,
+      "Get predicted orbits data validity information",
+      NULL
+    },
+#endif
     { "loc-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a LOC client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -280,6 +288,7 @@ qmicli_loc_options_enabled (void)
                  (!isnan (inject_position_latitude) || !isnan (inject_position_longitude)) +
                  inject_time_flag +
                  get_predicted_orbits_data_source_flag +
+                 get_predicted_orbits_data_validity_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -317,7 +326,8 @@ qmicli_loc_options_enabled (void)
         !isnan (inject_position_latitude) ||
         !isnan (inject_position_longitude) ||
         inject_time_flag ||
-        get_predicted_orbits_data_source_flag)
+        get_predicted_orbits_data_source_flag ||
+        get_predicted_orbits_data_validity_flag)
         qmicli_expect_indications ();
 
     checked = TRUE;
@@ -371,6 +381,9 @@ context_free (Context *context)
 
     if (context->get_predicted_orbits_data_source_indication_id)
         g_signal_handler_disconnect (context->client, context->get_predicted_orbits_data_source_indication_id);
+
+    if (context->get_predicted_orbits_data_validity_indication_id)
+        g_signal_handler_disconnect (context->client, context->get_predicted_orbits_data_validity_indication_id);
 
     g_clear_object (&context->cancellable);
     g_clear_object (&context->client);
@@ -1636,6 +1649,90 @@ get_predicted_orbits_data_source_ready (QmiClientLoc *client,
 }
 #endif /* HAVE_QMI_MESSAGE_LOC_GET_PREDICTED_ORBITS_DATA_SOURCE */
 
+#if defined HAVE_QMI_MESSAGE_LOC_GET_PREDICTED_ORBITS_DATA_VALIDITY
+static gboolean
+get_predicted_orbits_data_validity_timed_out (void)
+{
+    ctx->timeout_id = 0;
+    g_printerr ("error: operation failed: timeout\n");
+    operation_shutdown (FALSE);
+    return G_SOURCE_REMOVE;
+}
+
+static void
+get_predicted_orbits_data_validity_received (QmiClientLoc                                         *client,
+                                             QmiIndicationLocGetPredictedOrbitsDataValidityOutput *output)
+{
+    QmiLocIndicationStatus  status;
+    guint64                 start_utc_timestamp;
+    guint16                 duration_hours;
+    gchar                  *dt_str;
+    GDateTime              *dt;
+    g_autoptr(GError)       error = NULL;
+
+    if (!qmi_indication_loc_get_predicted_orbits_data_validity_output_get_indication_status (output, &status, &error)) {
+        g_printerr ("error: couldn't get predicted orbits validity %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_indication_loc_get_predicted_orbits_data_validity_output_get_validity_info (output, &start_utc_timestamp, &duration_hours, &error)) {
+        g_printerr ("error: couldn't get predicted orbits validity information: missing\n");
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    dt = g_date_time_new_from_unix_utc (start_utc_timestamp);
+    dt_str = g_date_time_format_iso8601 (dt);
+    g_date_time_unref (dt);
+    g_print ("Successfully retrieved validity info: %s, valid for %d hours\n", dt_str, duration_hours);
+    g_free (dt_str);
+    operation_shutdown (TRUE);
+}
+
+static void
+get_predicted_orbits_data_validity_ready (QmiClientLoc *client,
+                                          GAsyncResult *res)
+{
+    g_autoptr(QmiMessageLocGetPredictedOrbitsDataValidityOutput) output = NULL;
+    g_autoptr(GError)                                            error = NULL;
+
+    output = qmi_client_loc_get_predicted_orbits_data_validity_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_loc_get_predicted_orbits_data_validity_output_get_result (output, &error)) {
+        g_printerr ("error: could not get predicted orbits data validity status: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+}
+
+static void
+get_predicted_orbits_data_validity_create (void)
+{
+    /* Wait for response asynchronously */
+    ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                             (GSourceFunc) get_predicted_orbits_data_validity_timed_out,
+                                             NULL);
+
+    ctx->get_predicted_orbits_data_validity_indication_id = g_signal_connect (ctx->client,
+                                                                              "get-predicted-orbits-data-validity",
+                                                                              G_CALLBACK (get_predicted_orbits_data_validity_received),
+                                                                              NULL);
+
+    qmi_client_loc_get_predicted_orbits_data_validity (ctx->client,
+                                                       NULL,
+                                                       10,
+                                                       ctx->cancellable,
+                                                       (GAsyncReadyCallback) get_predicted_orbits_data_validity_ready,
+                                                       NULL);
+}
+#endif /* HAVE_QMI_MESSAGE_LOC_GET_PREDICTED_ORBITS_DATA_VALIDITY */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1932,6 +2029,13 @@ qmicli_loc_run (QmiDevice    *device,
     }
 #endif
 
+#if defined HAVE_QMI_MESSAGE_LOC_GET_PREDICTED_ORBITS_DATA_VALIDITY
+    if (get_predicted_orbits_data_validity_flag) {
+        g_debug ("Asynchronously request predicted orbits data validity info...");
+        get_predicted_orbits_data_validity_create ();
+        return;
+    }
+#endif
     /* Just client allocate/release? */
     if (noop_flag) {
         g_idle_add (noop_cb, NULL);
