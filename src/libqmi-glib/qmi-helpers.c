@@ -29,6 +29,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <grp.h>
 #include <pwd.h>
 #include <errno.h>
 
@@ -58,8 +59,8 @@ qmi_helpers_check_user_allowed (uid_t    uid,
     expected_usr = getpwnam (QMI_USERNAME);
     if (!expected_usr) {
         g_set_error (error,
-                     QMI_CORE_ERROR,
-                     QMI_CORE_ERROR_FAILED,
+                     G_IO_ERROR,
+                     g_io_error_from_errno (errno),
                      "Not enough privileges (unknown username %s)", QMI_USERNAME);
         return FALSE;
     }
@@ -68,6 +69,51 @@ qmi_helpers_check_user_allowed (uid_t    uid,
         return TRUE;
 #endif
 
+    g_set_error (error,
+                 QMI_CORE_ERROR,
+                 QMI_CORE_ERROR_FAILED,
+                 "Not enough privileges");
+    return FALSE;
+}
+
+/*****************************************************************************/
+
+gboolean
+qmi_helpers_check_group_allowed (uid_t    uid,
+                                 GError **error)
+{
+#ifndef QMI_GROUPNAME_ENABLED
+    if (uid == 0)
+        return TRUE;
+#else
+# ifndef QMI_GROUPNAME
+#  error QMI groupname not defined
+# endif
+
+    struct passwd *pw;
+    struct group *grp;
+    guint i;
+
+    grp = getgrnam (QMI_GROUPNAME);
+    if (!grp) {
+        g_set_error (error,
+                     G_IO_ERROR,
+                     g_io_error_from_errno (errno),
+                     "Not enough privileges (unknown group %s)", QMI_GROUPNAME);
+        return FALSE;
+    }
+
+    pw = getpwuid (uid);
+    if (pw && pw->pw_gid == grp->gr_gid)
+        return TRUE;
+
+    if (pw && grp->gr_mem) {
+        for (i = 0; grp->gr_mem[i]; i++) {
+            if (g_strcmp0 (grp->gr_mem[i], pw->pw_name) == 0)
+                return TRUE;
+        }
+    }
+#endif
     g_set_error (error,
                  QMI_CORE_ERROR,
                  QMI_CORE_ERROR_FAILED,

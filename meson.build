@@ -182,16 +182,29 @@ qmi_username = get_option('qmi_username')
 enable_qmi_username = (qmi_username != '')
 if enable_qmi_username
   config_h.set_quoted('QMI_USERNAME', qmi_username)
+else
+  qmi_username = 'no (root)'
+endif
+config_h.set('QMI_USERNAME_ENABLED', enable_qmi_username)
 
+# qmi group
+qmi_groupname = get_option('qmi_groupname')
+enable_qmi_groupname = (qmi_groupname != '')
+if enable_qmi_groupname
+  config_h.set_quoted('QMI_GROUPNAME', qmi_groupname)
+else
+  qmi_groupname = 'none'
+endif
+config_h.set('QMI_GROUPNAME_ENABLED', enable_qmi_groupname)
+
+# udev base directory - needed if either username or groupname is specified
+if enable_qmi_username or enable_qmi_groupname
   # FIXME: udev base directory, prefix can't be overrided
   udev_udevdir = get_option('udevdir')
   if udev_udevdir == ''
     udev_udevdir = dependency('udev').get_pkgconfig_variable('udevdir')
   endif
-else
-  qmi_username = 'no (root)'
 endif
-config_h.set('QMI_USERNAME_ENABLED', enable_qmi_username)
 
 # MBIM QMUX service support
 enable_mbim_qmux = get_option('mbim_qmux')
@@ -261,12 +274,13 @@ summary({
 
 summary({
   'prefix': qmi_prefix,
-  'udev base directory': (enable_qmi_username ? udev_udevdir : 'disabled'),
+  'udev base directory': (enable_qmi_username or enable_qmi_groupname ? udev_udevdir : 'disabled'),
 }, section: 'System paths')
 
 summary({
   'QMI over MBIM': enable_mbim_qmux,
   'QMI over QRTR': enable_qrtr,
   'QMI username': qmi_username,
+  'QMI groupname': qmi_groupname,
   'rmnet support': enable_rmnet,
 }, section: 'Features')

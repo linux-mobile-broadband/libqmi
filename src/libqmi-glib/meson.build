@@ -192,4 +192,13 @@ if enable_qmi_username
   )
 endif
 
+if enable_qmi_groupname
+  configure_file(
+    input: '76-qmi-device-group.rules.in',
+    output: '@BASENAME@',
+    configuration: {'QMI_GROUPNAME': qmi_groupname},
+    install_dir: udev_udevdir / 'rules.d',
+  )
+endif
+
 subdir('test')

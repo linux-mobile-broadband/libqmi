@@ -8,6 +8,7 @@ option('firmware_update', type: 'boolean', value: true, description: 'enable com
 option('mbim_qmux', type: 'boolean', value: true, description: 'enable support for QMI over MBIM QMUX service')
 option('mm_runtime_check', type: 'boolean', value: true, description: 'build ModemManager runtime check support')
 option('qmi_username', type: 'string', value: '', description: 'user allowed to access QMI devices')
+option('qmi_groupname', type: 'string', value: '', description: 'group allowed to access QMI devices')
 option('qrtr', type: 'boolean', value: true, description: 'enable support for QRTR protocol')
 option('rmnet', type: 'boolean', value: true, description: 'enable support for RMNET link management')
 
