@@ -1031,36 +1031,39 @@ connection_readable_cb (GSocket      *socket,
 }
 
 static void
-incoming_cb (GSocketService *service,
+incoming_cb (GSocketService    *service,
              GSocketConnection *connection,
-             GObject *unused,
-             QmiProxy *self)
+             GObject           *unused,
+             QmiProxy          *self)
 {
-    Client *client;
-    GCredentials *credentials;
-    GError *error = NULL;
-    uid_t uid;
+    Client                  *client;
+    g_autoptr(GCredentials)  credentials = NULL;
+    g_autoptr(GError)        error = NULL;
+    g_autoptr(GError)        gr_error = NULL;
+    uid_t                    uid;
 
     g_debug ("Client (%d) connection open...", g_socket_get_fd (g_socket_connection_get_socket (connection)));
 
     credentials = g_socket_get_credentials (g_socket_connection_get_socket (connection), &error);
     if (!credentials) {
         g_warning ("Client not allowed: Error getting socket credentials: %s", error->message);
-        g_error_free (error);
         return;
     }
 
     uid = g_credentials_get_unix_user (credentials, &error);
-    g_object_unref (credentials);
     if (error) {
         g_warning ("Client not allowed: Error getting unix user id: %s", error->message);
-        g_error_free (error);
         return;
     }
     if (!qmi_helpers_check_user_allowed (uid, &error)) {
-        g_warning ("Client not allowed: %s", error->message);
-        g_error_free (error);
-        return;
+        if (!qmi_helpers_check_group_allowed (uid, &gr_error)) {
+            if (gr_error)
+                g_warning ("Client group not allowed: %s", gr_error->message);
+            else
+                g_warning ("Client not allowed: %s", error->message);
+            return;
+        }
+        g_debug ("Client member of allowed group");
     }
 
     /* Create client */
@@ -1139,9 +1142,17 @@ QmiProxy *
 qmi_proxy_new (GError **error)
 {
     QmiProxy *self;
+    uid_t     uid;
 
-    if (!qmi_helpers_check_user_allowed (getuid (), error))
-        return NULL;
+    uid = getuid ();
+
+    /* Allow proxy creation if one of [uid, group] are allowed */
+    if (!qmi_helpers_check_user_allowed (uid, error)) {
+        g_clear_error (error);
+
+        if (!qmi_helpers_check_group_allowed (uid, error))
+            return NULL;
+    }
 
     self = g_object_new (QMI_TYPE_PROXY, NULL);
     if (!setup_socket_service (self, error))

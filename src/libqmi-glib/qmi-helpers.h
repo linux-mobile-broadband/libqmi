@@ -39,6 +39,10 @@ gboolean qmi_helpers_check_user_allowed  (uid_t    uid,
                                           GError **error);
 
 G_GNUC_INTERNAL
+gboolean qmi_helpers_check_group_allowed (uid_t    uid,
+                                          GError **error);
+
+G_GNUC_INTERNAL
 gboolean qmi_helpers_string_utf8_validate_printable (const guint8 *utf8,
                                                      gsize         utf8_len);
 
