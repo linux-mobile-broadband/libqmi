@@ -3,14 +3,14 @@
 
 project(
   'libqmi', 'c',
-  version: '1.37.995',
+  version: '1.38.0',
   license: 'GPL2',
   default_options: [
     'buildtype=debugoptimized',
     'c_std=gnu89',
     'warning_level=2',
   ],
-  meson_version: '>= 0.53.0',
+  meson_version: '>= 0.56.0',
 )
 
 fs = import('fs')
@@ -37,9 +37,9 @@ qmi_glib_pkgincludedir = qmi_includedir / qmi_glib_include_subdir
 # - Otherwise, increment c and zero r.
 #   - If the interface has grown (that is, the new library is compatible with old code), increment a.
 #   - If the interface has changed in an incompatible way (that is, functions have changed or been removed), then zero a.
-current = 16
+current = 17
 revision = 0
-age = 11
+age = 12
 qmi_glib_version = '@0@.@1@.@2@'.format(current - age, age, revision)
 
 qmi_gir_version = '1.0'
@@ -163,10 +163,10 @@ config_h.set('WITH_UDEV', enable_udev)
 enable_bash_completion = get_option('bash_completion')
 if enable_bash_completion
   bash_completion_dep = dependency('bash-completion')
-  bash_completion_completionsdir = bash_completion_dep.get_pkgconfig_variable(
-    'completionsdir',
+  bash_completion_completionsdir = bash_completion_dep.get_variable(
+    pkgconfig: 'completionsdir',
     # bash-completion 2.10 changed the substitutions
-    define_variable: bash_completion_dep.version().version_compare('>= 2.10') ? ['datadir', qmi_datadir] : ['prefix', qmi_prefix],
+    pkgconfig_define: bash_completion_dep.version().version_compare('>= 2.10') ? ['datadir', qmi_datadir] : ['prefix', qmi_prefix],
   )
 endif
 
@@ -202,7 +202,7 @@ if enable_qmi_username or enable_qmi_groupname
   # FIXME: udev base directory, prefix can't be overrided
   udev_udevdir = get_option('udevdir')
   if udev_udevdir == ''
-    udev_udevdir = dependency('udev').get_pkgconfig_variable('udevdir')
+    udev_udevdir = dependency('udev').get_variable(pkgconfig: 'udevdir')
   endif
 endif
 

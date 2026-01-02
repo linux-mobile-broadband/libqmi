@@ -1,3 +1,63 @@
+Overview of changes in libqmi 1.38.0
+----------------------------------------
+
+ * Build:
+   ** New "-Dqmi_groupname=<name>" meson build option to restrict QMI kernel
+      device access to a given Unix group and root. The access check works
+      in parallel to the "-Dqmi_groupname" option; passing either check allows
+      access to the kernel device (eg, logical OR).
+   ** Documentation building greatly sped up by switching to gi-docgen
+
+ * New services:
+   ** New 'IMSDCM' service to support baseband requests for packet data
+      connections initiated by the host.
+
+ * New request/response/indications:
+   ** wms: added "Network Registration Status" request and indication,
+      "Set Broadcast Activation" request, "Set Broadcast Config" request,
+      "Get Broadcast Config" request, "Indication Register" request,
+      "Get Transport Network Registration Status" request, and
+      "Transport Network Registration Status" indication
+   ** ims: added "Set IMS Services Enabled Setting" request and "Services
+      Enabled Setting" indication
+   ** uim: added "Write Record" request
+   ** qos: added "Bind Mux Data Port", "Bind Subscription", and "Get Bind
+      Subscription" requests
+   ** wds: added "Bind Subscription" and "Get Bind Subscription" requests
+   ** loc: added "Inject Position" request, "Inject Time Request" indication,
+      "Inject Predicted Orbits Request" indication, "Inject Position Request"
+      indication, "Inject UTC Time" request, and "Get Predicted Orbits Data
+      Validity" request
+   ** pbm: added "Get Emergency List" request
+   ** nas: added "Get ENDC Config" and "Incremental Network Scan"
+
+ * New TLVs supported in existing messages:
+   ** wms: added the "Call Mode Preference" TLV in the "Set IMS Services Enabled
+      Setting" request
+
+ * libqmi-glib:
+   ** Allow to decode IMS/IMSA/IMSP messages
+   ** nas: added QMI_NAS_RADIO_INTERFACE_NO_CHANGE value to QmiNasRadioInterface
+   ** loc: use QmiLocReliability instead of guint32 for Vertical Reliability
+      value in position report
+   ** Device open timeout increased to 10 seconds
+   ** Fixed an issue preventing QMI message parsing on big-endian (BE) arches
+
+ * qmi-proxy:
+   ** Don't mistakenly delete qmi-proxy binary when run from same directory
+
+ * qmicli:
+   ** Added capability to inject positions and time into the GNSS engine to
+      speed up initial fix
+   ** Added "--loc-get-predicted-orbits-data-validity",
+      "--loc-inject-position-latitude", "--loc-inject-position-longitude",
+      "--fox-set-fcc-authentication", "--loc-inject-time",
+      "--loc-get-predicted-orbits-data-source", "--pbm-get-emergency-list",
+      "--nas-incremental-network-scan", "--wms-set-cbs-channels",
+      "--wms-get-cbs-channels"
+   ** Added support for "--initial-mux-id=<x>" to the "link-add" command
+
+
 Overview of changes in libqmi 1.36.0
 ----------------------------------------
 
