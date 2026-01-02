@@ -53,26 +53,14 @@ The libqmi releases are generated using meson.
 10) Upload the HTML files to freedesktop.org:
     $ scp build/docs/reference/libqmi-glib/libqmi-glib-1.0/* fd.o:${libqmi}/${VERSION}/
 
-11) Copy documentation from /usr/share/gtk-doc and fix online references manually
-    $ mkdir html
-    $ cp -r /usr/share/gtk-doc/html/libqmi-glib/* html/
-    $ for FILE in $(ls html/*.html); do \
-        sed -i 's|<a[^>]* href="\.\./glib/[^"]*|<a href="https://docs.gtk.org/glib/|g' $FILE; \
-        sed -i 's|<a[^>]* href="\.\./gobject/[^"]*|<a href="https://docs.gtk.org/gobject/|g' $FILE; \
-        sed -i 's|<a[^>]* href="\.\./gio/[^"]*|<a href="https://docs.gtk.org/gio/|g' $FILE; \
-      done
-
-12) Upload the modified HTML files to freedesktop.org:
-    $ scp html/* fd.o:${libqmi}/libqmi-glib/${VERSION}/
-
-13) For major releases:
+11) For major releases:
      * Fork new stable branch (e.g. qmi-${MAJOR}-${MINOR})
      * Post-release version bump in the master branch, increment minor meson 'version' component.
          - Use a commit message like "build: unstable release version bump to 1.39.0"
      * Post-release version bump in the stable branch, increment micro meson 'version' component.
          - Use a commit message like "build: unstable release version bump to 1.38.1"
 
-13.1) For stable branch releases:
+12) For stable branch releases:
      * Post-release version bump, increment micro meson 'version' component.
          - Use a commit message like "build: unstable release version bump to 1.38.1"
 
