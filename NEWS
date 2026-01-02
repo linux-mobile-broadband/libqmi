@@ -4,7 +4,7 @@ Overview of changes in libqmi 1.38.0
  * Build:
    ** New "-Dqmi_groupname=<name>" meson build option to restrict QMI kernel
       device access to a given Unix group and root. The access check works
-      in parallel to the "-Dqmi_groupname" option; passing either check allows
+      in parallel to the "-Dqmi_username" option; passing either check allows
       access to the kernel device (eg, logical OR).
    ** Documentation building greatly sped up by switching to gi-docgen
 
