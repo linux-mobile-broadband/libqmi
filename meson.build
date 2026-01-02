@@ -10,7 +10,7 @@ project(
     'c_std=gnu89',
     'warning_level=2',
   ],
-  meson_version: '>= 0.53.0',
+  meson_version: '>= 0.56.0',
 )
 
 fs = import('fs')
@@ -163,10 +163,10 @@ config_h.set('WITH_UDEV', enable_udev)
 enable_bash_completion = get_option('bash_completion')
 if enable_bash_completion
   bash_completion_dep = dependency('bash-completion')
-  bash_completion_completionsdir = bash_completion_dep.get_pkgconfig_variable(
-    'completionsdir',
+  bash_completion_completionsdir = bash_completion_dep.get_variable(
+    pkgconfig: 'completionsdir',
     # bash-completion 2.10 changed the substitutions
-    define_variable: bash_completion_dep.version().version_compare('>= 2.10') ? ['datadir', qmi_datadir] : ['prefix', qmi_prefix],
+    pkgconfig_define: bash_completion_dep.version().version_compare('>= 2.10') ? ['datadir', qmi_datadir] : ['prefix', qmi_prefix],
   )
 endif
 
@@ -202,7 +202,7 @@ if enable_qmi_username or enable_qmi_groupname
   # FIXME: udev base directory, prefix can't be overrided
   udev_udevdir = get_option('udevdir')
   if udev_udevdir == ''
-    udev_udevdir = dependency('udev').get_pkgconfig_variable('udevdir')
+    udev_udevdir = dependency('udev').get_variable(pkgconfig: 'udevdir')
   endif
 endif
 
