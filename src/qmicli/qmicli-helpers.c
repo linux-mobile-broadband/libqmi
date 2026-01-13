@@ -782,6 +782,8 @@ qmicli_read_pdp_type_from_string (const gchar *str,
         *out = (QMI_WDS_PDP_TYPE_IPV6);
     else if (g_ascii_strcasecmp (str, "IPV4V6") == 0)
         *out = QMI_WDS_PDP_TYPE_IPV4_OR_IPV6;
+    else if (g_ascii_strcasecmp (str, "NONIP") == 0)
+        *out = QMI_WDS_PDP_TYPE_NON_IP;
     else
         return FALSE;
 

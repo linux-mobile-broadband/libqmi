@@ -161,7 +161,7 @@ static GOptionEntry entries[] = {
 #endif
 #if defined HAVE_QMI_MESSAGE_WDS_CREATE_PROFILE
     { "wds-create-profile", 0, 0, G_OPTION_ARG_STRING, &create_profile_str,
-      "Create new profile using first available profile index (optional keys: name, apn, pdp-type (IP|PPP|IPV6|IPV4V6), auth (NONE|PAP|CHAP|BOTH), username, password, context-num, no-roaming=yes, disabled=yes, vlan-range=[<start>-<end>])",
+      "Create new profile using first available profile index (optional keys: name, apn, pdp-type (IP|PPP|IPV6|IPV4V6|NONIP), auth (NONE|PAP|CHAP|BOTH), username, password, context-num, no-roaming=yes, disabled=yes, vlan-range=[<start>-<end>])",
       "[\"(3gpp|3gpp2)[,key=value,...]\"]"
     },
 #endif
@@ -173,7 +173,7 @@ static GOptionEntry entries[] = {
 #endif
 #if defined HAVE_QMI_MESSAGE_WDS_MODIFY_PROFILE
     { "wds-modify-profile", 0, 0, G_OPTION_ARG_STRING, &modify_profile_str,
-      "Modify existing profile (optional keys: name, apn, pdp-type (IP|PPP|IPV6|IPV4V6), auth (NONE|PAP|CHAP|BOTH), username, password, context-num, no-roaming=yes, disabled=yes, vlan-range=[<start>-<end>])",
+      "Modify existing profile (optional keys: name, apn, pdp-type (IP|PPP|IPV6|IPV4V6|NONIP), auth (NONE|PAP|CHAP|BOTH), username, password, context-num, no-roaming=yes, disabled=yes, vlan-range=[<start>-<end>])",
       "[\"(3gpp|3gpp2),#,key=value,...\"]"
     },
 #endif
