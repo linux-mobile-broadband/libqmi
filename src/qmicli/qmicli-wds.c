@@ -95,7 +95,7 @@ static gchar *set_lte_attach_pdn_list_str;
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_WDS_START_NETWORK
     { "wds-start-network", 0, 0, G_OPTION_ARG_STRING, &start_network_str,
-      "Start network (allowed keys: apn, 3gpp-profile, 3gpp2-profile, auth (PAP|CHAP|BOTH), username, password, autoconnect=yes, ip-type (4|6))",
+      "Start network (allowed keys: apn, 3gpp-profile, 3gpp2-profile, auth (PAP|CHAP|BOTH), username, password, autoconnect=yes, ip-type (ipv4|ipv6))",
       "[\"key=value,...\"]"
     },
 # if defined HAVE_QMI_MESSAGE_WDS_STOP_NETWORK && defined HAVE_QMI_MESSAGE_WDS_GET_PACKET_SERVICE_STATUS
@@ -246,7 +246,7 @@ static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_WDS_SET_IP_FAMILY
     { "wds-set-ip-family", 0, 0, G_OPTION_ARG_STRING, &set_ip_family_str,
       "Set IP family",
-      "[4|6]"
+      "[ipv4|ipv6]"
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_WDS_GET_CHANNEL_RATES
@@ -613,20 +613,24 @@ start_network_properties_handle (const gchar  *key,
     }
 
     if (g_ascii_strcasecmp (key, "ip-type") == 0 && props->ip_type == QMI_WDS_IP_FAMILY_UNSPECIFIED) {
-        switch (atoi (value)) {
-        case 4:
-            props->ip_type = QMI_WDS_IP_FAMILY_IPV4;
-            break;
-        case 6:
-            props->ip_type = QMI_WDS_IP_FAMILY_IPV6;
-            break;
-        default:
-            g_set_error (error,
-                         QMI_CORE_ERROR,
-                         QMI_CORE_ERROR_FAILED,
-                         "unknown IP type '%s' (not 4 or 6)",
-                         value);
-            return FALSE;
+        if (!qmicli_read_wds_ip_family_from_string (value, &props->ip_type)) {
+            g_print ("[%s] Checking for IP family legacy format (4|6)\n",
+                     qmi_device_get_path_display (ctx->device));
+            switch (atoi (value)) {
+            case 4:
+                props->ip_type = QMI_WDS_IP_FAMILY_IPV4;
+                break;
+            case 6:
+                props->ip_type = QMI_WDS_IP_FAMILY_IPV6;
+                break;
+            default:
+                g_set_error (error,
+                             QMI_CORE_ERROR,
+                             QMI_CORE_ERROR_FAILED,
+                             "unknown IP type '%s' (not 4 or 6)",
+                             value);
+                return FALSE;
+            }
         }
         return TRUE;
     }
@@ -3196,18 +3200,25 @@ qmicli_wds_run (QmiDevice *device,
 
 #if defined HAVE_QMI_MESSAGE_WDS_SET_IP_FAMILY
     if (set_ip_family_str) {
-        QmiMessageWdsSetIpFamilyInput *input;
-        QmiWdsIpFamily preference;
+        g_autoptr(QmiMessageWdsSetIpFamilyInput) input = NULL;
+        QmiWdsIpFamily preference = QMI_WDS_IP_FAMILY_UNKNOWN;
 
-        switch (atoi (set_ip_family_str)) {
-        case 4:
-            preference = QMI_WDS_IP_FAMILY_IPV4;
-            break;
-        case 6:
-            preference = QMI_WDS_IP_FAMILY_IPV6;
-            break;
-        default:
-            g_printerr ("error: unknown IP type '%s' (not 4 or 6)\n",
+        if (!qmicli_read_wds_ip_family_from_string (set_ip_family_str, &preference)) {
+            g_print ("[%s] Checking for IP family legacy format (4|6)\n",
+                     qmi_device_get_path_display (ctx->device));
+            switch (atoi (set_ip_family_str)) {
+            case 4:
+                preference = QMI_WDS_IP_FAMILY_IPV4;
+                break;
+            case 6:
+                preference = QMI_WDS_IP_FAMILY_IPV6;
+                break;
+            default:
+                g_printerr ("error: unrecognized IP family legacy format\n");
+            }
+        }
+        if (preference == QMI_WDS_IP_FAMILY_UNKNOWN) {
+            g_printerr ("error: unknown IP type '%s'\n",
                         set_ip_family_str);
             operation_shutdown (FALSE);
             return;
@@ -3223,7 +3234,6 @@ qmicli_wds_run (QmiDevice *device,
                                       ctx->cancellable,
                                       (GAsyncReadyCallback) set_ip_family_ready,
                                       NULL);
-        qmi_message_wds_set_ip_family_input_unref (input);
         return;
     }
 #endif
