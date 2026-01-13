@@ -407,6 +407,16 @@
       "format"        : "guint8",
       "public-format" : "gboolean" },
 
+    { "common-ref" : "WDS VLAN ID Type",
+      "name"       : "VLAN ID Type",
+      "id"         : "0x50",
+      "type"       : "TLV",
+      "format"     : "sequence",
+      "contents"   : [ { "name"   : "VLAN ID Range Start",
+                         "format" : "guint16" },
+                       { "name"   : "VLAN ID Range End",
+                         "format" : "guint16" } ] },
+
     { "common-ref"    : "WDS APN Type",
       "name"          : "APN Type Mask",
       "id"            : "0xDD",
@@ -1210,6 +1220,8 @@
                    // 0x31, APN class
                    { "common-ref"    : "WDS Roaming Disallowed Flag",
                      "since"         : "1.22" },
+                   { "common-ref"    : "WDS VLAN ID Type",
+                     "since"         : "1.40" },
                    // 0x90, Negotiate DNS server preference
                    // 0x91, PPP session close timer for DO
                    // 0x92, PPP session close timer for 1X
@@ -1321,6 +1333,8 @@
                    // 0x31, APN class
                    { "common-ref"    : "WDS Roaming Disallowed Flag",
                      "since"         : "1.22" },
+                   { "common-ref"    : "WDS VLAN ID Type",
+                     "since"         : "1.40" },
                    // 0x90, Negotiate DNS server preference
                    // 0x91, PPP session close timer for DO
                    // 0x92, PPP session close timer for 1X
@@ -1517,6 +1531,9 @@
                     { "common-ref"    : "WDS Roaming Disallowed Flag",
                       "since"         : "1.22",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
+                    { "common-ref"    : "WDS VLAN ID Type",
+                      "since"         : "1.40",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     // 0x90, Negotiate DNS server preference
                     // 0x91, PPP session close timer for DO
                     // 0x92, PPP session close timer for 1X
@@ -1664,6 +1681,9 @@
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
                     // 0x30, PDN inactivity timeout
                     // 0x31, APN class
+                    { "common-ref"    : "WDS VLAN ID Type",
+                      "since"         : "1.40",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     // 0x90, Negotiate DNS server preference
                     // 0x91, PPP session close timer for DO
                     // 0x92, PPP session close timer for 1X
