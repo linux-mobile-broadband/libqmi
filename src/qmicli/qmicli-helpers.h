@@ -132,6 +132,9 @@ gboolean qmicli_read_raw_data_from_string       (const gchar  *str,
                                                  GArray **out);
 gboolean qmicli_read_yes_no_from_string         (const gchar *str,
                                                  gboolean *out);
+gboolean qmicli_read_uint_range_from_string     (const gchar *str,
+                                                 guint *start,
+                                                 guint *end);
 
 gchar *qmicli_get_supported_messages_list (const guint8 *data,
                                            gsize len);

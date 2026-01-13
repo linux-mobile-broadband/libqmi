@@ -811,6 +811,39 @@ qmicli_read_uint_from_string (const gchar *str,
     return FALSE;
 }
 
+gboolean
+qmicli_read_uint_range_from_string (const gchar *str,
+                                    guint *start,
+                                    guint *end)
+{
+    g_autoptr(GRegex)      r = NULL;
+    g_autoptr(GMatchInfo)  match_info  = NULL;
+    gchar                 *value = NULL;
+    gboolean               success = FALSE;
+
+    r = g_regex_new ("^\\[(\\d+)\\-(\\d+)\\]$",
+                     G_REGEX_RAW, 0, NULL);
+    g_assert (r);
+
+    if (!g_regex_match (r, str, 0, &match_info))
+        goto out;
+
+    if (!g_match_info_matches (match_info))
+        goto out;
+
+    value = g_match_info_fetch (match_info, 1);
+    if (value && qmicli_read_uint_from_string (value, start)) {
+        g_free (value);
+        value = g_match_info_fetch (match_info, 2);
+        if (value && qmicli_read_uint_from_string (value, end))
+            success = TRUE;
+    }
+    g_free (value);
+
+out:
+    return success;
+}
+
 gchar *
 qmicli_get_supported_messages_list (const guint8 *data,
                                     gsize len)

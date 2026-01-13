@@ -265,6 +265,59 @@ test_helpers_supported_messages_list_none (void)
 
 /******************************************************************************/
 
+static void
+test_helpers_range_from_string_1 (void)
+{
+    const gchar *str = "[10-1300]";
+    guint start;
+    guint end;
+
+    g_assert_true (qmicli_read_uint_range_from_string (str, &start, &end));
+    g_assert_true (start == 10 && end == 1300);
+}
+
+static void
+test_helpers_range_from_string_2 (void)
+{
+    const gchar *str = "6000-15000]";
+    guint start;
+    guint end;
+
+    g_assert_false (qmicli_read_uint_range_from_string (str, &start, &end));
+}
+
+static void
+test_helpers_range_from_string_3 (void)
+{
+    const gchar *str = "[0 10]";
+    guint start;
+    guint end;
+
+    g_assert_false (qmicli_read_uint_range_from_string (str, &start, &end));
+}
+
+static void
+test_helpers_range_from_string_4 (void)
+{
+    const gchar *str = "[3-100";
+    guint start;
+    guint end;
+
+    g_assert_false (qmicli_read_uint_range_from_string (str, &start, &end));
+}
+
+static void
+test_helpers_range_from_string_5 (void)
+{
+    const gchar *str = "[3-100]]";
+    guint start;
+    guint end;
+
+    g_assert_false (qmicli_read_uint_range_from_string (str, &start, &end));
+}
+
+/******************************************************************************/
+
 typedef struct {
     const gchar *key;
     const gchar *value;
@@ -367,6 +420,11 @@ int main (int argc, char **argv)
 #if defined HAVE_QMI_MESSAGE_WMS_GET_BROADCAST_CONFIG
     g_test_add_func ("/qmicli/helpers/cbs-channels-from-string", test_helpers_cbs_channels_from_string);
 #endif
+    g_test_add_func ("/qmicli/helpers/range-from-string/1", test_helpers_range_from_string_1);
+    g_test_add_func ("/qmicli/helpers/range-from-string/2", test_helpers_range_from_string_2);
+    g_test_add_func ("/qmicli/helpers/range-from-string/3", test_helpers_range_from_string_3);
+    g_test_add_func ("/qmicli/helpers/range-from-string/4", test_helpers_range_from_string_4);
+    g_test_add_func ("/qmicli/helpers/range-from-string/5", test_helpers_range_from_string_5);
 
     g_test_add_func ("/qmicli/helpers/supported-message-list",      test_helpers_supported_messages_list);
     g_test_add_func ("/qmicli/helpers/supported-message-list/none", test_helpers_supported_messages_list_none);
