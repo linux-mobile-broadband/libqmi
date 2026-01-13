@@ -50,6 +50,7 @@
  * @QMI_WDS_IP_FAMILY_IPV4: IPv4.
  * @QMI_WDS_IP_FAMILY_IPV6: IPv6.
  * @QMI_WDS_IP_FAMILY_UNSPECIFIED: None specified.
+ * @QMI_WDS_IP_FAMILY_ETHERNET: Ethernet. Since 1.40.
  *
  * Type of IP family.
  *
@@ -59,7 +60,8 @@ typedef enum { /*< since=1.0 >*/
     QMI_WDS_IP_FAMILY_UNKNOWN     = 0,
     QMI_WDS_IP_FAMILY_IPV4        = 4,
     QMI_WDS_IP_FAMILY_IPV6        = 6,
-    QMI_WDS_IP_FAMILY_UNSPECIFIED = 8
+    QMI_WDS_IP_FAMILY_UNSPECIFIED = 8,
+    QMI_WDS_IP_FAMILY_ETHERNET    = 12
 } QmiWdsIpFamily;
 
 /**

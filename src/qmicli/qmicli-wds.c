@@ -95,7 +95,7 @@ static gchar *set_lte_attach_pdn_list_str;
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_WDS_START_NETWORK
     { "wds-start-network", 0, 0, G_OPTION_ARG_STRING, &start_network_str,
-      "Start network (allowed keys: apn, 3gpp-profile, 3gpp2-profile, auth (PAP|CHAP|BOTH), username, password, autoconnect=yes, ip-type (ipv4|ipv6))",
+      "Start network (allowed keys: apn, 3gpp-profile, 3gpp2-profile, auth (PAP|CHAP|BOTH), username, password, autoconnect=yes, ip-type (ipv4|ipv6|ethernet))",
       "[\"key=value,...\"]"
     },
 # if defined HAVE_QMI_MESSAGE_WDS_STOP_NETWORK && defined HAVE_QMI_MESSAGE_WDS_GET_PACKET_SERVICE_STATUS
@@ -246,7 +246,7 @@ static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_WDS_SET_IP_FAMILY
     { "wds-set-ip-family", 0, 0, G_OPTION_ARG_STRING, &set_ip_family_str,
       "Set IP family",
-      "[ipv4|ipv6]"
+      "[ipv4|ipv6|ethernet]"
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_WDS_GET_CHANNEL_RATES
@@ -727,6 +727,8 @@ start_network_input_create (const gchar                     *str,
             ip_type_str = "4";
         else if (props.ip_type == QMI_WDS_IP_FAMILY_IPV6)
             ip_type_str = "6";
+        else if (props.ip_type == QMI_WDS_IP_FAMILY_ETHERNET)
+            ip_type_str = "12";
     }
 
     /* Set authentication method */
@@ -893,7 +895,8 @@ get_current_settings_ready (QmiClientWds *client,
         g_print ("           IP Family: %s\n",
                  ((ip_family == QMI_WDS_IP_FAMILY_IPV4) ? "IPv4" :
                   ((ip_family == QMI_WDS_IP_FAMILY_IPV6) ? "IPv6" :
-                   "unknown")));
+                   ((ip_family == QMI_WDS_IP_FAMILY_ETHERNET) ? "Ethernet" :
+                    "unknown"))));
 
     /* IPv4... */
 
