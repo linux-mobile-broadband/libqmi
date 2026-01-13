@@ -96,4 +96,20 @@ typedef enum { /*< since=1.36 >*/
     QMI_WDA_LOOPBACK_ENABLED  = 0x01,
 } QmiWdaLoopBackState;
 
+/**
+ * QmiWdaEthernetHardwareConfig:
+ * @QMI_WDA_ETHERNET_HARDWARE_CONFIG_DEFAULT: Default.
+ * @QMI_WDA_ETHERNET_HARDWARE_CONFIG_VLAN_IP: VLAN + IP supported.
+ * @QMI_WDA_ETHERNET_HARDWARE_CONFIG_NON_VLAN_IP: Non VLAN + IP supported.
+ *
+ * Ethernet hardware settings.
+ *
+ * Since: 1.40
+ */
+typedef enum { /*< since=1.40 >*/
+    QMI_WDA_ETHERNET_HARDWARE_CONFIG_DEFAULT     = 0x00,
+    QMI_WDA_ETHERNET_HARDWARE_CONFIG_VLAN_IP     = 0x01,
+    QMI_WDA_ETHERNET_HARDWARE_CONFIG_NON_VLAN_IP = 0x02,
+} QmiWdaEthernetHardwareConfig;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WDA_H_ */

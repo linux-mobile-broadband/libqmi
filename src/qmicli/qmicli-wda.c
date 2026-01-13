@@ -54,6 +54,7 @@ static gchar    *get_data_format_str;
 static gchar    *set_loopback_configuration_str;
 static gchar    *set_capability_str;
 static gboolean  get_data_format_flag;
+static gboolean  get_ethernet_config_flag;
 static gboolean  get_supported_messages_flag;
 static gboolean  noop_flag;
 
@@ -90,6 +91,12 @@ static GOptionEntry entries[] = {
     { "wda-set-capability", 0, 0, G_OPTION_ARG_STRING, &set_capability_str,
       "Negotiate capabilities between the TE and the modem (allowed keys: ep-type (undefined|hsusb|pcie|embedded|ethernet), ep-iface-number, eth-pdu=yes)",
       "[\"key=value,...\"]"
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDA_GET_ETHERNET_CONFIG
+    { "wda-get-ethernet-config", 0, 0, G_OPTION_ARG_NONE, &get_ethernet_config_flag,
+      "Get the ethernet hardware settings",
+      NULL
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_WDA_GET_SUPPORTED_MESSAGES
@@ -138,6 +145,7 @@ qmicli_wda_options_enabled (void)
     n_actions = (!!set_data_format_str +
                  get_data_format_flag +
                  !!set_capability_str +
+                 get_ethernet_config_flag +
                  get_supported_messages_flag +
                  !!set_loopback_configuration_str +
                  noop_flag);
@@ -849,6 +857,43 @@ set_capability_input_create (const gchar *str)
 
 #endif /* HAVE_QMI_MESSAGE_WDA_SET_CAPABILITY */
 
+#if defined HAVE_QMI_MESSAGE_WDA_GET_ETHERNET_CONFIG
+
+static void
+get_ethernet_config_ready (QmiClientWda *client,
+                           GAsyncResult *res)
+{
+    g_autoptr(QmiMessageWdaGetEthernetConfigOutput) output;
+    g_autoptr(GError) error = NULL;
+    QmiWdaEthernetHardwareConfig config;
+
+    output = qmi_client_wda_get_ethernet_config_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wda_get_ethernet_config_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get ethernet config: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (qmi_message_wda_get_ethernet_config_output_get_hardware_config (
+            output,
+            &config,
+            NULL)) {
+        g_print ("[%s] Ethernet hardware config: %u\n",
+                 qmi_device_get_path_display (ctx->device),
+                 config);
+    }
+
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_WDA_GET_ETHERNET_CONFIG */
+
 #if defined HAVE_QMI_MESSAGE_WDA_GET_SUPPORTED_MESSAGES
 
 static void
@@ -1097,6 +1142,19 @@ qmicli_wda_run (QmiDevice *device,
                                        ctx->cancellable,
                                        (GAsyncReadyCallback)set_capability_ready,
                                        NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_WDA_GET_ETHERNET_CONFIG
+    if (get_ethernet_config_flag) {
+        g_debug ("Asynchronously getting ethernet configuration...");
+        qmi_client_wda_get_ethernet_config (ctx->client,
+                                            NULL,
+                                            10,
+                                            ctx->cancellable,
+                                            (GAsyncReadyCallback)get_ethernet_config_ready,
+                                            NULL);
         return;
     }
 #endif
