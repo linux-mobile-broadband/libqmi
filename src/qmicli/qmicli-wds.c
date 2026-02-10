@@ -2785,7 +2785,7 @@ bind_mux_data_port_input_create (const gchar *str)
         }
     } else {
         g_printerr ("error: malformed input string, key=value format expected.\n");
-        goto error_out;
+        return NULL;
     }
 
 
@@ -3221,6 +3221,10 @@ qmicli_wds_run (QmiDevice *device,
 
         g_debug ("Binding mux data port..");
         input = bind_mux_data_port_input_create (bind_mux_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
         qmi_client_wds_bind_mux_data_port (client,
                                            input,
                                            10,
