@@ -3085,7 +3085,6 @@ set_lte_attach_pdn_list_input_create (const gchar *str)
         success = qmicli_read_uint_from_string (split[i], &val);
         if (!success || val == 0 || val > G_MAXUINT16) {
             g_printerr ("error: invalid or out of range profile number [1,%u]: '%s'\n", G_MAXUINT16, split[i]);
-            operation_shutdown (FALSE);
             return NULL;
         }
         profile_index = (guint16) val;
@@ -3773,6 +3772,10 @@ qmicli_wds_run (QmiDevice *device,
         g_autoptr(QmiMessageWdsSetLteAttachPdnListInput) input = NULL;
 
         input = set_lte_attach_pdn_list_input_create (set_lte_attach_pdn_list_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
         g_debug ("Asynchronously setting LTE Attach PDN list...");
         qmi_client_wds_set_lte_attach_pdn_list (client,
                                                 input,
