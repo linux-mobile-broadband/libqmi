@@ -51,7 +51,8 @@
  * @QMI_SERVICE_VOICE: Voice service.
  * @QMI_SERVICE_CAT2: Card Application Toolkit service (v2).
  * @QMI_SERVICE_UIM: User Identity Module service.
- * @QMI_SERVICE_UIM_RMT: User Identity Module Remote Transport  Since 1.38.
+ * @QMI_SERVICE_UIM_HTTP: User Identity Module HTTP service. Since 1.38.
+ * @QMI_SERVICE_UIM_RMT: User Identity Module Remote Transport service. Since 1.38.
  * @QMI_SERVICE_PBM: Phonebook Management service.
  * @QMI_SERVICE_QCHAT: QCHAT service. Since 1.8.
  * @QMI_SERVICE_RMTFS: Remote file system service.
@@ -146,6 +147,7 @@ typedef enum { /*< since=1.0 >*/
     QMI_SERVICE_SSCTL   = 0x2B,
     QMI_SERVICE_DPM     = 0x2F,
     QMI_SERVICE_UIM_RMT = 0x32,
+    QMI_SERVICE_UIM_HTTP = 0x47,
     QMI_SERVICE_CAT     = 0xE0,
     QMI_SERVICE_RMS     = 0xE1,
     QMI_SERVICE_OMA     = 0xE2,
