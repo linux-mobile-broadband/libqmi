@@ -256,5 +256,19 @@
                      "type"   : "TLV",
                      "since"  : "1.36",
                      "format" : "guint32" } ],
-     "output"  : [ { "common-ref" : "Operation Result" } ] }
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Get Bind",
+     "type"    : "Message",
+     "service" : "IMSA",
+     "id"      : "0x0034",
+     "since"   : "1.40",
+     "input"   : [ ],
+     "output"  : [ { "common-ref" : "Operation Result" },
+                   { "name"       : "Binding",
+                     "id"         : "0x10",
+                     "type"       : "TLV",
+                     "since"      : "1.40",
+                     "format"     : "guint32" } ] }
 ]
