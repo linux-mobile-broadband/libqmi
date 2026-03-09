@@ -53,6 +53,7 @@ static gboolean reset_flag;
 static gboolean noop_flag;
 static gchar *set_broadcast_config_str;
 static gboolean get_broadcast_config_flag;
+static gboolean set_broadcast_activation_flag;
 
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_WMS_GET_SUPPORTED_MESSAGES
@@ -83,6 +84,12 @@ static GOptionEntry entries[] = {
     { "wms-get-cbs-channels", 0, 0, G_OPTION_ARG_NONE, &get_broadcast_config_flag,
       "Get CBS channels",
       NULL,
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_WMS_SET_BROADCAST_ACTIVATION
+    { "wms-set-broadcast-activation", 0, 0, G_OPTION_ARG_NONE, &set_broadcast_activation_flag,
+      "Activate Cell Broadcast message reception on the modem",
+      NULL
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_WMS_RESET
@@ -127,6 +134,7 @@ qmicli_wms_options_enabled (void)
                  !!set_routes_str +
                  !!set_broadcast_config_str +
                  get_broadcast_config_flag +
+                 set_broadcast_activation_flag +
                  reset_flag +
                  noop_flag);
 
@@ -582,6 +590,36 @@ get_broadcast_config_ready (QmiClientWms *client,
 
 #endif
 
+#if defined HAVE_QMI_MESSAGE_WMS_SET_BROADCAST_ACTIVATION
+
+static void
+set_broadcast_activation_ready (QmiClientWms *client,
+                                GAsyncResult *res)
+{
+    g_autoptr(QmiMessageWmsSetBroadcastActivationOutput) output = NULL;
+    g_autoptr(GError) error = NULL;
+
+    output = qmi_client_wms_set_broadcast_activation_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wms_set_broadcast_activation_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't activate broadcast: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully activated Cell Broadcast reception\n",
+             qmi_device_get_path_display (ctx->device));
+
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_WMS_SET_BROADCAST_ACTIVATION */
+
 #if defined HAVE_QMI_MESSAGE_WMS_RESET
 
 static void
@@ -726,6 +764,27 @@ qmicli_wms_run (QmiDevice *device,
                                              NULL);
         return;
 
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_WMS_SET_BROADCAST_ACTIVATION
+    if (set_broadcast_activation_flag) {
+        g_autoptr(QmiMessageWmsSetBroadcastActivationInput) input = NULL;
+
+        g_debug ("Asynchronously activating broadcast...");
+        input = qmi_message_wms_set_broadcast_activation_input_new ();
+        qmi_message_wms_set_broadcast_activation_input_set_activation (
+            input,
+            QMI_WMS_MESSAGE_MODE_GSM_WCDMA,
+            TRUE,
+            NULL);
+        qmi_client_wms_set_broadcast_activation (ctx->client,
+                                                 input,
+                                                 10,
+                                                 ctx->cancellable,
+                                                 (GAsyncReadyCallback)set_broadcast_activation_ready,
+                                                 NULL);
+        return;
     }
 #endif
 
