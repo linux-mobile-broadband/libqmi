@@ -555,7 +555,10 @@ get_broadcast_config_ready (QmiClientWms *client,
         return;
     }
 
-    g_print ("[%s] Successfully get cbs channels: ", qmi_device_get_path_display (ctx->device));
+    g_print ("[%s] CBS broadcast active: %s\n",
+             qmi_device_get_path_display (ctx->device),
+             active ? "yes" : "no");
+    g_print ("[%s] CBS channels: ", qmi_device_get_path_display (ctx->device));
 
     for (i = 0; i < channels->len; i++) {
         QmiMessageWmsGetBroadcastConfigOutputConfigChannelsElement ch;
