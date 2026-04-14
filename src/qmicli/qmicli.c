@@ -522,6 +522,8 @@ allocate_client_ready (QmiDevice *dev,
     case QMI_SERVICE_TIME:
     case QMI_SERVICE_TS:
     case QMI_SERVICE_TMD:
+    case QMI_SERVICE_UIM_HTTP:
+    case QMI_SERVICE_UIM_RMT:
     case QMI_SERVICE_SAP:
     case QMI_SERVICE_TSYNC:
     case QMI_SERVICE_RFSA:
