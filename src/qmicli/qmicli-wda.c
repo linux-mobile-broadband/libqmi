@@ -52,7 +52,9 @@ static Context *ctx;
 static gchar    *set_data_format_str;
 static gchar    *get_data_format_str;
 static gchar    *set_loopback_configuration_str;
+static gchar    *set_capability_str;
 static gboolean  get_data_format_flag;
+static gboolean  get_ethernet_config_flag;
 static gboolean  get_supported_messages_flag;
 static gboolean  noop_flag;
 
@@ -75,14 +77,26 @@ parse_get_data_format (const gchar  *option_name,
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_WDA_SET_DATA_FORMAT
     { "wda-set-data-format", 0, 0, G_OPTION_ARG_STRING, &set_data_format_str,
-      "Set data format (allowed keys: link-layer-protocol (802-3|raw-ip), ul-protocol (disabled|tlp|qc-ncm|mbim|rndis|qmap|qmapv5), dl-protocol (disabled|tlp|qc-ncm|mbim|rndis|qmap|qmapv5), dl-datagram-max-size, dl-max-datagrams, ep-type (undefined|hsusb|pcie|embedded), ep-iface-number, ul-datagram-max-size, ul-max-datagrams)",
+      "Set data format (allowed keys: link-layer-protocol (802-3|raw-ip|ethernet-pdu), ul-protocol (disabled|tlp|qc-ncm|mbim|rndis|qmap|qmapv5), dl-protocol (disabled|tlp|qc-ncm|mbim|rndis|qmap|qmapv5), dl-datagram-max-size, dl-max-datagrams, ep-type (undefined|hsusb|pcie|embedded|ethernet), ep-iface-number, ul-datagram-max-size, ul-max-datagrams)",
       "[\"key=value,...\"]"
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT
     { "wda-get-data-format", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, parse_get_data_format,
-      "Get data format (allowed keys: ep-type (undefined|hsusb|pcie|embedded), ep-iface-number); also allows empty key list",
+      "Get data format (allowed keys: ep-type (undefined|hsusb|pcie|embedded|ethernet), ep-iface-number); also allows empty key list",
       "[\"key=value,...\"]"
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDA_SET_CAPABILITY
+    { "wda-set-capability", 0, 0, G_OPTION_ARG_STRING, &set_capability_str,
+      "Negotiate capabilities between the TE and the modem (allowed keys: ep-type (undefined|hsusb|pcie|embedded|ethernet), ep-iface-number, eth-pdu=yes)",
+      "[\"key=value,...\"]"
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDA_GET_ETHERNET_CONFIG
+    { "wda-get-ethernet-config", 0, 0, G_OPTION_ARG_NONE, &get_ethernet_config_flag,
+      "Get the ethernet hardware settings",
+      NULL
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_WDA_GET_SUPPORTED_MESSAGES
@@ -130,6 +144,8 @@ qmicli_wda_options_enabled (void)
 
     n_actions = (!!set_data_format_str +
                  get_data_format_flag +
+                 !!set_capability_str +
+                 get_ethernet_config_flag +
                  get_supported_messages_flag +
                  !!set_loopback_configuration_str +
                  noop_flag);
@@ -697,6 +713,187 @@ error_out:
 
 #endif /* HAVE_QMI_MESSAGE_WDA_SET_DATA_FORMAT */
 
+#if defined HAVE_QMI_MESSAGE_WDA_SET_CAPABILITY
+
+static void
+set_capability_ready (QmiClientWda *client,
+                      GAsyncResult *res)
+{
+    g_autoptr(QmiMessageWdaSetCapabilityOutput) output;
+    g_autoptr(GError) error = NULL;
+    gboolean eth_pdu;
+
+    output = qmi_client_wda_set_capability_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wda_set_capability_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't set capability: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully set capability\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_message_wda_set_capability_output_get_ethernet_pdu_capability (
+            output,
+            &eth_pdu,
+            NULL))
+        g_print ("Ethernet PDU capability: %s\n", eth_pdu ? "yes" : "no");
+
+    operation_shutdown (TRUE);
+}
+
+typedef struct {
+    QmiDataEndpointType endpoint_type;
+    gint                endpoint_iface_number;
+    gboolean            eth_pdu;
+    gboolean            eth_pdu_set;
+} SetCapabilityProperties;
+
+static gboolean
+set_capability_properties_handle (const gchar  *key,
+                                  const gchar  *value,
+                                  GError      **error,
+                                  gpointer      user_data)
+{
+    SetCapabilityProperties *props = (SetCapabilityProperties *)user_data;
+
+    if (!value || !value[0]) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "key '%s' requires a value",
+                     key);
+        return FALSE;
+    }
+
+    if (g_ascii_strcasecmp (key, "ep-type") == 0) {
+        if (!qmicli_read_data_endpoint_type_from_string (value, &(props->endpoint_type))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "Unrecognized Endpoint Type '%s'",
+                         value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "ep-iface-number") == 0) {
+        props->endpoint_iface_number = atoi(value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "eth-pdu") == 0) {
+        if (!qmicli_read_yes_no_from_string (value, &props->eth_pdu)) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "invalid eth-pdu value: %s (not a boolean)", value);
+            return FALSE;
+        }
+        props->eth_pdu_set = TRUE;
+        return TRUE;
+    }
+
+    g_set_error (error,
+                 QMI_CORE_ERROR,
+                 QMI_CORE_ERROR_FAILED,
+                 "Unrecognized option '%s'",
+                 key);
+    return FALSE;
+}
+
+static QmiMessageWdaSetCapabilityInput *
+set_capability_input_create (const gchar *str)
+{
+    g_autoptr(QmiMessageWdaSetCapabilityInput) input = NULL;
+    g_autoptr(GError) error = NULL;
+    SetCapabilityProperties props = {
+        .endpoint_type         = QMI_DATA_ENDPOINT_TYPE_UNDEFINED,
+        .endpoint_iface_number = QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED,
+        .eth_pdu_set           = FALSE,
+    };
+
+    input = qmi_message_wda_set_capability_input_new ();
+
+    if (!qmicli_parse_key_value_string (str,
+                                        &error,
+                                        set_capability_properties_handle,
+                                        &props)) {
+        g_printerr ("error: could not parse input string '%s'\n", error->message);
+        return NULL;
+    }
+
+    if (props.endpoint_type == QMI_DATA_ENDPOINT_TYPE_UNDEFINED ||
+        props.endpoint_iface_number == QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED) {
+        g_printerr ("error: invalid endpoint info\n");
+        return NULL;
+    }
+
+    if (!qmi_message_wda_set_capability_input_set_endpoint_info (
+            input,
+            props.endpoint_type,
+            props.endpoint_iface_number,
+            &error)) {
+        g_printerr ("error: could not set endpoint info: %s\n", error->message);
+        return NULL;
+    }
+
+    if (props.eth_pdu_set &&
+        !qmi_message_wda_set_capability_input_set_ethernet_pdu_capability (
+            input,
+            props.eth_pdu,
+            &error)) {
+        g_printerr ("error: could not set ethernet pdu capability: %s\n", error->message);
+        return NULL;
+    }
+
+    return g_steal_pointer (&input);
+}
+
+#endif /* HAVE_QMI_MESSAGE_WDA_SET_CAPABILITY */
+
+#if defined HAVE_QMI_MESSAGE_WDA_GET_ETHERNET_CONFIG
+
+static void
+get_ethernet_config_ready (QmiClientWda *client,
+                           GAsyncResult *res)
+{
+    g_autoptr(QmiMessageWdaGetEthernetConfigOutput) output;
+    g_autoptr(GError) error = NULL;
+    QmiWdaEthernetHardwareConfig config;
+
+    output = qmi_client_wda_get_ethernet_config_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wda_get_ethernet_config_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get ethernet config: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (qmi_message_wda_get_ethernet_config_output_get_hardware_config (
+            output,
+            &config,
+            NULL)) {
+        g_print ("[%s] Ethernet hardware config: %u\n",
+                 qmi_device_get_path_display (ctx->device),
+                 config);
+    }
+
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_WDA_GET_ETHERNET_CONFIG */
+
 #if defined HAVE_QMI_MESSAGE_WDA_GET_SUPPORTED_MESSAGES
 
 static void
@@ -924,6 +1121,40 @@ qmicli_wda_run (QmiDevice *device,
                                         ctx->cancellable,
                                         (GAsyncReadyCallback)get_data_format_ready,
                                         NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_WDA_SET_CAPABILITY
+    if (set_capability_str) {
+        g_autoptr(QmiMessageWdaSetCapabilityInput) input;
+
+        input = set_capability_input_create (set_capability_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously setting capability...");
+        qmi_client_wda_set_capability (ctx->client,
+                                       input,
+                                       10,
+                                       ctx->cancellable,
+                                       (GAsyncReadyCallback)set_capability_ready,
+                                       NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_WDA_GET_ETHERNET_CONFIG
+    if (get_ethernet_config_flag) {
+        g_debug ("Asynchronously getting ethernet configuration...");
+        qmi_client_wda_get_ethernet_config (ctx->client,
+                                            NULL,
+                                            10,
+                                            ctx->cancellable,
+                                            (GAsyncReadyCallback)get_ethernet_config_ready,
+                                            NULL);
         return;
     }
 #endif

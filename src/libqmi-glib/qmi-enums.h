@@ -182,6 +182,7 @@ typedef enum { /*< since=1.28 >*/   /* the get_string() helper and QmiEndian typ
  * @QMI_DATA_ENDPOINT_TYPE_PCIE: PCIe. Since 1.28.
  * @QMI_DATA_ENDPOINT_TYPE_EMBEDDED: Embedded. Since 1.28.
  * @QMI_DATA_ENDPOINT_TYPE_BAM_DMUX: BAM/DMUX. Since 1.30.
+ * @QMI_DATA_ENDPOINT_TYPE_ETHERNET: Ethernet. Since 1.40.
  * @QMI_DATA_ENDPOINT_TYPE_UNDEFINED: Undefined.
  *
  * Data Endpoint Type.
@@ -195,6 +196,7 @@ typedef enum { /*< since=1.18 >*/
     QMI_DATA_ENDPOINT_TYPE_PCIE      = 0x03,
     QMI_DATA_ENDPOINT_TYPE_EMBEDDED  = 0x04,
     QMI_DATA_ENDPOINT_TYPE_BAM_DMUX  = 0x05,
+    QMI_DATA_ENDPOINT_TYPE_ETHERNET  = 0x06,
     QMI_DATA_ENDPOINT_TYPE_UNDEFINED = 0xFF,
 } QmiDataEndpointType;
 

@@ -95,7 +95,7 @@ static gchar *set_lte_attach_pdn_list_str;
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_WDS_START_NETWORK
     { "wds-start-network", 0, 0, G_OPTION_ARG_STRING, &start_network_str,
-      "Start network (allowed keys: apn, 3gpp-profile, 3gpp2-profile, auth (PAP|CHAP|BOTH), username, password, autoconnect=yes, ip-type (4|6))",
+      "Start network (allowed keys: apn, 3gpp-profile, 3gpp2-profile, auth (PAP|CHAP|BOTH), username, password, autoconnect=yes, ip-type (ipv4|ipv6|ethernet))",
       "[\"key=value,...\"]"
     },
 # if defined HAVE_QMI_MESSAGE_WDS_STOP_NETWORK && defined HAVE_QMI_MESSAGE_WDS_GET_PACKET_SERVICE_STATUS
@@ -161,7 +161,7 @@ static GOptionEntry entries[] = {
 #endif
 #if defined HAVE_QMI_MESSAGE_WDS_CREATE_PROFILE
     { "wds-create-profile", 0, 0, G_OPTION_ARG_STRING, &create_profile_str,
-      "Create new profile using first available profile index (optional keys: name, apn, pdp-type (IP|PPP|IPV6|IPV4V6), auth (NONE|PAP|CHAP|BOTH), username, password, context-num, no-roaming=yes, disabled=yes)",
+      "Create new profile using first available profile index (optional keys: name, apn, pdp-type (IP|PPP|IPV6|IPV4V6|NONIP), auth (NONE|PAP|CHAP|BOTH), username, password, context-num, no-roaming=yes, disabled=yes, vlan-range=[<start>-<end>])",
       "[\"(3gpp|3gpp2)[,key=value,...]\"]"
     },
 #endif
@@ -173,7 +173,7 @@ static GOptionEntry entries[] = {
 #endif
 #if defined HAVE_QMI_MESSAGE_WDS_MODIFY_PROFILE
     { "wds-modify-profile", 0, 0, G_OPTION_ARG_STRING, &modify_profile_str,
-      "Modify existing profile (optional keys: name, apn, pdp-type (IP|PPP|IPV6|IPV4V6), auth (NONE|PAP|CHAP|BOTH), username, password, context-num, no-roaming=yes, disabled=yes)",
+      "Modify existing profile (optional keys: name, apn, pdp-type (IP|PPP|IPV6|IPV4V6|NONIP), auth (NONE|PAP|CHAP|BOTH), username, password, context-num, no-roaming=yes, disabled=yes, vlan-range=[<start>-<end>])",
       "[\"(3gpp|3gpp2),#,key=value,...\"]"
     },
 #endif
@@ -246,7 +246,7 @@ static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_WDS_SET_IP_FAMILY
     { "wds-set-ip-family", 0, 0, G_OPTION_ARG_STRING, &set_ip_family_str,
       "Set IP family",
-      "[4|6]"
+      "[ipv4|ipv6|ethernet]"
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_WDS_GET_CHANNEL_RATES
@@ -613,20 +613,24 @@ start_network_properties_handle (const gchar  *key,
     }
 
     if (g_ascii_strcasecmp (key, "ip-type") == 0 && props->ip_type == QMI_WDS_IP_FAMILY_UNSPECIFIED) {
-        switch (atoi (value)) {
-        case 4:
-            props->ip_type = QMI_WDS_IP_FAMILY_IPV4;
-            break;
-        case 6:
-            props->ip_type = QMI_WDS_IP_FAMILY_IPV6;
-            break;
-        default:
-            g_set_error (error,
-                         QMI_CORE_ERROR,
-                         QMI_CORE_ERROR_FAILED,
-                         "unknown IP type '%s' (not 4 or 6)",
-                         value);
-            return FALSE;
+        if (!qmicli_read_wds_ip_family_from_string (value, &props->ip_type)) {
+            g_print ("[%s] Checking for IP family legacy format (4|6)\n",
+                     qmi_device_get_path_display (ctx->device));
+            switch (atoi (value)) {
+            case 4:
+                props->ip_type = QMI_WDS_IP_FAMILY_IPV4;
+                break;
+            case 6:
+                props->ip_type = QMI_WDS_IP_FAMILY_IPV6;
+                break;
+            default:
+                g_set_error (error,
+                             QMI_CORE_ERROR,
+                             QMI_CORE_ERROR_FAILED,
+                             "unknown IP type '%s' (not 4 or 6)",
+                             value);
+                return FALSE;
+            }
         }
         return TRUE;
     }
@@ -723,6 +727,8 @@ start_network_input_create (const gchar                     *str,
             ip_type_str = "4";
         else if (props.ip_type == QMI_WDS_IP_FAMILY_IPV6)
             ip_type_str = "6";
+        else if (props.ip_type == QMI_WDS_IP_FAMILY_ETHERNET)
+            ip_type_str = "12";
     }
 
     /* Set authentication method */
@@ -889,7 +895,8 @@ get_current_settings_ready (QmiClientWds *client,
         g_print ("           IP Family: %s\n",
                  ((ip_family == QMI_WDS_IP_FAMILY_IPV4) ? "IPv4" :
                   ((ip_family == QMI_WDS_IP_FAMILY_IPV6) ? "IPv6" :
-                   "unknown")));
+                   ((ip_family == QMI_WDS_IP_FAMILY_ETHERNET) ? "Ethernet" :
+                    "unknown"))));
 
     /* IPv4... */
 
@@ -1386,6 +1393,9 @@ typedef struct {
     gboolean              no_roaming_set;
     gboolean              disabled;
     gboolean              disabled_set;
+    gboolean              vlan_range_set;
+    guint                 vlan_range_start;
+    guint                 vlan_range_end;
 } CreateModifyProfileProperties;
 
 static gboolean
@@ -1507,6 +1517,21 @@ create_modify_profile_properties_handle (const gchar  *key,
         return TRUE;
     }
 
+    if (g_ascii_strcasecmp (key, "vlan-range") == 0 && !props->vlan_range_set) {
+        if (!qmicli_read_uint_range_from_string (value,
+                                                 &(props->vlan_range_start),
+                                                 &(props->vlan_range_end))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "invalid 'vlan-range' value '%s'",
+                         value);
+            return FALSE;
+        }
+        props->vlan_range_set = TRUE;
+        return TRUE;
+    }
+
     g_set_error (error,
                  QMI_CORE_ERROR,
                  QMI_CORE_ERROR_FAILED,
@@ -1605,6 +1630,9 @@ create_profile_input_create (const gchar                      *str,
 
     if (props.disabled_set)
         qmi_message_wds_create_profile_input_set_apn_disabled_flag (*input, props.disabled, NULL);
+
+    if (props.vlan_range_set)
+        qmi_message_wds_create_profile_input_set_vlan_id_type (*input, props.vlan_range_start, props.vlan_range_end, NULL);
 
     success = TRUE;
 
@@ -1922,6 +1950,9 @@ modify_profile_input_create (const gchar                      *str,
     if (props.disabled_set)
         qmi_message_wds_modify_profile_input_set_apn_disabled_flag (*input, props.disabled, NULL);
 
+    if (props.vlan_range_set)
+        qmi_message_wds_modify_profile_input_set_vlan_id_type (*input, props.vlan_range_start, props.vlan_range_end, NULL);
+
     success = TRUE;
 
 out:
@@ -2068,6 +2099,8 @@ get_profile_settings_ready (QmiClientWds *client,
         QmiWdsAuthentication auth;
         QmiWdsApnTypeMask apn_type;
         gboolean flag;
+        guint16 vlan_id_start;
+        guint16 vlan_id_end;
 
         if (qmi_message_wds_get_profile_settings_output_get_apn_name (output, &str, NULL))
             g_print ("\t\tAPN: '%s'\n", str);
@@ -2095,6 +2128,8 @@ get_profile_settings_ready (QmiClientWds *client,
             g_print ("\t\tNo roaming: '%s'\n", flag ? "yes" : "no");
         if (qmi_message_wds_get_profile_settings_output_get_apn_disabled_flag (output, &flag, NULL))
             g_print ("\t\tAPN disabled: '%s'\n", flag ? "yes" : "no");
+        if (qmi_message_wds_get_profile_settings_output_get_vlan_id_type (output, &vlan_id_start, &vlan_id_end, NULL))
+            g_print ("\t\tVLAN id range: [%u - %u]\n", vlan_id_start, vlan_id_end);
         qmi_message_wds_get_profile_settings_output_unref (output);
     }
 
@@ -2210,6 +2245,8 @@ get_default_settings_ready (QmiClientWds *client,
     const gchar *str;
     QmiWdsPdpType pdp_type;
     QmiWdsAuthentication auth;
+    guint16 vlan_id_start;
+    guint16 vlan_id_end;
 
     output = qmi_client_wds_get_default_settings_finish (client, res, &error);
     if (!output) {
@@ -2257,6 +2294,8 @@ get_default_settings_ready (QmiClientWds *client,
         aux = qmi_wds_authentication_build_string_from_mask (auth);
         g_print ("\tAuth: '%s'\n", VALIDATE_MASK_NONE (aux));
     }
+    if (qmi_message_wds_get_default_settings_output_get_vlan_id_type (output, &vlan_id_start, &vlan_id_end, NULL))
+        g_print ("\tVLAN id range: [%u - %u]\n", vlan_id_start, vlan_id_end);
 
     qmi_message_wds_get_default_settings_output_unref (output);
     operation_shutdown (TRUE);
@@ -3196,18 +3235,25 @@ qmicli_wds_run (QmiDevice *device,
 
 #if defined HAVE_QMI_MESSAGE_WDS_SET_IP_FAMILY
     if (set_ip_family_str) {
-        QmiMessageWdsSetIpFamilyInput *input;
-        QmiWdsIpFamily preference;
+        g_autoptr(QmiMessageWdsSetIpFamilyInput) input = NULL;
+        QmiWdsIpFamily preference = QMI_WDS_IP_FAMILY_UNKNOWN;
 
-        switch (atoi (set_ip_family_str)) {
-        case 4:
-            preference = QMI_WDS_IP_FAMILY_IPV4;
-            break;
-        case 6:
-            preference = QMI_WDS_IP_FAMILY_IPV6;
-            break;
-        default:
-            g_printerr ("error: unknown IP type '%s' (not 4 or 6)\n",
+        if (!qmicli_read_wds_ip_family_from_string (set_ip_family_str, &preference)) {
+            g_print ("[%s] Checking for IP family legacy format (4|6)\n",
+                     qmi_device_get_path_display (ctx->device));
+            switch (atoi (set_ip_family_str)) {
+            case 4:
+                preference = QMI_WDS_IP_FAMILY_IPV4;
+                break;
+            case 6:
+                preference = QMI_WDS_IP_FAMILY_IPV6;
+                break;
+            default:
+                g_printerr ("error: unrecognized IP family legacy format\n");
+            }
+        }
+        if (preference == QMI_WDS_IP_FAMILY_UNKNOWN) {
+            g_printerr ("error: unknown IP type '%s'\n",
                         set_ip_family_str);
             operation_shutdown (FALSE);
             return;
@@ -3223,7 +3269,6 @@ qmicli_wds_run (QmiDevice *device,
                                       ctx->cancellable,
                                       (GAsyncReadyCallback) set_ip_family_ready,
                                       NULL);
-        qmi_message_wds_set_ip_family_input_unref (input);
         return;
     }
 #endif

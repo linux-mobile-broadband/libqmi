@@ -39,6 +39,7 @@
     QMICLI_ENUM_LIST_ITEM (QmiDataEndpointType,                         data_endpoint_type,                           "data endpoint type")            \
     QMICLI_ENUM_LIST_ITEM (QmiWdsAutoconnectSetting,                    wds_autoconnect_setting,                      "autoconnect setting")           \
     QMICLI_ENUM_LIST_ITEM (QmiWdsAutoconnectSettingRoaming,             wds_autoconnect_setting_roaming,              "autoconnect setting roaming")   \
+    QMICLI_ENUM_LIST_ITEM (QmiWdsIpFamily,                              wds_ip_family,                                "ip family")                     \
     QMICLI_ENUM_LIST_ITEM (QmiDmsBootImageDownloadMode,                 dms_boot_image_download_mode,                 "boot image download mode")      \
     QMICLI_ENUM_LIST_ITEM (QmiDmsHpDeviceMode,                          dms_hp_device_mode,                           "hp device mode")                \
     QMICLI_ENUM_LIST_ITEM (QmiDmsSwiUsbComposition,                     dms_swi_usb_composition,                      "swi usb composition")           \
@@ -131,6 +132,9 @@ gboolean qmicli_read_raw_data_from_string       (const gchar  *str,
                                                  GArray **out);
 gboolean qmicli_read_yes_no_from_string         (const gchar *str,
                                                  gboolean *out);
+gboolean qmicli_read_uint_range_from_string     (const gchar *str,
+                                                 guint *start,
+                                                 guint *end);
 
 gchar *qmicli_get_supported_messages_list (const guint8 *data,
                                            gsize len);

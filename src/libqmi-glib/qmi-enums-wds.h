@@ -50,6 +50,7 @@
  * @QMI_WDS_IP_FAMILY_IPV4: IPv4.
  * @QMI_WDS_IP_FAMILY_IPV6: IPv6.
  * @QMI_WDS_IP_FAMILY_UNSPECIFIED: None specified.
+ * @QMI_WDS_IP_FAMILY_ETHERNET: Ethernet. Since 1.40.
  *
  * Type of IP family.
  *
@@ -59,7 +60,8 @@ typedef enum { /*< since=1.0 >*/
     QMI_WDS_IP_FAMILY_UNKNOWN     = 0,
     QMI_WDS_IP_FAMILY_IPV4        = 4,
     QMI_WDS_IP_FAMILY_IPV6        = 6,
-    QMI_WDS_IP_FAMILY_UNSPECIFIED = 8
+    QMI_WDS_IP_FAMILY_UNSPECIFIED = 8,
+    QMI_WDS_IP_FAMILY_ETHERNET    = 12
 } QmiWdsIpFamily;
 
 /**
@@ -1457,6 +1459,7 @@ typedef enum { /*< since=1.32 >*/
  * @QMI_WDS_PDP_TYPE_PPP: PPP
  * @QMI_WDS_PDP_TYPE_IPV6: IPv6
  * @QMI_WDS_PDP_TYPE_IPV4_OR_IPV6: IPv4 and IPv6 combined context
+ * @QMI_WDS_PDP_TYPE_NON_IP: Non IP. Since 1.40.
  *
  * PDP context type.
  *
@@ -1466,7 +1469,8 @@ typedef enum { /*< since=1.0 >*/
     QMI_WDS_PDP_TYPE_IPV4         = 0,
     QMI_WDS_PDP_TYPE_PPP          = 1,
     QMI_WDS_PDP_TYPE_IPV6         = 2,
-    QMI_WDS_PDP_TYPE_IPV4_OR_IPV6 = 3
+    QMI_WDS_PDP_TYPE_IPV4_OR_IPV6 = 3,
+    QMI_WDS_PDP_TYPE_NON_IP       = 4
 } QmiWdsPdpType;
 
 /**
