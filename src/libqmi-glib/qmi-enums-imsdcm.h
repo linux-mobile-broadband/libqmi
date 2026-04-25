@@ -71,9 +71,9 @@ typedef enum { /*< since=1.37 >*/
 /**
  * QmiImsDcmRatType:
  * @QMI_IMSDCM_RAT_TYPE_EHPRD: CDMA/EHPRD
- * @QMI_IMSDCM_RAT_TYPE_LTE: IMS is initialized, but not registered yet with the network IMS service.
- * @QMI_IMSDCM_RAT_TYPE_EPC: IMS is initialized but device is in airplane mode.
- * @QMI_IMSDCM_RAT_TYPE_WLAN: IMS is initialized and registered.
+ * @QMI_IMSDCM_RAT_TYPE_LTE: LTE
+ * @QMI_IMSDCM_RAT_TYPE_EPC: EPC
+ * @QMI_IMSDCM_RAT_TYPE_WLAN: WLAN
  *
  * IMS DCM RAT type.
  *
