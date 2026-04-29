@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301 USA.
  *
  * Copyright (C) 2014-2020 Aleksander Morgado <aleksander@aleksander.es>
- * Copyright (C) 2019-2020 Alexander Couzens <lynxis@fe80.eu>
+ * Copyright (C) 2019-2020,2026 Alexander Couzens <lynxis@fe80.eu>
  */
 
 #ifndef _LIBQMI_GLIB_QMI_ENUMS_VOICE_H_
@@ -891,5 +891,19 @@ typedef enum { /*< since=1.30 >*/
     QMI_VOICE_SUPPLEMENTARY_SERVICE_REASON_BAR_ALL_INCOMING                   = 0x0E,
     QMI_VOICE_SUPPLEMENTARY_SERVICE_REASON_CALL_WAITING                       = 0x0F,
 } QmiVoiceSupplementaryServiceReason;
+
+/**
+ * QmiVoiceAlertingType:
+ * @QMI_VOICE_ALERTING_TYPE_NETWORK: network will generate the tone
+ * @QMI_VOICE_ALERTING_TYPE_UE: UE/phone needs to generate the ring tone
+ *
+ * Alert type for ringback/ringtone generation.
+ *
+ * Since: 1.40
+ */
+typedef enum { /*< since=1.40 >*/
+    QMI_VOICE_ALERTING_TYPE_NETWORK = 0x00,
+    QMI_VOICE_ALERTING_TYPE_UE      = 0x01,
+} QmiVoiceAlertingType;
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_VOICE_H_ */
