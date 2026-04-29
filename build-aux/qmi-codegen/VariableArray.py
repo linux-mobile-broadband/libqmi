@@ -607,6 +607,7 @@ class VariableArray(Variable):
     def build_struct_field_documentation(self, line_prefix, variable_name):
         translations = { 'lp'                          : line_prefix,
                          'array_element_public_format' : self.array_element.public_format,
+                         'array_element_element_type'  : self.array_element.element_type,
                          'name'                        : variable_name }
 
         template = ''
@@ -615,7 +616,7 @@ class VariableArray(Variable):
                 '${lp}@${name}_sequence: the sequence number.\n')
 
         template += (
-            '${lp}@${name}: a #GArray of #${array_element_public_format} elements.\n')
+            '${lp}@${name}: (element-type ${array_element_element_type})(transfer none): a #GArray of #${array_element_public_format} elements.\n')
         return string.Template(template).substitute(translations)
 
 
