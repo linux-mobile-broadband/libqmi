@@ -83,6 +83,9 @@ static gchar *set_autoconnect_settings_str;
 static gboolean get_supported_messages_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
+#if defined HAVE_QMI_MESSAGE_WDS_RESET_PACKET_STATISTICS
+static gboolean reset_packet_statistics_flag;
+#endif
 static gchar *bind_data_port_str;
 static gchar *bind_mux_str;
 static gchar *set_ip_family_str;
@@ -283,6 +286,12 @@ static GOptionEntry entries[] = {
       "Just allocate or release a WDS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
     },
+#if defined HAVE_QMI_MESSAGE_WDS_RESET_PACKET_STATISTICS
+    { "wds-reset-packet-statistics", 0, 0, G_OPTION_ARG_NONE, &reset_packet_statistics_flag,
+      "Reset packet statistics",
+      NULL
+    },
+#endif
     /* deprecated entries (hidden in --help) */
 #if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUMBER
     { "wds-get-default-profile-num", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &get_default_profile_num_str,
@@ -355,6 +364,9 @@ qmicli_wds_options_enabled (void)
                  get_max_lte_attach_pdn_number_flag +
                  get_lte_attach_pdn_list_flag +
                  !!set_lte_attach_pdn_list_str +
+#if defined HAVE_QMI_MESSAGE_WDS_RESET_PACKET_STATISTICS
+                 reset_packet_statistics_flag +
+#endif
                  noop_flag);
 
     if (n_actions > 1) {
@@ -2649,6 +2661,35 @@ noop_cb (gpointer unused)
     return FALSE;
 }
 
+#if defined HAVE_QMI_MESSAGE_WDS_RESET_PACKET_STATISTICS
+
+static void
+reset_packet_statistics_ready (QmiClientWds *client,
+                                GAsyncResult *res)
+{
+    g_autoptr(QmiMessageWdsResetPacketStatisticsOutput) output = NULL;
+    g_autoptr(GError) error = NULL;
+
+    output = qmi_client_wds_reset_packet_statistics_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_reset_packet_statistics_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't reset packet statistics: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Packet statistics reset successfully\n",
+             qmi_device_get_path_display (ctx->device));
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_WDS_RESET_PACKET_STATISTICS */
+
 #if defined HAVE_QMI_MESSAGE_WDS_BIND_DATA_PORT
 
 static QmiMessageWdsBindDataPortInput *
@@ -3796,6 +3837,18 @@ qmicli_wds_run (QmiDevice *device,
         g_idle_add (noop_cb, NULL);
         return;
     }
+
+#if defined HAVE_QMI_MESSAGE_WDS_RESET_PACKET_STATISTICS
+    if (reset_packet_statistics_flag) {
+        qmi_client_wds_reset_packet_statistics (ctx->client,
+                                                NULL,
+                                                10,
+                                                ctx->cancellable,
+                                                (GAsyncReadyCallback)reset_packet_statistics_ready,
+                                                NULL);
+        return;
+    }
+#endif
 
     g_warn_if_reached ();
 }
