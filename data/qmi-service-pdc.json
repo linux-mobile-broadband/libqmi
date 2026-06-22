@@ -93,6 +93,14 @@
                    { "common-ref" : "Config Type And Id" } ] },
 
   // *********************************************************************************
+  {  "name"    : "Config Change",
+     "type"    : "Indication",
+     "service" : "PDC",
+     "id"      : "0x21",
+     "since"   : "1.40",
+     "output"  : [ { "common-ref" : "Config Type And Id" } ] },
+
+  // *********************************************************************************
   {  "name"    : "Get Selected Config",
      "type"    : "Message",
      "service" : "PDC",
