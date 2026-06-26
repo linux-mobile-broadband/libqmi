@@ -465,6 +465,25 @@ test_message_new_request_from_data (void)
 }
 
 static void
+test_message_new_request_from_data_too_short_header (void)
+{
+    g_autoptr(GByteArray) qmi = NULL;
+    g_autoptr(QmiMessage) self = NULL;
+    g_autoptr(GError)     error = NULL;
+    /* 5 bytes is too short for service header (7 bytes) */
+    static const guint8 expected_buffer [] = {
+        0x02, 0x02, 0x00, 0xff, 0xff
+    };
+
+    qmi = g_byte_array_new ();
+    g_byte_array_append (qmi, expected_buffer, sizeof (expected_buffer));
+
+    self = qmi_message_new_from_data (QMI_SERVICE_DMS, 0x01, qmi, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_MESSAGE);
+    g_assert (self == NULL);
+}
+
+static void
 test_message_new_response_ok (void)
 {
     static const guint8 expected_buffer [] = {
@@ -1854,6 +1873,7 @@ int main (int argc, char **argv)
 
     g_test_add_func ("/libqmi-glib/message/new/request",           test_message_new_request);
     g_test_add_func ("/libqmi-glib/message/new/request-from-data", test_message_new_request_from_data);
+    g_test_add_func ("/libqmi-glib/message/new/request-from-data/too-short-header", test_message_new_request_from_data_too_short_header);
     g_test_add_func ("/libqmi-glib/message/new/response/ok",       test_message_new_response_ok);
     g_test_add_func ("/libqmi-glib/message/new/response/error",    test_message_new_response_error);
 

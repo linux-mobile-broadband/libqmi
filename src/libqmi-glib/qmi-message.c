@@ -524,9 +524,21 @@ qmi_message_new_from_data (QmiService   service,
     struct full_message   *buffer;
     gsize                  buffer_len;
     gsize                  message_len;
+    gsize                  header_size;
 
     /* Service must fit in 16 bits */
     g_return_val_if_fail (service <= G_MAXUINT16, NULL);
+
+    if (service == QMI_SERVICE_CTL)
+        header_size = sizeof (struct control_header);
+    else
+        header_size = sizeof (struct service_header);
+    if (qmi_data->len < header_size) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_MESSAGE,
+                     "QMI message too short to contain header (have %u bytes, need %" G_GSIZE_FORMAT ")",
+                     qmi_data->len, header_size);
+        return NULL;
+    }
 
     /* Create array with enough size for the QMUX marker and QMUX header, and
      * with enough room to copy the rest of the message into */
