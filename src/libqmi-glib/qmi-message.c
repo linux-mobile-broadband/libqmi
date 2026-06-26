@@ -550,6 +550,13 @@ qmi_message_new_from_data (QmiService   service,
             GUINT16_FROM_LE (((struct service_message *)(qmi_data->data))->header.tlv_length);
     }
 
+    if (qmi_data->len < message_len) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_MESSAGE,
+                     "QMI message too short (have %u bytes, need %" G_GSIZE_FORMAT ")",
+                     qmi_data->len, message_len);
+        return NULL;
+    }
+
     /* Use the size of qmux_header for both QMUX and QRTR as they are the same */
     buffer_len = (1 + sizeof (struct qmux_header) + message_len);
 
