@@ -1508,8 +1508,7 @@ qmi_message_tlv_read_fixed_size_string (QmiMessage  *self,
 
     /* Empty string? */
     if (!ptr[0]) {
-        /* terminator at start of string */
-        *out = '\0';
+        memset (out, 0, string_length);
         /* but update offset with the full expected length */
         *offset = (*offset + string_length);
         return TRUE;
