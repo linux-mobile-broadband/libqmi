@@ -1195,6 +1195,50 @@ test_message_tlv_read_fixed_size_string_garbage_empty (void)
 }
 
 static void
+test_message_tlv_read_fixed_size_string_garbage_partial (void)
+{
+    g_autoptr(QmiMessage)  self = NULL;
+    g_autoptr(GError)      error = NULL;
+    gboolean               ret;
+    gsize                  init_offset;
+    guint16                tlv_length = 0;
+    gsize                  offset;
+    gchar                  fixed_str[5];
+
+    self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
+
+    init_offset = qmi_message_tlv_write_init (self, 0x01, &error);
+    g_assert_no_error (error);
+    g_assert (init_offset > 0);
+
+    /* Write a 4-byte string containing invalid UTF-8 at index 2: "ab\xff" "c" */
+    ret = qmi_message_tlv_write_string (self, 0, "ab\xff" "c", 4, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+
+    ret = qmi_message_tlv_write_complete (self, init_offset, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+
+    /* Now read */
+    init_offset = qmi_message_tlv_read_init (self, 0x01, &tlv_length, &error);
+    g_assert_no_error (error);
+    g_assert (init_offset > 0);
+
+    offset = 0;
+
+    /* Test partial copy zero-filling */
+    memset (fixed_str, 'Z', sizeof (fixed_str));
+    ret = qmi_message_tlv_read_fixed_size_string (self, init_offset, &offset, 4, fixed_str, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    fixed_str[4] = '\0';
+    g_assert_cmpstr (fixed_str, ==, "ab");
+    g_assert_cmpuint (fixed_str[2], ==, 0);
+    g_assert_cmpuint (fixed_str[3], ==, 0);
+}
+
+static void
 test_message_tlv_rw_mixed (void)
 {
     g_autoptr(QmiMessage) self = NULL;
@@ -1822,6 +1866,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libqmi-glib/message/tlv-rw/sized",              test_message_tlv_rw_sized);
     g_test_add_func ("/libqmi-glib/message/tlv-rw/strings",            test_message_tlv_rw_strings);
     g_test_add_func ("/libqmi-glib/message/tlv-rw/fixed-size-string-garbage-empty", test_message_tlv_read_fixed_size_string_garbage_empty);
+    g_test_add_func ("/libqmi-glib/message/tlv-rw/fixed-size-string-garbage-partial", test_message_tlv_read_fixed_size_string_garbage_partial);
     g_test_add_func ("/libqmi-glib/message/tlv-rw/mixed",              test_message_tlv_rw_mixed);
     g_test_add_func ("/libqmi-glib/message/tlv-write/overflow",        test_message_tlv_write_overflow);
     g_test_add_func ("/libqmi-glib/message/tlv-read/overflow-message", test_message_tlv_read_overflow_message);

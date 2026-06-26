@@ -1501,6 +1501,8 @@ qmi_message_tlv_read_fixed_size_string (QmiMessage  *self,
     if (end && end > (const gchar *)ptr) {
         /* copy only the valid bytes */
         memcpy (out, ptr, end - (const gchar *)ptr);
+        /* zero-fill the remainder of the fixed size buffer */
+        memset (out + (end - (const gchar *)ptr), 0, string_length - (end - (const gchar *)ptr));
         /* but update offset with the full expected length */
         *offset = (*offset + string_length);
         return TRUE;

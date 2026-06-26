@@ -1308,6 +1308,81 @@ test_generated_nas_get_system_info (TestFixture *fixture)
     test_fixture_loop_run (fixture);
 }
 
+#if defined HAVE_QMI_MESSAGE_NAS_GET_OPERATOR_NAME
+
+static void
+nas_get_operator_name_garbage_ready (QmiClientNas *client,
+                                     GAsyncResult *res,
+                                     TestFixture  *fixture)
+{
+    QmiMessageNasGetOperatorNameOutput *output;
+    GError *error = NULL;
+    gboolean st;
+
+    output = qmi_client_nas_get_operator_name_finish (client, res, &error);
+    g_assert_no_error (error);
+    g_assert (output);
+
+    st = qmi_message_nas_get_operator_name_output_get_result (output, &error);
+    g_assert_no_error (error);
+    g_assert (st);
+
+    {
+        GArray *operator_plmn_list = NULL;
+
+        g_assert (qmi_message_nas_get_operator_name_output_get_operator_plmn_list (
+                      output,
+                      &operator_plmn_list,
+                      &error));
+        g_assert_no_error (error);
+        g_assert (operator_plmn_list);
+        g_assert_cmpuint (operator_plmn_list->len, ==, 1);
+
+        {
+            QmiMessageNasGetOperatorNameOutputOperatorPlmnListElement *el;
+
+            el = &g_array_index (operator_plmn_list, QmiMessageNasGetOperatorNameOutputOperatorPlmnListElement, 0);
+            /* MCC should be "53" because 3rd byte was invalid UTF-8 (0xFF) and was zero-filled by reader */
+            g_assert_cmpstr (el->mcc, ==, "53");
+            g_assert_cmpstr (el->mnc, ==, "24");
+        }
+    }
+
+    qmi_message_nas_get_operator_name_output_unref (output);
+
+    test_fixture_loop_stop (fixture);
+}
+
+static void
+test_generated_nas_get_operator_name_garbage (TestFixture *fixture)
+{
+    guint8 expected[] = {
+        0x01,
+        0x0C, 0x00, 0x00, 0x03, 0x01,
+        0x00, 0x01, 0x00, 0x39, 0x00, 0x00, 0x00
+    };
+    guint8 response[] = {
+        0x01,
+        0x23, 0x00, 0x80, 0x03, 0x01,
+        0x02, 0x01, 0x00, 0x39, 0x00, 0x17, 0x00,
+        0x02, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x11, 0x0D, 0x00, 0x01, 0x00, 0x35, 0x33, 0xFF, 0x32, 0x34, 0xFF, 0x34, 0x12, 0x78, 0x56, 0x05
+    };
+
+    test_port_context_set_command (fixture->ctx,
+                                   expected, G_N_ELEMENTS (expected),
+                                   response, G_N_ELEMENTS (response),
+                                   fixture->service_info[QMI_SERVICE_NAS].transaction_id++);
+
+    qmi_client_nas_get_operator_name (QMI_CLIENT_NAS (fixture->service_info[QMI_SERVICE_NAS].client), NULL, 3, NULL,
+                                      (GAsyncReadyCallback) nas_get_operator_name_garbage_ready,
+                                      fixture);
+
+    test_fixture_loop_run (fixture);
+}
+
+#endif
+
 #endif
 
 /*****************************************************************************/
@@ -1346,6 +1421,9 @@ int main (int argc, char **argv)
 #endif
 #if defined HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_INFO
     TEST_ADD ("/libqmi-glib/generated/nas/get-system-info", test_generated_nas_get_system_info);
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_OPERATOR_NAME
+    TEST_ADD ("/libqmi-glib/generated/nas/get-operator-name-garbage", test_generated_nas_get_operator_name_garbage);
 #endif
 
     return g_test_run ();
