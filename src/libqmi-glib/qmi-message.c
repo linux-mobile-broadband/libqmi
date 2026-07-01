@@ -524,9 +524,21 @@ qmi_message_new_from_data (QmiService   service,
     struct full_message   *buffer;
     gsize                  buffer_len;
     gsize                  message_len;
+    gsize                  header_size;
 
     /* Service must fit in 16 bits */
     g_return_val_if_fail (service <= G_MAXUINT16, NULL);
+
+    if (service == QMI_SERVICE_CTL)
+        header_size = sizeof (struct control_header);
+    else
+        header_size = sizeof (struct service_header);
+    if (qmi_data->len < header_size) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_MESSAGE,
+                     "QMI message too short to contain header (have %u bytes, need %" G_GSIZE_FORMAT ")",
+                     qmi_data->len, header_size);
+        return NULL;
+    }
 
     /* Create array with enough size for the QMUX marker and QMUX header, and
      * with enough room to copy the rest of the message into */
@@ -536,6 +548,13 @@ qmi_message_new_from_data (QmiService   service,
     } else {
         message_len = sizeof (struct service_header) +
             GUINT16_FROM_LE (((struct service_message *)(qmi_data->data))->header.tlv_length);
+    }
+
+    if (qmi_data->len < message_len) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_MESSAGE,
+                     "QMI message too short (have %u bytes, need %" G_GSIZE_FORMAT ")",
+                     qmi_data->len, message_len);
+        return NULL;
     }
 
     /* Use the size of qmux_header for both QMUX and QRTR as they are the same */
@@ -1501,6 +1520,8 @@ qmi_message_tlv_read_fixed_size_string (QmiMessage  *self,
     if (end && end > (const gchar *)ptr) {
         /* copy only the valid bytes */
         memcpy (out, ptr, end - (const gchar *)ptr);
+        /* zero-fill the remainder of the fixed size buffer */
+        memset (out + (end - (const gchar *)ptr), 0, string_length - (end - (const gchar *)ptr));
         /* but update offset with the full expected length */
         *offset = (*offset + string_length);
         return TRUE;
@@ -1508,8 +1529,7 @@ qmi_message_tlv_read_fixed_size_string (QmiMessage  *self,
 
     /* Empty string? */
     if (!ptr[0]) {
-        /* terminator at start of string */
-        *out = '\0';
+        memset (out, 0, string_length);
         /* but update offset with the full expected length */
         *offset = (*offset + string_length);
         return TRUE;
