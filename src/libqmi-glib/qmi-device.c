@@ -58,6 +58,7 @@
 #include "qmi-dsd.h"
 #include "qmi-dpm.h"
 #include "qmi-fox.h"
+#include "qmi-foxap.h"
 #include "qmi-atr.h"
 #include "qmi-ims.h"
 #include "qmi-imsp.h"
@@ -1317,6 +1318,11 @@ qmi_device_allocate_client (QmiDevice           *self,
     case QMI_SERVICE_FOX:
 #if defined HAVE_QMI_SERVICE_FOX
         ctx->client_type = QMI_TYPE_CLIENT_FOX;
+#endif
+        break;
+    case QMI_SERVICE_FOXAP:
+#if defined HAVE_QMI_SERVICE_FOXAP
+        ctx->client_type = QMI_TYPE_CLIENT_FOXAP;
 #endif
         break;
     case QMI_SERVICE_ATR:

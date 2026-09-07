@@ -245,6 +245,7 @@ services = [
   'imsp',
   'imsdcm',
   'fox',
+  'foxap',
   'gas',
   'gms',
   'loc',

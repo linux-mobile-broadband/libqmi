@@ -99,6 +99,8 @@
 #include "qmi-enums-fox.h"
 #include "qmi-fox.h"
 
+#include "qmi-foxap.h"
+
 #include "qmi-atr.h"
 
 #include "qmi-enums-imsdcm.h"
