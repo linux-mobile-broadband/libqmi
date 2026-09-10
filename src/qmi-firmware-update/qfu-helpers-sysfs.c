@@ -631,8 +631,7 @@ wait_for_device_cancelled (GCancellable *cancellable,
 
     ctx = (WaitForDeviceContext *) g_task_get_task_data (task);
 
-    /* Disconnect this handler */
-    g_cancellable_disconnect (g_task_get_cancellable (task), ctx->cancellable_id);
+    /* Avoid calling g_cancellable_disconnect() from within the callback to avoid deadlocks */
     ctx->cancellable_id = 0;
 
     /* Disconnect the other handlers */
