@@ -53,6 +53,7 @@
  * @QMI_VOICE_CALL_STATE_DISCONNECTING: Disconnecting.
  * @QMI_VOICE_CALL_STATE_END: Call is finished.
  * @QMI_VOICE_CALL_STATE_SETUP: 3GPP specific. MT call is in setup state.
+ * @QMI_VOICE_CALL_STATE_PRE_ALERTING: MT call is in pre-alerting state, before it alerts. Seen on IMS calls. Since 1.40.
  *
  * State of a call.
  *
@@ -70,6 +71,7 @@ typedef enum { /*< since=1.14 >*/
     QMI_VOICE_CALL_STATE_DISCONNECTING  = 0x08,
     QMI_VOICE_CALL_STATE_END            = 0x09,
     QMI_VOICE_CALL_STATE_SETUP          = 0x0A,
+    QMI_VOICE_CALL_STATE_PRE_ALERTING   = 0x0B,
 } QmiVoiceCallState;
 
 /**
