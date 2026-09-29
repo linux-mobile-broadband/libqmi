@@ -23,6 +23,7 @@ sources = files(
   'qmicli-imsa.c',
   'qmicli-imsp.c',
   'qmicli-fox.c',
+  'qmicli-foxap.c',
   'qmicli-gas.c',
   'qmicli-gms.c',
   'qmicli-link-management.c',

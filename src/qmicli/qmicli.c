@@ -480,6 +480,13 @@ allocate_client_ready (QmiDevice *dev,
 #else
         break;
 #endif
+    case QMI_SERVICE_FOXAP:
+#if defined HAVE_QMI_SERVICE_FOXAP
+        qmicli_foxap_run (dev, QMI_CLIENT_FOXAP (client), cancellable);
+        return;
+#else
+        break;
+#endif
     case QMI_SERVICE_ATR:
 #if defined HAVE_QMI_SERVICE_ATR
         qmicli_atr_run (dev, QMI_CLIENT_ATR (client), cancellable);
@@ -970,6 +977,13 @@ parse_actions (void)
     }
 #endif
 
+#if defined HAVE_QMI_SERVICE_FOXAP
+    if (qmicli_foxap_options_enabled ()) {
+        service = QMI_SERVICE_FOXAP;
+        actions_enabled++;
+    }
+#endif
+
 #if defined HAVE_QMI_SERVICE_ATR
     if (qmicli_atr_options_enabled ()) {
         service = QMI_SERVICE_ATR;
@@ -1073,6 +1087,9 @@ int main (int argc, char **argv)
 #endif
 #if defined HAVE_QMI_SERVICE_FOX
     g_option_context_add_group (context, qmicli_fox_get_option_group ());
+#endif
+#if defined HAVE_QMI_SERVICE_FOXAP
+    g_option_context_add_group (context, qmicli_foxap_get_option_group ());
 #endif
 #if defined HAVE_QMI_SERVICE_ATR
     g_option_context_add_group (context, qmicli_atr_get_option_group ());

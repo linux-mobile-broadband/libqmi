@@ -177,6 +177,14 @@ void          qmicli_fox_run              (QmiDevice *device,
                                            GCancellable *cancellable);
 #endif
 
+#if defined HAVE_QMI_SERVICE_FOXAP
+GOptionGroup *qmicli_foxap_get_option_group (void);
+gboolean      qmicli_foxap_options_enabled  (void);
+void          qmicli_foxap_run              (QmiDevice *device,
+                                             QmiClientFoxap *client,
+                                             GCancellable *cancellable);
+#endif
+
 #if defined HAVE_QMI_SERVICE_ATR
 GOptionGroup *qmicli_atr_get_option_group (void);
 gboolean      qmicli_atr_options_enabled  (void);

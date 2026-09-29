@@ -1,0 +1,45 @@
+[
+  // *********************************************************************************
+  // Foxconn modules shipped by Lenovo, e.g. the T99W696 (17cb:0308) in recent
+  // ThinkPads, take the FCC unlock on service 0xE4 rather than on FOX (0xE3).
+  //
+  // This is what the vendor software itself does. In Foxconn's SDK, libfiisdk.so.2.2.2
+  // as shipped in Lenovo's lenovo-wwan-unlock package, the unlock path is
+  // Fox_Attempt() -> FoxApSetFccLockStatus() -> QMIFOXAPSetFccLockStatus(), and that
+  // last one composes the message with service byte 0xE4 and message id 0x5571.
+  //
+  // A QMI client is bound to a single service id, so this needs a service of its own
+  // rather than another message on FOX. It is an addition and not a replacement:
+  // these modules keep using FOX (message 0x555E) for the firmware version queries
+  // that feed the unlock hash, and DMS for the IMEI.
+  {  "name"        : "FOXAP",
+     "type"        : "Service",
+     "description" : "Foxconn AP Modem Service" },
+
+  // *********************************************************************************
+  {  "name"    : "QMI Client FOXAP",
+     "type"    : "Client",
+     "since"   : "1.40" },
+
+  // *********************************************************************************
+  {  "name"    : "QMI Message FOXAP",
+     "type"    : "Message-ID-Enum" },
+
+  // *********************************************************************************
+  {  "name"    : "Set FCC Authentication",
+     "type"    : "Message",
+     "service" : "FOXAP",
+     "id"      : "0x5571",
+     "since"   : "1.40",
+     "input"   : [ { "name"          : "Magic String",
+                     "id"            : "0x01",
+                     "type"          : "TLV",
+                     "since"         : "1.40",
+                     "format"        : "string" },
+                   { "name"          : "Magic Number",
+                     "id"            : "0x02",
+                     "type"          : "TLV",
+                     "since"         : "1.40",
+                     "format"        : "guint8" } ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] }
+]
