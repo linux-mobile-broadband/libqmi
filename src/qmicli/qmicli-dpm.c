@@ -169,6 +169,8 @@ typedef struct {
     gint                 hw_data_ep_iface_number;
     guint                hw_data_rx_id;
     guint                hw_data_tx_id;
+    gboolean             hw_data_rx_id_set;
+    gboolean             hw_data_tx_id_set;
 
     /* sw data port item building */
     GArray              *sw_data_ports;
@@ -233,6 +235,8 @@ reset_hw_data_port_item (OpenPortProperties *props)
 {
     props->hw_data_rx_id           = 0;
     props->hw_data_tx_id           = 0;
+    props->hw_data_rx_id_set       = FALSE;
+    props->hw_data_tx_id_set       = FALSE;
     props->hw_data_ep_type         = QMI_DATA_ENDPOINT_TYPE_UNKNOWN;
     props->hw_data_ep_iface_number = QMI_ENDPOINT_INTERFACE_NUMBER_UNDEFINED;
 }
@@ -242,8 +246,8 @@ build_hw_data_port_item (OpenPortProperties *props)
 {
     if ((props->hw_data_ep_type != QMI_DATA_ENDPOINT_TYPE_UNKNOWN) &&
         (props->hw_data_ep_iface_number != QMI_ENDPOINT_INTERFACE_NUMBER_UNDEFINED) &&
-        (props->hw_data_rx_id != 0) &&
-        (props->hw_data_tx_id != 0)) {
+        props->hw_data_rx_id_set &&
+        props->hw_data_tx_id_set) {
         QmiMessageDpmOpenPortInputHardwareDataPortsElement details;
 
         details.rx_endpoint_number = props->hw_data_rx_id;
@@ -265,8 +269,8 @@ check_unfinished_hw_data_port_item (OpenPortProperties  *props,
 {
     if ((props->hw_data_ep_type != QMI_DATA_ENDPOINT_TYPE_UNKNOWN) ||
         (props->hw_data_ep_iface_number != QMI_ENDPOINT_INTERFACE_NUMBER_UNDEFINED) ||
-        (props->hw_data_rx_id != 0) ||
-        (props->hw_data_tx_id != 0)) {
+        props->hw_data_rx_id_set ||
+        props->hw_data_tx_id_set) {
         g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
                      "error: unfinished hw data port item");
         return FALSE;
@@ -378,11 +382,13 @@ open_port_properties_handle (const gchar  *key,
     }
     if (g_ascii_strcasecmp (key, "hw-data-rx-id") == 0) {
         props->hw_data_rx_id = atoi (value);
+        props->hw_data_rx_id_set = TRUE;
         build_hw_data_port_item (props);
         return TRUE;
     }
     if (g_ascii_strcasecmp (key, "hw-data-tx-id") == 0) {
         props->hw_data_tx_id = atoi (value);
+        props->hw_data_tx_id_set = TRUE;
         build_hw_data_port_item (props);
         return TRUE;
     }
