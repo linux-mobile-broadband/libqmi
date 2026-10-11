@@ -2443,5 +2443,14 @@
    "output"  : [ { "common-ref"    : "Operation Result" },
                  { "common-ref"    : "WDS Profile Identifier",
                    "since"         : "1.22",
-                   "prerequisites" : [ { "common-ref" : "Success" } ] } ] }
+                   "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Reset Packet Statistics",
+     "type"    : "Message",
+     "service" : "WDS",
+     "id"      : "0x0086",
+     "since"   : "1.39",
+     "output"  : [ { "common-ref" : "Operation Result" } ] }
+
 ]
