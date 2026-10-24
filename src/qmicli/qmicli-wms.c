@@ -42,6 +42,9 @@ typedef struct {
     QmiDevice *device;
     QmiClientWms *client;
     GCancellable *cancellable;
+#if defined HAVE_QMI_INDICATION_WMS_EVENT_REPORT
+    guint event_report_indication_id;
+#endif
 } Context;
 static Context *ctx;
 
@@ -53,6 +56,8 @@ static gboolean reset_flag;
 static gboolean noop_flag;
 static gchar *set_broadcast_config_str;
 static gboolean get_broadcast_config_flag;
+static gboolean set_broadcast_activation_flag;
+static gboolean monitor_flag;
 
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_WMS_GET_SUPPORTED_MESSAGES
@@ -83,6 +88,18 @@ static GOptionEntry entries[] = {
     { "wms-get-cbs-channels", 0, 0, G_OPTION_ARG_NONE, &get_broadcast_config_flag,
       "Get CBS channels",
       NULL,
+    },
+#endif
+#if defined HAVE_QMI_INDICATION_WMS_EVENT_REPORT
+    { "wms-monitor", 0, 0, G_OPTION_ARG_NONE, &monitor_flag,
+      "Monitor for incoming messages including Cell Broadcast (CBS/ETWS/CMAS). Use Ctrl+C to stop.",
+      NULL
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_WMS_SET_BROADCAST_ACTIVATION
+    { "wms-set-broadcast-activation", 0, 0, G_OPTION_ARG_NONE, &set_broadcast_activation_flag,
+      "Activate Cell Broadcast message reception on the modem",
+      NULL
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_WMS_RESET
@@ -127,6 +144,8 @@ qmicli_wms_options_enabled (void)
                  !!set_routes_str +
                  !!set_broadcast_config_str +
                  get_broadcast_config_flag +
+                 set_broadcast_activation_flag +
+                 monitor_flag +
                  reset_flag +
                  noop_flag);
 
@@ -134,6 +153,9 @@ qmicli_wms_options_enabled (void)
         g_printerr ("error: too many WMS actions requested\n");
         exit (EXIT_FAILURE);
     }
+
+    if (monitor_flag)
+        qmicli_expect_indications ();
 
     checked = TRUE;
     return !!n_actions;
@@ -144,6 +166,12 @@ context_free (Context *context)
 {
     if (!context)
         return;
+
+#if defined HAVE_QMI_INDICATION_WMS_EVENT_REPORT
+    if (context->event_report_indication_id)
+        g_signal_handler_disconnect (context->client,
+                                     context->event_report_indication_id);
+#endif
 
     if (context->client)
         g_object_unref (context->client);
@@ -555,7 +583,10 @@ get_broadcast_config_ready (QmiClientWms *client,
         return;
     }
 
-    g_print ("[%s] Successfully get cbs channels: ", qmi_device_get_path_display (ctx->device));
+    g_print ("[%s] CBS broadcast active: %s\n",
+             qmi_device_get_path_display (ctx->device),
+             active ? "yes" : "no");
+    g_print ("[%s] CBS channels: ", qmi_device_get_path_display (ctx->device));
 
     for (i = 0; i < channels->len; i++) {
         QmiMessageWmsGetBroadcastConfigOutputConfigChannelsElement ch;
@@ -578,6 +609,224 @@ get_broadcast_config_ready (QmiClientWms *client,
 }
 
 #endif
+
+#if defined HAVE_QMI_MESSAGE_WMS_SET_BROADCAST_ACTIVATION
+
+static void
+set_broadcast_activation_ready (QmiClientWms *client,
+                                GAsyncResult *res)
+{
+    g_autoptr(QmiMessageWmsSetBroadcastActivationOutput) output = NULL;
+    g_autoptr(GError) error = NULL;
+
+    output = qmi_client_wms_set_broadcast_activation_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wms_set_broadcast_activation_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't activate broadcast: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully activated Cell Broadcast reception\n",
+             qmi_device_get_path_display (ctx->device));
+
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_WMS_SET_BROADCAST_ACTIVATION */
+
+#if defined HAVE_QMI_INDICATION_WMS_EVENT_REPORT
+
+static void
+monitoring_cancelled (GCancellable *cancellable)
+{
+    operation_shutdown (TRUE);
+}
+
+static void
+event_report_received (QmiClientWms *client,
+                       QmiIndicationWmsEventReportOutput *output)
+{
+    g_print ("[%s] Received WMS event report indication:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    /* Transfer Route MT Message (TLV 0x11) - carries CBS/SMS PDU data */
+    {
+        QmiWmsAckIndicator ack_indicator;
+        guint32 transaction_id;
+        QmiWmsMessageFormat format;
+        GArray *raw_data = NULL;
+
+        if (qmi_indication_wms_event_report_output_get_transfer_route_mt_message (
+                output, &ack_indicator, &transaction_id, &format, &raw_data, NULL)) {
+            guint i;
+
+            g_print ("  Transfer Route MT Message:\n");
+            g_print ("    Ack Indicator:  %s\n",
+                     VALIDATE_UNKNOWN (qmi_wms_ack_indicator_get_string (ack_indicator)));
+            g_print ("    Transaction ID: %u\n", transaction_id);
+            g_print ("    Format:         %s\n",
+                     VALIDATE_UNKNOWN (qmi_wms_message_format_get_string (format)));
+            g_print ("    Raw Data (%u bytes):", raw_data->len);
+            for (i = 0; i < raw_data->len; i++) {
+                if (i % 16 == 0)
+                    g_print ("\n      ");
+                g_print ("%02x ", g_array_index (raw_data, guint8, i));
+            }
+            g_print ("\n");
+
+            /* For GSM/WCDMA Cell Broadcast, decode the CBS page header */
+            if (format == QMI_WMS_MESSAGE_FORMAT_GSM_WCDMA_BROADCAST &&
+                raw_data->len >= 6) {
+                guint16 serial_number;
+                guint16 message_id;
+                guint8  dcs;
+                guint8  page_info;
+
+                serial_number = ((guint16)g_array_index (raw_data, guint8, 0) << 8) |
+                                 (guint16)g_array_index (raw_data, guint8, 1);
+                message_id    = ((guint16)g_array_index (raw_data, guint8, 2) << 8) |
+                                 (guint16)g_array_index (raw_data, guint8, 3);
+                dcs           = g_array_index (raw_data, guint8, 4);
+                page_info     = g_array_index (raw_data, guint8, 5);
+
+                g_print ("    CBS Header:\n");
+                g_print ("      Serial Number: 0x%04x (GS: %u, Message Code: %u, Update: %u)\n",
+                         serial_number,
+                         (serial_number >> 14) & 0x03,
+                         (serial_number >> 4) & 0x03ff,
+                         serial_number & 0x0f);
+                g_print ("      Message ID:    %u (0x%04x)\n", message_id, message_id);
+                g_print ("      DCS:           0x%02x\n", dcs);
+                g_print ("      Page:          %u of %u\n",
+                         (page_info >> 4) & 0x0f,
+                         page_info & 0x0f);
+            }
+        }
+    }
+
+    /* ETWS Message (TLV 0x13) */
+    {
+        QmiWmsNotificationType notification_type;
+        GArray *raw_data = NULL;
+
+        if (qmi_indication_wms_event_report_output_get_etws_message (
+                output, &notification_type, &raw_data, NULL)) {
+            guint i;
+
+            g_print ("  ETWS Message:\n");
+            g_print ("    Notification Type: %s\n",
+                     VALIDATE_UNKNOWN (qmi_wms_notification_type_get_string (notification_type)));
+            g_print ("    Raw Data (%u bytes):", raw_data->len);
+            for (i = 0; i < raw_data->len; i++) {
+                if (i % 16 == 0)
+                    g_print ("\n      ");
+                g_print ("%02x ", g_array_index (raw_data, guint8, i));
+            }
+            g_print ("\n");
+        }
+    }
+
+    /* ETWS PLMN Information (TLV 0x14) */
+    {
+        guint16 mcc;
+        guint16 mnc;
+
+        if (qmi_indication_wms_event_report_output_get_etws_plmn_information (
+                output, &mcc, &mnc, NULL)) {
+            g_print ("  ETWS PLMN:\n");
+            g_print ("    MCC: %u\n", mcc);
+            g_print ("    MNC: %u\n", mnc);
+        }
+    }
+
+    /* MT Message (TLV 0x10) - stored message notification */
+    {
+        QmiWmsStorageType storage_type;
+        guint32 memory_index;
+
+        if (qmi_indication_wms_event_report_output_get_mt_message (
+                output, &storage_type, &memory_index, NULL)) {
+            g_print ("  MT Message (stored):\n");
+            g_print ("    Storage Type: %s\n",
+                     VALIDATE_UNKNOWN (qmi_wms_storage_type_get_string (storage_type)));
+            g_print ("    Memory Index: %u\n", memory_index);
+        }
+    }
+
+    /* Message Mode (TLV 0x12) */
+    {
+        QmiWmsMessageMode message_mode;
+
+        if (qmi_indication_wms_event_report_output_get_message_mode (
+                output, &message_mode, NULL)) {
+            g_print ("  Message Mode: %s\n",
+                     VALIDATE_UNKNOWN (qmi_wms_message_mode_get_string (message_mode)));
+        }
+    }
+
+    g_print ("\n");
+}
+
+static void
+set_event_report_for_monitor_ready (QmiClientWms *client,
+                                    GAsyncResult *res)
+{
+    g_autoptr(QmiMessageWmsSetEventReportOutput) output = NULL;
+    g_autoptr(GError) error = NULL;
+
+    output = qmi_client_wms_set_event_report_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wms_set_event_report_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't enable WMS event reporting: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] WMS event reporting enabled, monitoring for messages...\n",
+             qmi_device_get_path_display (ctx->device));
+
+    /* Connect the indication signal */
+    ctx->event_report_indication_id =
+        g_signal_connect (ctx->client,
+                          "event-report",
+                          G_CALLBACK (event_report_received),
+                          NULL);
+
+    /* User can use Ctrl+C to cancel the monitoring at any time */
+    g_cancellable_connect (ctx->cancellable,
+                           G_CALLBACK (monitoring_cancelled),
+                           NULL,
+                           NULL);
+}
+
+static void
+start_wms_monitoring (void)
+{
+    g_autoptr(QmiMessageWmsSetEventReportInput) input = NULL;
+
+    input = qmi_message_wms_set_event_report_input_new ();
+    qmi_message_wms_set_event_report_input_set_new_mt_message_indicator (input, TRUE, NULL);
+
+    qmi_client_wms_set_event_report (ctx->client,
+                                     input,
+                                     10,
+                                     ctx->cancellable,
+                                     (GAsyncReadyCallback)set_event_report_for_monitor_ready,
+                                     NULL);
+}
+
+#endif /* HAVE_QMI_INDICATION_WMS_EVENT_REPORT */
 
 #if defined HAVE_QMI_MESSAGE_WMS_RESET
 
@@ -626,7 +875,7 @@ qmicli_wms_run (QmiDevice *device,
                 GCancellable *cancellable)
 {
     /* Initialize context */
-    ctx = g_slice_new (Context);
+    ctx = g_slice_new0 (Context);
     ctx->device = g_object_ref (device);
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
@@ -723,6 +972,35 @@ qmicli_wms_run (QmiDevice *device,
                                              NULL);
         return;
 
+    }
+#endif
+
+#if defined HAVE_QMI_INDICATION_WMS_EVENT_REPORT
+    if (monitor_flag) {
+        g_debug ("Starting WMS monitoring...");
+        start_wms_monitoring ();
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_WMS_SET_BROADCAST_ACTIVATION
+    if (set_broadcast_activation_flag) {
+        g_autoptr(QmiMessageWmsSetBroadcastActivationInput) input = NULL;
+
+        g_debug ("Asynchronously activating broadcast...");
+        input = qmi_message_wms_set_broadcast_activation_input_new ();
+        qmi_message_wms_set_broadcast_activation_input_set_activation (
+            input,
+            QMI_WMS_MESSAGE_MODE_GSM_WCDMA,
+            TRUE,
+            NULL);
+        qmi_client_wms_set_broadcast_activation (ctx->client,
+                                                 input,
+                                                 10,
+                                                 ctx->cancellable,
+                                                 (GAsyncReadyCallback)set_broadcast_activation_ready,
+                                                 NULL);
+        return;
     }
 #endif
 
